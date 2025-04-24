@@ -3,43 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Animated Tab Indicator with Expanded Icon</title>
-  <link rel="stylesheet" href="styles.css" />
+  <title>Starter Mini App</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
-  <nav class="tab-nav">
-    <!-- The sliding indicator -->
-    <div class="indicator"></div>
-    <button class="tab active" data-tab="home">
-      <span class="icon">🏠</span>
-      <span class="text">Home</span>
-    </button>
-    <button class="tab" data-tab="clock">
-      <span class="icon">⏰</span>
-      <span class="text">Clock</span>
-    </button>
-    <button class="tab" data-tab="spatial">
-      <span class="icon">📍</span>
-      <span class="text">Spatial</span>
-    </button>
-    <button class="tab" data-tab="calendar">
-      <span class="icon">📅</span>
-      <span class="text">Calendar</span>
-    </button>
-    <button class="tab" data-tab="settings">
-      <span class="icon">⚙️</span>
-      <span class="text">Settings</span>
-    </button>
-  </nav>
+  <h1>Telegram Mini App Startersssssssssssss</h1>
+  <p id="status">Initializing...</p>
+  <button id="sendBtn">Send Data to Chat</button>
 
-  <div class="tab-content">
-    <div id="home" class="content active"></div>
-    <div id="clock" class="content"></div>
-    <div id="spatial" class="content"></div>
-    <div id="calendar" class="content"></div>
-    <div id="settings" class="content"></div>
-  </div>
+  <script>
+    // Initialize Web App
+    const tg = window.Telegram.WebApp;
+    tg.expand();  // Optional: expand to full height
 
-  <script src="script.js"></script>
+    // Display theme info
+    document.getElementById('status').textContent =
+      'Theme: ' + tg.themeParams.bg_color;
+
+    // Button handler: send data back to chat
+    document.getElementById('sendBtn').addEventListener('click', () => {
+      tg.sendData(JSON.stringify({ action: 'hello', timestamp: Date.now() }));
+    });
+  </script>
 </body>
 </html>
