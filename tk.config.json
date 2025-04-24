@@ -1,9 +1,0 @@
-{
-    "headers": [
-      {
-        "source": "/telegram-web-app.js",
-        "destination": "https://telegram.org/js/telegram-web-app.js"
-      }
-    ]
-  }
-  
