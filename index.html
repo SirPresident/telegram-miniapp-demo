@@ -1,29 +1,115 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Starter Mini App</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Telegram Status</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 15px; background-color: var(--tg-theme-bg-color); color: var(--tg-theme-text-color); }
+        #userInfo { margin-bottom: 20px; }
+        input[type="text"] { width: calc(100% - 22px); padding: 10px; margin-bottom: 10px; border: 1px solid var(--tg-theme-hint-color); border-radius: 5px; }
+        button { width: 100%; padding: 10px; background-color: var(--tg-theme-button-color); color: var(--tg-theme-button-text-color); border: none; border-radius: 5px; cursor: pointer; }
+        #message { margin-top: 10px; font-size: 0.9em; }
+    </style>
 </head>
 <body>
-  <h1>Kourosh is gay?</h1>
-  <p id="status">Initializing...</p>
-  <button id="sendBtn">Very gay.</button>
+    <h1>My Telegram Status</h1>
 
-  <script>
-    // Initialize Web App
-    const tg = window.Telegram.WebApp;
-    tg.expand();  // Optional: expand to full height
+    <div id="userInfo">
+        Loading user info...
+    </div>
 
-    // Display theme info
-    document.getElementById('status').textContent =
-      'Yes he is' + tg.themeParams.bg_color;
+    <input type="text" id="statusInput" placeholder="Enter your status">
+    <button id="saveButton">Save Status</button>
 
-    // Button handler: send data back to chat
-    document.getElementById('sendBtn').addEventListener('click', () => {
-      tg.sendData(JSON.stringify({ action: 'hello', timestamp: Date.now() }));
-    });
-  </script>
+    <div id="message"></div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        const BACKEND_URL_BASE = 'YOUR_NGROK_HTTPS_URL_HERE'; // IMPORTANT: We will fill this later
+
+        let telegramUser = null;
+
+        tg.ready(); // Inform Telegram the app is ready
+        tg.expand(); // Expand the Mini App to full height
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                telegramUser = tg.initDataUnsafe.user;
+                document.getElementById('userInfo').innerText = `Hello, ${telegramUser.first_name || ''} ${telegramUser.last_name || ''} (@${telegramUser.username || 'N/A'})! Your ID: ${telegramUser.id}`;
+                fetchStatus(telegramUser.id);
+            } else {
+                document.getElementById('userInfo').innerText = "Could not load Telegram user data. Are you running this inside Telegram?";
+                document.getElementById('saveButton').disabled = true;
+                document.getElementById('statusInput').disabled = true;
+            }
+
+            document.getElementById('saveButton').addEventListener('click', () => {
+                if (!telegramUser) return;
+                const statusText = document.getElementById('statusInput').value;
+                saveStatus(telegramUser.id, statusText);
+            });
+        });
+
+        async function fetchStatus(userId) {
+            if (!BACKEND_URL_BASE || BACKEND_URL_BASE === 'YOUR_NGROK_HTTPS_URL_HERE') {
+                document.getElementById('message').innerText = 'Backend URL not configured.';
+                return;
+            }
+            try {
+                const response = await fetch(`${BACKEND_URL_BASE}/api/status/${userId}/`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        // For a real app, you'd send tg.initData for backend validation
+                    }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('statusInput').value = data.status_text || '';
+                    document.getElementById('message').innerText = 'Status loaded.';
+                } else if (response.status === 404) {
+                    document.getElementById('message').innerText = 'No status saved yet.';
+                }
+                else {
+                    document.getElementById('message').innerText = `Error fetching status: ${response.statusText}`;
+                }
+            } catch (error) {
+                document.getElementById('message').innerText = `Network error fetching status: ${error}`;
+            }
+        }
+
+        async function saveStatus(userId, statusText) {
+            if (!BACKEND_URL_BASE || BACKEND_URL_BASE === 'YOUR_NGROK_HTTPS_URL_HERE') {
+                document.getElementById('message').innerText = 'Backend URL not configured.';
+                return;
+            }
+            document.getElementById('message').innerText = 'Saving...';
+            try {
+                const response = await fetch(`${BACKEND_URL_BASE}/api/status/${userId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        // For a real app, you'd send tg.initData for backend validation
+                    },
+                    body: JSON.stringify({
+                        status_text: statusText,
+                        // You could also send tg.initData here for validation
+                        // raw_init_data: tg.initData
+                    })
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('message').innerText = data.message || 'Status saved!';
+                } else {
+                    const errorData = await response.json();
+                    document.getElementById('message').innerText = `Error saving status: ${errorData.error || response.statusText}`;
+                }
+            } catch (error) {
+                document.getElementById('message').innerText = `Network error saving status: ${error}`;
+            }
+        }
+    </script>
 </body>
 </html>
