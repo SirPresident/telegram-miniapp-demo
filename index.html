@@ -94,24 +94,22 @@
                 return;
             }
 
-            // Decide if you want to fetch all messages or user-specific
-            // let fetchUrl = `${BACKEND_URL_BASE}/api/messages/`; // All messages
-            // if (telegramUser && telegramUser.id) {
-            //    fetchUrl = `${BACKEND_URL_BASE}/api/messages/?telegram_id=${telegramUser.id}`; // User-specific
-            // }
-
-
             try {
-                const response = await fetch(`${BACKEND_URL_BASE}/api/messages/`, { // Using the all messages endpoint for now
+                console.log("Fetching from:", `${BACKEND_URL_BASE}/api/messages/`);
+                const response = await fetch(`${BACKEND_URL_BASE}/api/messages/`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
                         'bypass-tunnel-reminder': 'true' // For localtunnel
                     }
                 });
+                console.log("Response received, status:", response.status, "ok:", response.ok);
 
                 if (response.ok) {
+                    console.log("Response is OK, parsing JSON...");
                     const data = await response.json();
+                    console.log("JSON parsed:", data);
+
                     loadingMessageDiv.style.display = 'none'; // Hide loading message
 
                     if (data.messages && data.messages.length > 0) {
@@ -131,6 +129,7 @@
                         messagesContainer.innerHTML = '<p style="text-align:center;">No notes saved yet.</p>';
                     }
                 } else {
+                    console.error("Response not OK. Status:", response.status);
                     let errorText = response.statusText;
                     try { const errorData = await response.json(); errorText = errorData.error || errorText; }
                     catch (e) { /* ignore */ }
@@ -138,8 +137,8 @@
                     console.error(`Error loading messages: ${response.status}`, errorText);
                 }
             } catch (error) {
+                console.error("Catch block in fetchAndDisplayMessages:", error);
                 loadingMessageDiv.innerText = `Network error loading messages: ${error}`;
-                console.error("Network error in fetchAndDisplayMessages:", error);
             }
         }
 
@@ -147,12 +146,13 @@
         function escapeHtml(unsafe) {
             if (typeof unsafe !== 'string') return '';
             return unsafe
-                 .replace(/&/g, "&")
-                 .replace(/</g, "<")
-                 .replace(/>/g, ">")
-                 .replace(/"/g, """)
-                 .replace(/'/g, "'");
-        }
+                .replace(/&/g, "&")
+                .replace(/</g, "<")
+                .replace(/>/g, ">")
+                .replace(/"/g, "")
+                .replace(/'/g, "");
+            }
+
 
     </script>
 </body>
