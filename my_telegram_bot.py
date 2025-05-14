@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 # --- CONFIGURATION ---
 # !! IMPORTANT: Replace these with YOUR actual values !!
 BOT_TOKEN = "8015169379:AAE13t1c1123g2qgydVf3za2y3ZmINMw1kc"
-MINI_APP_URL = "https://sirpresident.github.io/note-app-1/" # e.g., tma-status-app
+MINI_APP_URL = "https://sirpresident.github.io/telegram-miniapp-demo/" # e.g., tma-status-app
 DJANGO_PROCESS_NOTE_URL = "https://finarfin-bot-subdomain.loca.lt/api/process_note/" # e.g., finarfin-bot-subdomain
 # DJANGO_BOT_SECRET = "your_very_secret_shared_string" # For future security: a shared secret
 
