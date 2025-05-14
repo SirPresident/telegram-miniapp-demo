@@ -3,171 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Saved Notes</title>
+    <title>My AI Processed Logs</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body {
-            font-family: sans-serif; padding: 15px;
-            background-color: var(--tg-theme-bg-color);
-            color: var(--tg-theme-text-color);
-            margin: 0;
-        }
-        #header {
-            padding: 10px 15px;
-            background-color: var(--tg-theme-secondary-bg-color); /* Slightly different bg for header */
-            border-bottom: 1px solid var(--tg-theme-hint-color);
-        }
+        body { font-family: sans-serif; padding: 0; margin:0; background-color: var(--tg-theme-bg-color); color: var(--tg-theme-text-color); }
+        #header { padding: 10px 15px; background-color: var(--tg-theme-secondary-bg-color); border-bottom: 1px solid var(--tg-theme-hint-color); }
         #userInfo { font-size: 0.9em; color: var(--tg-theme-hint-color); }
-        #messagesContainer { padding: 15px; }
-        .message-item {
-            background-color: var(--tg-theme-bg-color); /* Or var(--tg-theme-secondary-bg-color) for contrast */
-            border: 1px solid var(--tg-theme-hint-color);
-            border-radius: 8px;
-            padding: 10px;
-            margin-bottom: 10px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        .message-meta { font-size: 0.8em; color: var(--tg-theme-hint-color); margin-bottom: 5px; }
-        .message-text { white-space: pre-wrap; word-break: break-word; }
+        #logsContainer { padding: 15px; }
+        .log-entry { border: 1px solid var(--tg-theme-hint-color); border-radius: 8px; padding: 10px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .log-meta { font-size: 0.8em; color: var(--tg-theme-hint-color); margin-bottom: 8px; border-bottom: 1px dashed var(--tg-theme-hint-color); padding-bottom: 5px; }
+        .log-original-note { font-style: italic; color: var(--tg-theme-hint-color); margin-bottom: 8px; font-size:0.9em; }
+        .log-section { margin-top: 8px; }
+        .log-section h3 { font-size: 0.95em; margin-top: 0; margin-bottom: 5px; color: var(--tg-theme-link-color); }
+        .log-section ul { list-style-type: disc; margin: 0 0 5px 20px; padding: 0; }
+        .log-section li { margin-bottom: 3px; }
         #loadingMessage { text-align: center; padding: 20px; }
-        /* Basic button styling (if you add refresh button) */
-        button {
-            padding: 8px 15px; background-color: var(--tg-theme-button-color);
-            color: var(--tg-theme-button-text-color); border: none;
-            border-radius: 5px; cursor: pointer; margin-top: 10px;
-        }
+        .tag { background-color: var(--tg-theme-button-color); color: var(--tg-theme-button-text-color); padding: 2px 6px; border-radius: 4px; font-size:0.8em; margin-right:5px; display:inline-block; margin-bottom:3px;}
     </style>
 </head>
 <body>
-    <div id="header">
-        <h1>My Saved Notes</h1>
-        <div id="userInfo">Loading user...</div>
-    </div>
-
-    <div id="messagesContainer">
-        <div id="loadingMessage">Loading messages...</div>
-    </div>
-
-    <!-- Optional: Refresh button -->
-    <!-- <div style="text-align: center; padding-bottom: 15px;">
-        <button id="refreshButton">Refresh Notes</button>
-    </div> -->
+    <div id="header"><h1>My AI Processed Logs</h1><div id="userInfo">Loading user...</div></div>
+    <div id="logsContainer"><div id="loadingMessage">Loading logs...</div></div>
 
     <script>
         const tg = window.Telegram.WebApp;
-        // !! IMPORTANT: This URL must point to your live backend !!
-        const BACKEND_URL_BASE = 'https://finarfin-bot-subdomain.loca.lt'; // Your localtunnel base
-
+        const BACKEND_URL_BASE = 'https://your-localtunnel-subdomain.loca.lt'; // Replace!
         let telegramUser = null;
 
-        tg.ready();
-        tg.expand(); // Expand to full height
+        tg.ready(); tg.expand();
 
         document.addEventListener('DOMContentLoaded', () => {
             if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
                 telegramUser = tg.initDataUnsafe.user;
-                document.getElementById('userInfo').innerText = `User: ${telegramUser.first_name || ''} (@${telegramUser.username || 'N/A'})`;
-                fetchAndDisplayMessages(); // Fetch messages on load
+                document.getElementById('userInfo').innerText = `Logs for: ${telegramUser.first_name || ''} (@${telegramUser.username || 'N/A'})`;
+                if (telegramUser.id) fetchAndDisplayLogs();
+                else document.getElementById('loadingMessage').innerText = "Cannot load logs: User ID unavailable.";
             } else {
                 document.getElementById('userInfo').innerText = "Could not load Telegram user data.";
-                document.getElementById('loadingMessage').innerText = "Cannot load messages: User data unavailable.";
-                console.error("Telegram.WebApp.initDataUnsafe.user is not available.");
+                document.getElementById('loadingMessage').innerText = "Cannot load logs: User data unavailable.";
             }
-
-            // Optional: Refresh button functionality
-            // const refreshBtn = document.getElementById('refreshButton');
-            // if (refreshBtn) {
-            //     refreshBtn.addEventListener('click', fetchAndDisplayMessages);
-            // }
         });
 
-        async function fetchAndDisplayMessages() {
-            const messagesContainer = document.getElementById('messagesContainer');
-            const loadingMessageDiv = document.getElementById('loadingMessage');
-            loadingMessageDiv.innerText = 'Refreshing messages...';
-            loadingMessageDiv.style.display = 'block'; // Show loading message
-            messagesContainer.innerHTML = '';
-            messagesContainer.appendChild(loadingMessageDiv);
+        async function fetchAndDisplayLogs() {
+            const container = document.getElementById('logsContainer');
+            const loadingDiv = document.getElementById('loadingMessage');
+            loadingDiv.innerText = 'Refreshing logs...'; loadingDiv.style.display = 'block';
+            container.innerHTML = ''; container.appendChild(loadingDiv);
 
-            if (!BACKEND_URL_BASE || BACKEND_URL_BASE.includes('YOUR_')) {
-                loadingMessageDiv.innerText = 'Backend URL not configured.';
-                return;
+            if (!BACKEND_URL_BASE || BACKEND_URL_BASE.includes('your-localtunnel')) {
+                loadingDiv.innerText = 'Backend URL not configured.'; return;
             }
-
-            // --- KEY CHANGE: Check for telegramUser and use user-specific fetch URL ---
             if (!telegramUser || !telegramUser.id) {
-                loadingMessageDiv.innerText = 'Cannot load messages: Telegram user ID not available.';
-                console.error("Telegram user ID missing for fetching messages.");
-                return;
+                loadingDiv.innerText = 'User ID missing for fetching logs.'; return;
             }
-            const fetchUrl = `${BACKEND_URL_BASE}/api/messages/?telegram_id=${telegramUser.id}`;
-            // --- END KEY CHANGE ---
 
-            loadingMessageDiv.innerText = 'Refreshing messages...';
-            console.log("Fetching user-specific messages from:", fetchUrl);
+            const fetchUrl = `${BACKEND_URL_BASE}/api/get_user_logs/?telegram_id=${telegramUser.id}`;
+            console.log("Fetching logs from:", fetchUrl);
 
             try {
                 const response = await fetch(fetchUrl, {
                     method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'bypass-tunnel-reminder': 'true'
-                        // For production with initData validation:
-                        // 'X-Telegram-Init-Data': tg.initData
-                    }
+                    headers: {'Content-Type': 'application/json', 'bypass-tunnel-reminder': 'true'}
                 });
-                console.log("Response received, status:", response.status, "ok:", response.ok);
-
                 if (response.ok) {
-                    console.log("Response is OK, parsing JSON...");
                     const data = await response.json();
-                    console.log("JSON parsed:", data);
+                    loadingDiv.style.display = 'none';
+                    if (data.logs && data.logs.length > 0) {
+                        data.logs.forEach(log => {
+                            const entryDiv = document.createElement('div');
+                            entryDiv.className = 'log-entry';
+                            let htmlContent = `<div class="log-meta">Logged: ${log.logged_at}</div>`;
+                            if(log.original_note) {
+                                htmlContent += `<div class="log-original-note"><strong>Original:</strong> ${escapeHtml(log.original_note)}</div>`;
+                            }
 
-                    loadingMessageDiv.style.display = 'none';
+                            if (log.mood_label) {
+                                htmlContent += `<div class="log-section"><h3>Mood</h3><span class="tag">${escapeHtml(log.mood_label)} (${log.mood_score || 'N/A'})</span></div>`;
+                            }
+                            if (log.health && log.health.length > 0) {
+                                htmlContent += `<div class="log-section"><h3>Health</h3><ul>`;
+                                log.health.forEach(h => { htmlContent += `<li>${escapeHtml(h)}</li>`; });
+                                htmlContent += `</ul></div>`;
+                            }
+                            if (log.activity && log.activity.length > 0) {
+                                htmlContent += `<div class="log-section"><h3>Activity</h3><ul>`;
+                                log.activity.forEach(a => { htmlContent += `<li>${escapeHtml(a)}</li>`; });
+                                htmlContent += `</ul></div>`;
+                            }
+                            // Add similar sections for diet and important if you implement them
 
-                    if (data.messages && data.messages.length > 0) {
-                        data.messages.forEach(msg => {
-                            const msgDiv = document.createElement('div');
-                            msgDiv.className = 'message-item';
-                            msgDiv.innerHTML = `
-                                <div class="message-meta">
-                                    From: ${msg.telegram_username || msg.telegram_user_id}
-                                    <span style="float: right;">${msg.received_at}</span>
-                                </div>
-                                <div class="message-text">${escapeHtml(msg.text)}</div>
-                            `;
-                            messagesContainer.appendChild(msgDiv);
+                            entryDiv.innerHTML = htmlContent;
+                            container.appendChild(entryDiv);
                         });
-                    } else {
-                        messagesContainer.innerHTML = '<p style="text-align:center;">No notes saved yet.</p>';
-                    }
+                    } else { container.innerHTML = '<p style="text-align:center;">No logs found yet. Send me a note in the chat!</p>'; }
                 } else {
-                    console.error("Response not OK. Status:", response.status);
-                    let errorText = response.statusText;
-                    try { const errorData = await response.json(); errorText = errorData.error || errorText; }
-                    catch (e) { /* ignore */ }
-                    loadingMessageDiv.innerText = `Error loading messages: ${response.status} ${errorText}`;
-                    console.error(`Error loading messages: ${response.status}`, errorText);
+                    let errTxt = response.statusText; try {const eD = await response.json(); errTxt = eD.error || errTxt;} catch(e){}
+                    loadingDiv.innerText = `Error loading logs: ${response.status} ${errTxt}`;
                 }
             } catch (error) {
-                loadingMessageDiv.innerText = `Network error loading messages: ${error}`;
-                console.error("Network error in fetchAndDisplayMessages:", error);
+                loadingDiv.innerText = `Network error loading logs: ${error}`;
+                console.error("Fetch logs error:", error);
             }
         }
-
-        // Helper to prevent XSS if displaying user-generated text
-        function escapeHtml(unsafe) {
-            if (typeof unsafe !== 'string') {
-                return '';
-            }
-            return unsafe
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
+        function escapeHtml(unsafe) { // Keep this helper function
+            if (typeof unsafe !== 'string') return '';
+            return unsafe.replace(/&/g, "&").replace(/</g, "<").replace(/>/g, ">").replace(/"/g, """).replace(/'/g, "'");
         }
-
     </script>
 </body>
 </html>
