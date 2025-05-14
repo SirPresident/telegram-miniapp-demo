@@ -27,7 +27,7 @@
 
     <script>
         const tg = window.Telegram.WebApp;
-        const BACKEND_URL_BASE = 'https://your-localtunnel-subdomain.loca.lt'; // Replace!
+        const BACKEND_URL_BASE = 'https://finarfin-bot-subdomain.loca.lt'; // Replace!
         let telegramUser = null;
 
         tg.ready(); tg.expand();
@@ -105,9 +105,20 @@
                 console.error("Fetch logs error:", error);
             }
         }
-        function escapeHtml(unsafe) { // Keep this helper function
-            if (typeof unsafe !== 'string') return '';
-            return unsafe.replace(/&/g, "&").replace(/</g, "<").replace(/>/g, ">").replace(/"/g, """).replace(/'/g, "'");
+        // function escapeHtml(unsafe) { // Keep this helper function
+        //     if (typeof unsafe !== 'string') return '';
+        //     return unsafe.replace(/&/g, "&").replace(/</g, "<").replace(/>/g, ">").replace(/"/g, """).replace(/'/g, "'");
+        // }
+        function escapeHtml(unsafe) {
+            if (typeof unsafe !== 'string') {
+                return '';
+            }
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
         }
     </script>
 </body>
