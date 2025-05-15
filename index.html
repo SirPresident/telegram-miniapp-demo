@@ -112,6 +112,7 @@
             margin-top: 1.5rem;
             padding: 1rem;
             height: auto;
+            flex-wrap: wrap; /* allow wrapping on small screens */
         }
         .panel {
             flex: 1;
@@ -125,6 +126,20 @@
                 -2px -2px 6px var(--shadow-light);
             transition: background 0.3s, box-shadow 0.3s;
             height: auto;
+            min-width: 220px; /* prevent panels from getting too narrow */
+            box-sizing: border-box;
+        }
+        /* Responsive: stack panels vertically on small screens */
+        @media (max-width: 800px) {
+            .panels {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 0.5rem;
+            }
+            .panel {
+                min-width: 0;
+                width: 100%;
+            }
         }
         .panel h3 {
             margin: 0 0 0.5rem;
