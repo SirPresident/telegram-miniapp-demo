@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My AI Processed Logs</title>
+    <title>My AI Processed Logs & Mood Chart</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Include Chart.js from a CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { font-family: sans-serif; padding: 0; margin:0; background-color: var(--tg-theme-bg-color); color: var(--tg-theme-text-color); }
         #header { padding: 10px 15px; background-color: var(--tg-theme-secondary-bg-color); border-bottom: 1px solid var(--tg-theme-hint-color); }
@@ -19,16 +21,55 @@
         .log-section li { margin-bottom: 3px; }
         #loadingMessage { text-align: center; padding: 20px; }
         .tag { background-color: var(--tg-theme-button-color); color: var(--tg-theme-button-text-color); padding: 2px 6px; border-radius: 4px; font-size:0.8em; margin-right:5px; display:inline-block; margin-bottom:3px;}
+        #moodChartContainer {
+            width: 90%; /* adjust as needed */
+            max-width: 600px;  /* width for larger screens if app expands */
+            margin: 20px auto;
+            padding: 10px;
+            background-color: var(--tg-theme-secondary-bg-color); /* chart background */
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        #chartNavigation {
+            text-align: center;
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
+        #chartNavigation button {
+            margin: 0 10px;
+            padding: 8px 15px;
+            /* styles inherited from body or add specific button styles */
+        }
+        #currentWeekDisplay {
+            font-weight: bold;
+            margin: 0 15px;
+            color: var(--tg-theme-text-color);
+        }
     </style>
 </head>
 <body>
     <div id="header"><h1>My AI Processed Logs</h1><div id="userInfo">Loading user...</div></div>
-    <div id="logsContainer"><div id="loadingMessage">Loading logs...</div></div>
+
+    <div id="moodChartContainer">
+        <canvas id="moodScoreChart"></canvas>
+    </div>
+    <div id="chartNavigation">
+        <button id="prevWeekBtn">&lt; Prev Week</button>
+        <span id="currentWeekDisplay">Current Week</span>
+        <button id="nextWeekBtn">Next Week &gt;</button>
+    </div>
+
+    <div id="logsContainer">
+        <div id="loadingMessage">Loading logs...</div>
+    </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         const BACKEND_URL_BASE = 'https://finarfin-bot-subdomain.loca.lt'; // Replace!
         let telegramUser = null;
+        let allUserLogs = []; // Store all fetched logs
+        let moodChartInstance = null; // Chart.js instance
+        let currentWeekStartDate = null; // For week navigation
 
         tg.ready(); tg.expand();
 
@@ -36,30 +77,29 @@
             if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
                 telegramUser = tg.initDataUnsafe.user;
                 document.getElementById('userInfo').innerText = `Logs for: ${telegramUser.first_name || ''} (@${telegramUser.username || 'N/A'})`;
-                if (telegramUser.id) fetchAndDisplayLogs();
-                else document.getElementById('loadingMessage').innerText = "Cannot load logs: User ID unavailable.";
+                if (telegramUser.id) {
+                    fetchAllLogsAndSetupChart();
+                } else {
+                    document.getElementById('loadingMessage').innerText = "Cannot load: User ID unavailable.";
+                }
             } else {
                 document.getElementById('userInfo').innerText = "Could not load Telegram user data.";
                 document.getElementById('loadingMessage').innerText = "Cannot load logs: User data unavailable.";
             }
+
+            document.getElementById('prevWeekBtn').addEventListener('click', () => navigateWeek(-7));
+            document.getElementById('nextWeekBtn').addEventListener('click', () => navigateWeek(7));
         });
 
-        async function fetchAndDisplayLogs() {
-            const container = document.getElementById('logsContainer');
+        async function fetchAllLogsAndSetupChart() {
             const loadingDiv = document.getElementById('loadingMessage');
-            loadingDiv.innerText = 'Refreshing logs...'; loadingDiv.style.display = 'block';
-            container.innerHTML = ''; container.appendChild(loadingDiv);
+            loadingDiv.innerText = 'Loading all logs for chart...';
+            loadingDiv.style.display = 'block';
 
-            if (!BACKEND_URL_BASE || BACKEND_URL_BASE.includes('your-localtunnel')) {
-                loadingDiv.innerText = 'Backend URL not configured.'; return;
-            }
             if (!telegramUser || !telegramUser.id) {
                 loadingDiv.innerText = 'User ID missing for fetching logs.'; return;
             }
-
             const fetchUrl = `${BACKEND_URL_BASE}/api/get_user_logs/?telegram_id=${telegramUser.id}`;
-            console.log("Fetching logs from:", fetchUrl);
-
             try {
                 const response = await fetch(fetchUrl, {
                     method: 'GET',
@@ -69,33 +109,21 @@
                     const data = await response.json();
                     loadingDiv.style.display = 'none';
                     if (data.logs && data.logs.length > 0) {
-                        data.logs.forEach(log => {
-                            const entryDiv = document.createElement('div');
-                            entryDiv.className = 'log-entry';
-                            let htmlContent = `<div class="log-meta">Logged: ${log.logged_at}</div>`;
-                            if(log.original_note) {
-                                htmlContent += `<div class="log-original-note"><strong>Original:</strong> ${escapeHtml(log.original_note)}</div>`;
-                            }
-
-                            if (log.mood_label) {
-                                htmlContent += `<div class="log-section"><h3>Mood</h3><span class="tag">${escapeHtml(log.mood_label)} (${log.mood_score || 'N/A'})</span></div>`;
-                            }
-                            if (log.health && log.health.length > 0) {
-                                htmlContent += `<div class="log-section"><h3>Health</h3><ul>`;
-                                log.health.forEach(h => { htmlContent += `<li>${escapeHtml(h)}</li>`; });
-                                htmlContent += `</ul></div>`;
-                            }
-                            if (log.activity && log.activity.length > 0) {
-                                htmlContent += `<div class="log-section"><h3>Activity</h3><ul>`;
-                                log.activity.forEach(a => { htmlContent += `<li>${escapeHtml(a)}</li>`; });
-                                htmlContent += `</ul></div>`;
-                            }
-                            // Add similar sections for diet and important if you implement them
-
-                            entryDiv.innerHTML = htmlContent;
-                            container.appendChild(entryDiv);
-                        });
-                    } else { container.innerHTML = '<p style="text-align:center;">No logs found yet. Send me a note in the chat!</p>'; }
+                        allUserLogs = data.logs.map(log => ({
+                            ...log,
+                            // Ensure logged_at is a Date object for easier manipulation
+                            logged_at_date: new Date(log.logged_at.replace(' ', 'T') + 'Z')
+                        }));
+                        // Set initial week to the week of the latest log entry or today
+                        allUserLogs.sort((a, b) => b.logged_at_date - a.logged_at_date);
+                        currentWeekStartDate = getStartOfWeek(allUserLogs.length > 0 ? allUserLogs[0].logged_at_date : new Date());
+                        renderMoodChartForCurrentWeek();
+                        displayLogEntries(allUserLogs);
+                    } else {
+                        document.getElementById('logsContainer').innerHTML = '<p style="text-align:center;">No logs found yet.</p>';
+                        document.getElementById('moodChartContainer').style.display = 'none';
+                        document.getElementById('chartNavigation').style.display = 'none';
+                    }
                 } else {
                     let errTxt = response.statusText; try {const eD = await response.json(); errTxt = eD.error || errTxt;} catch(e){}
                     loadingDiv.innerText = `Error loading logs: ${response.status} ${errTxt}`;
@@ -105,10 +133,180 @@
                 console.error("Fetch logs error:", error);
             }
         }
-        // function escapeHtml(unsafe) { // Keep this helper function
-        //     if (typeof unsafe !== 'string') return '';
-        //     return unsafe.replace(/&/g, "&").replace(/</g, "<").replace(/>/g, ">").replace(/"/g, """).replace(/'/g, "'");
-        // }
+
+        function getStartOfWeek(date) {
+            const d = new Date(date);
+            const day = d.getDay(); // Sunday - 0, Monday - 1, ..., Saturday - 6
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is Sunday
+            return new Date(d.setDate(diff));
+        }
+
+        function formatDate(date) {
+            return date.toISOString().split('T')[0];
+        }
+
+        function addDays(date, days) {
+            const result = new Date(date);
+            result.setDate(result.getDate() + days);
+            return result;
+        }
+
+        function processLogsForWeek(startDate) {
+            const endDate = addDays(new Date(startDate), 7);
+            const weekLogs = allUserLogs.filter(log => {
+                const logDate = log.logged_at_date;
+                return logDate >= startDate && logDate < endDate && log.mood_score !== null && log.mood_score !== undefined;
+            });
+
+            const dailyAverages = {};
+
+            weekLogs.forEach(log => {
+                const dayKey = formatDate(log.logged_at_date);
+                if (!dailyAverages[dayKey]) {
+                    dailyAverages[dayKey] = { sum: 0, count: 0 };
+                }
+                dailyAverages[dayKey].sum += log.mood_score;
+                dailyAverages[dayKey].count += 1;
+            });
+
+            const labels = [];
+            const dataPoints = [];
+
+            for (let i = 0; i < 7; i++) {
+                const currentDate = addDays(new Date(startDate), i);
+                const dayKey = formatDate(currentDate);
+                labels.push(dayKey.substring(5)); // "MM-DD"
+
+                if (dailyAverages[dayKey] && dailyAverages[dayKey].count > 0) {
+                    dataPoints.push(dailyAverages[dayKey].sum / dailyAverages[dayKey].count);
+                } else {
+                    dataPoints.push(null);
+                }
+            }
+            return { labels, dataPoints };
+        }
+
+        function renderMoodChartForCurrentWeek() {
+            if (!currentWeekStartDate) return;
+
+            const { labels, dataPoints } = processLogsForWeek(currentWeekStartDate);
+
+            const ctx = document.getElementById('moodScoreChart').getContext('2d');
+
+            // Update week display
+            const weekStartStr = formatDate(currentWeekStartDate);
+            const weekEndStr = formatDate(addDays(new Date(currentWeekStartDate), 6));
+            document.getElementById('currentWeekDisplay').innerText = `${weekStartStr.substring(5)} to ${weekEndStr.substring(5)}`;
+
+            if (moodChartInstance) {
+                moodChartInstance.data.labels = labels;
+                moodChartInstance.data.datasets[0].data = dataPoints;
+                moodChartInstance.update();
+            } else {
+                moodChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Daily Average Mood Score',
+                            data: dataPoints,
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            tension: 0.1,
+                            fill: true,
+                            spanGaps: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                min: 1,
+                                max: 5,
+                                ticks: {
+                                    stepSize: 1,
+                                    color: getComputedStyle(document.body).getPropertyValue('--tg-theme-text-color') || '#000000'
+                                },
+                                grid: {
+                                    color: getComputedStyle(document.body).getPropertyValue('--tg-theme-hint-color') || '#dddddd'
+                                }
+                            },
+                            x: {
+                                ticks: {
+                                    color: getComputedStyle(document.body).getPropertyValue('--tg-theme-text-color') || '#000000'
+                                },
+                                grid: {
+                                    color: getComputedStyle(document.body).getPropertyValue('--tg-theme-hint-color') || '#dddddd'
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: getComputedStyle(document.body).getPropertyValue('--tg-theme-text-color') || '#000000'
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.y !== null) {
+                                            label += context.parsed.y.toFixed(1);
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function navigateWeek(daysOffset) {
+            if (!currentWeekStartDate) return;
+            currentWeekStartDate = addDays(new Date(currentWeekStartDate), daysOffset);
+            renderMoodChartForCurrentWeek();
+        }
+
+        function displayLogEntries(logsToDisplay) {
+            const container = document.getElementById('logsContainer');
+            container.innerHTML = '';
+
+            if (logsToDisplay && logsToDisplay.length > 0) {
+                logsToDisplay.forEach(log => {
+                    const entryDiv = document.createElement('div');
+                    entryDiv.className = 'log-entry';
+                    let htmlContent = `<div class="log-meta">Logged: ${log.logged_at}</div>`;
+                    if(log.original_note) {
+                        htmlContent += `<div class="log-original-note"><strong>Original:</strong> ${escapeHtml(log.original_note)}</div>`;
+                    }
+                    if (log.mood_label) {
+                        htmlContent += `<div class="log-section"><h3>Mood</h3><span class="tag">${escapeHtml(log.mood_label)} (${log.mood_score || 'N/A'})</span></div>`;
+                    }
+                    if (log.health && log.health.length > 0) {
+                        htmlContent += `<div class="log-section"><h3>Health</h3><ul>`;
+                        log.health.forEach(h => { htmlContent += `<li>${escapeHtml(h)}</li>`; });
+                        htmlContent += `</ul></div>`;
+                    }
+                    if (log.activity && log.activity.length > 0) {
+                        htmlContent += `<div class="log-section"><h3>Activity</h3><ul>`;
+                        log.activity.forEach(a => { htmlContent += `<li>${escapeHtml(a)}</li>`; });
+                        htmlContent += `</ul></div>`;
+                    }
+                    entryDiv.innerHTML = htmlContent;
+                    container.appendChild(entryDiv);
+                });
+            } else {
+                container.innerHTML = '<p style="text-align:center;">No logs found for this period or user.</p>';
+            }
+        }
+
         function escapeHtml(unsafe) {
             if (typeof unsafe !== 'string') {
                 return '';
