@@ -163,48 +163,118 @@
     </style>
 </head>
 <body>
-    <!-- Theme Toggle -->
-    <label class="switch">
-        <input type="checkbox" id="themeToggle">
-        <span class="slider-switch"></span>
-    </label>
+    <div class="tab-row" style="display:flex;align-items:center;gap:1.5rem;margin-bottom:1.5rem;">
+        <!-- Theme Switcher (moved left) -->
+        <label class="switch" style="margin-bottom:0;">
+            <input type="checkbox" id="themeToggle">
+            <span class="slider-switch"></span>
+        </label>
+        <!-- Tab Navigation -->
+        <nav class="tab-nav" style="position:relative;display:flex;justify-content:flex-start;background:var(--bg-color);border-radius:30px;padding:8px;box-shadow:8px 8px 24px var(--shadow-dark),-8px -8px 24px var(--shadow-light);gap:0.5rem;">
+            <div class="indicator" style="position:absolute;top:8px;bottom:8px;left:8px;width:40px;background:var(--highlight-below);border-radius:50%;box-shadow:2px 2px 8px var(--shadow-dark),-2px -2px 8px var(--shadow-light);transition:left 0.3s cubic-bezier(.4,2,.6,1),width 0.3s cubic-bezier(.4,2,.6,1);z-index:0;"></div>
+            <button class="tab active" data-tab="history" style="flex:1 1 0;position:relative;background:none;border:none;cursor:pointer;font-size:16px;color:var(--text-color);width:40px;height:40px;padding:0;border-radius:50%;overflow:hidden;transition:width 0.3s cubic-bezier(.4,2,.6,1),border-radius 0.3s cubic-bezier(.4,2,.6,1),background 0.3s,padding 0.3s;display:flex;align-items:center;justify-content:center;z-index:1;box-shadow:2px 2px 8px var(--shadow-dark),-2px -2px 8px var(--shadow-light);margin:0 2px;outline:none;background:var(--bg-color);">
+                <span class="icon" style="font-size:20px;transition:font-size 0.3s,opacity 0.3s;flex-shrink:0;filter:drop-shadow(1px 1px 2px var(--shadow-dark));display:flex;align-items:center;justify-content:center;opacity:1;">📅</span>
+                <span class="text" style="margin-left:0;margin-right:0;white-space:nowrap;opacity:0;max-width:0;overflow:hidden;transition:opacity 0.3s,max-width 0.3s,margin 0.3s;font-size:1rem;color:var(--text-color);letter-spacing:0.01em;">History</span>
+            </button>
+            <button class="tab" data-tab="levelup" style="flex:1 1 0;position:relative;background:none;border:none;cursor:pointer;font-size:16px;color:var(--text-color);width:40px;height:40px;padding:0;border-radius:50%;overflow:hidden;transition:width 0.3s cubic-bezier(.4,2,.6,1),border-radius 0.3s cubic-bezier(.4,2,.6,1),background 0.3s,padding 0.3s;display:flex;align-items:center;justify-content:center;z-index:1;box-shadow:2px 2px 8px var(--shadow-dark),-2px -2px 8px var(--shadow-light);margin:0 2px;outline:none;background:var(--bg-color);">
+                <span class="icon" style="font-size:20px;transition:font-size 0.3s,opacity 0.3s;flex-shrink:0;filter:drop-shadow(1px 1px 2px var(--shadow-dark));display:flex;align-items:center;justify-content:center;opacity:1;">⬆</span>
+                <span class="text" style="margin-left:0;margin-right:0;white-space:nowrap;opacity:0;max-width:0;overflow:hidden;transition:opacity 0.3s,max-width 0.3s,margin 0.3s;font-size:1rem;color:var(--text-color);letter-spacing:0.01em;">Level up</span>
+            </button>
+        </nav>
+    </div>
 
-    <div class="container">
-        <div class="box">
-            <div id="header" style="margin-bottom:1rem;">
-                <h1 style="font-size:1.4rem;">My AI Processed Logs</h1>
-                <div id="userInfo">Loading user...</div>
-            </div>
-            <div class="inner">
-                <!-- Vertical dual-handle slider -->
-                <div id="slider"></div>
-                <!-- Chart -->
-                <div class="chart-wrap">
-                    <canvas id="moodScoreChart"></canvas>
+    <div class="tab-content" style="width:100%;">
+        <div id="history" class="content active">
+            <!-- Existing main app content goes here (container, box, chart, panels, logs, etc.) -->
+            <div class="container">
+                <div class="box">
+                    <div id="header" style="margin-bottom:1rem;">
+                        <h1 style="font-size:1.4rem;">My AI Processed Logs</h1>
+                        <div id="userInfo">Loading user...</div>
+                    </div>
+                    <div class="inner">
+                        <!-- Vertical dual-handle slider -->
+                        <div id="slider"></div>
+                        <!-- Chart -->
+                        <div class="chart-wrap">
+                            <canvas id="moodScoreChart"></canvas>
+                        </div>
+                    </div>
+                    <!-- Label & nav -->
+                    <div class="segment-label" id="segmentLabel"></div>
+                    <div class="nav-buttons">
+                        <button id="prevWeekBtn">Previous</button>
+                        <button id="nextWeekBtn">Next</button>
+                    </div>
+                    <div class="panels">
+                        <div class="panel"><h3>Dietary</h3>
+                            <div id="dietPanel"></div>
+                        </div>
+                        <div class="panel"><h3>Health</h3>
+                            <div id="healthPanel"></div>
+                        </div>
+                        <div class="panel"><h3>Activities</h3>
+                            <div id="activityPanel"></div>
+                        </div>
+                    </div>
+                    <div id="logsContainer" style="margin-top:2rem;">
+                        <div id="loadingMessage">Loading logs...</div>
+                    </div>
                 </div>
             </div>
-            <!-- Label & nav -->
-            <div class="segment-label" id="segmentLabel"></div>
-            <div class="nav-buttons">
-                <button id="prevWeekBtn">Previous</button>
-                <button id="nextWeekBtn">Next</button>
-            </div>
-            <div class="panels">
-                <div class="panel"><h3>Dietary</h3>
-                    <div id="dietPanel"></div>
+        </div>
+        <div id="levelup" class="content" style="display:none;">
+            <!-- Placeholder for Level up page -->
+            <div class="container">
+                <div class="box" style="text-align:center;">
+                    <h2 style="margin-bottom:1rem;">Level up</h2>
+                    <p>Coming soon: gamified progress, achievements, and more!</p>
                 </div>
-                <div class="panel"><h3>Health</h3>
-                    <div id="healthPanel"></div>
-                </div>
-                <div class="panel"><h3>Activities</h3>
-                    <div id="activityPanel"></div>
-                </div>
-            </div>
-            <div id="logsContainer" style="margin-top:2rem;">
-                <div id="loadingMessage">Loading logs...</div>
             </div>
         </div>
     </div>
+
+    <script>
+    // Tab logic (from ref.html, adapted)
+    document.addEventListener('DOMContentLoaded', () => {
+        const tabs = document.querySelectorAll('.tab');
+        const indicator = document.querySelector('.indicator');
+        const contents = document.querySelectorAll('.content');
+
+        function updateIndicator(activeTab) {
+            const left = activeTab.offsetLeft;
+            const width = activeTab.offsetWidth;
+            indicator.style.left = left + 'px';
+            indicator.style.width = width + 'px';
+        }
+
+        // Initialize indicator position for the active tab
+        updateIndicator(document.querySelector('.tab.active'));
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                updateIndicator(tab);
+                // Show/hide content
+                contents.forEach(c => c.classList.remove('active'));
+                contents.forEach(c => c.style.display = 'none');
+                const target = tab.getAttribute('data-tab');
+                const el = document.getElementById(target);
+                if (el) {
+                    el.classList.add('active');
+                    el.style.display = '';
+                }
+            });
+        });
+
+        // Responsive: update indicator on window resize
+        window.addEventListener('resize', () => {
+            const activeTab = document.querySelector('.tab.active');
+            if (activeTab) updateIndicator(activeTab);
+        });
+    });
+    </script>
 
     <script>
         // Theme toggle logic
