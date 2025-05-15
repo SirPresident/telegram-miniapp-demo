@@ -620,198 +620,144 @@
                 plugins:[ syncHeight, thresholdPlugin ]
             });
             // Slider
-            
-    slider = document.getElementById('slider');
-    if (slider.noUiSlider) slider.noUiSlider.destroy();
-    noUiSlider.create(slider, {
-        start: [1, 5], // full range by default
-        connect: true,
-        orientation: 'vertical',
-        direction: 'rtl',
-        range: { min: 1, max: 5 },
-        step: 0.1,
-        tooltips: [true, true],
-        format: { to: v => v.toFixed(1), from: v => +v }
-    });
-
-    slider.noUiSlider.on('update', ([minThreshold, maxThreshold]) => {
-        minThreshold = +minThreshold;
-        maxThreshold = +maxThreshold;
-
-        // Update chart thresholds
-        moodChartInstance.options.thresholds.min = minThreshold;
-        moodChartInstance.options.thresholds.max = maxThreshold;
-
-        // Recolor chart points
-        const baseColor = getComputedStyle(document.documentElement).getPropertyValue('--chart-line').trim();
-        const highlightColor = 'seagreen';
-        const weekMoodDataForChart = getWeekMoodData(idx);
-
-        moodChartInstance.data.datasets[0].pointBackgroundColor =
-            weekMoodDataForChart.map(point =>
-                (point.y !== null && point.y >= minThreshold && point.y <= maxThreshold) ? highlightColor : baseColor
-            );
-
-        moodChartInstance.update('none');
-
-        // NEW: update panels with current week and thresholds
-        updatePanels(idx, minThreshold, maxThreshold);
-    });
-}
-
-function getWeekMoodData(weekIdx) {
-    if (!weekSegments[weekIdx] || weekSegments[weekIdx].length === 0) return [];
-    const currentWeekLogs = weekSegments[weekIdx];
-    const weekStartDate = getStartOfWeek(currentWeekLogs[0].logged_at_date);
-    const dailyAverages = [];
-
-    for (let i = 0; i < 7; i++) {
-        const day = addDays(weekStartDate, i);
-        const logsForThisDay = currentWeekLogs.filter(log =>
-            formatDate(log.logged_at_date) === formatDate(day) &&
-            log.mood_score !== null && log.mood_score !== undefined
-        );
-
-        if (logsForThisDay.length > 0) {
-            const sum = logsForThisDay.reduce((acc, log) => acc + log.mood_score, 0);
-            const avg = sum / logsForThisDay.length;
-            dailyAverages.push({ x: luxon.DateTime.fromJSDate(day).toISODate(), y: avg });
-        } else {
-            dailyAverages.push({ x: luxon.DateTime.fromJSDate(day).toISODate(), y: null });
+            slider = document.getElementById('slider');
+            if (slider.noUiSlider) slider.noUiSlider.destroy();
+            noUiSlider.create(slider,{
+                start:[2,4], connect:true,
+                orientation:'vertical', direction:'rtl',
+                range:{min:1,max:5}, step:0.1,
+                tooltips:[true,true],
+                format:{ to:v=>v.toFixed(1), from:v=>+v }
+            });
+            slider.noUiSlider.on('update',([min,max])=>{
+                min=+min; max=+max;
+                moodChartInstance.options.thresholds.min=min;
+                moodChartInstance.options.thresholds.max=max;
+                // recolor points
+                const base = getComputedStyle(document.documentElement).getPropertyValue('--chart-line').trim();
+                const weekData = getWeekMoodData(idx);
+                moodChartInstance.data.datasets[0].pointBackgroundColor =
+                    weekData.map(pt => (pt.y>=min&&pt.y<=max)?'seagreen':base);
+                moodChartInstance.update('none');
+            });
         }
-    }
-    return dailyAverages;
-}
 
-function updateView() {
-    // Update chart data & gradient
-    const weekMoodDataForChart = getWeekMoodData(idx);
-    moodChartInstance.data.datasets[0].data = weekMoodDataForChart;
-    moodChartInstance.data.datasets[0].backgroundColor = makeGradient(moodChartInstance.ctx);
-
-    // Update label
-    if (weekMoodDataForChart.length && weekMoodDataForChart.some(d => d.y !== null)) {
-        const validDates = weekMoodDataForChart.filter(d => d.y !== null).map(d => d.x);
-        if (validDates.length > 0) {
-            const weekStartDate = getStartOfWeek(weekSegments[idx][0].logged_at_date);
-            const weekEndDate = addDays(weekStartDate, 6);
-            document.getElementById('segmentLabel').textContent =
-                `${luxon.DateTime.fromJSDate(weekStartDate).toFormat('LLL dd')} – ${luxon.DateTime.fromJSDate(weekEndDate).toFormat('LLL dd')}`;
-        } else {
-            document.getElementById('segmentLabel').textContent = 'No mood data for this week';
+        function makeGradient(ctx){
+            const h = 300, g = ctx.createLinearGradient(0,0,0,h);
+            const root = getComputedStyle(document.documentElement);
+            const s = root.getPropertyValue('--chart-grad-start').trim() || 'rgba(54,162,235,0.6)';
+            const e = root.getPropertyValue('--chart-grad-end').trim()   || 'rgba(54,162,235,0.1)';
+            g.addColorStop(0,s); g.addColorStop(1,e);
+            return g;
         }
-    } else {
-        document.getElementById('segmentLabel').textContent = 'No data for this week';
-    }
 
-    // Update nav button states
-    document.getElementById('prevWeekBtn').disabled = idx === 0;
-    document.getElementById('nextWeekBtn').disabled = idx === (weekSegments.length - 1);
-
-    // Get current slider thresholds and pass to updatePanels
-    const [minThreshold, maxThreshold] = slider.noUiSlider.get();
-    updatePanels(idx, +minThreshold, +maxThreshold);
-
-    // Recolor points on chart based on current slider values
-    const baseColor = getComputedStyle(document.documentElement).getPropertyValue('--chart-line').trim();
-    const highlightColor = 'seagreen';
-    moodChartInstance.data.datasets[0].pointBackgroundColor =
-        weekMoodDataForChart.map(point =>
-            (point.y !== null && point.y >= +minThreshold && point.y <= +maxThreshold) ? highlightColor : baseColor
-        );
-
-    moodChartInstance.update();
-}
-
-function updatePanels(weekIdx, minMoodThreshold, maxMoodThreshold) {
-    const currentWeekLogs = weekSegments[weekIdx] || [];
-
-    // Filter logs for the current week based on mood_score within thresholds
-    const filteredLogsForPanels = currentWeekLogs.filter(log =>
-        log.mood_score !== null &&
-        log.mood_score !== undefined &&
-        log.mood_score >= minMoodThreshold &&
-        log.mood_score <= maxMoodThreshold
-    );
-
-    // Diet Panel
-    const dietPanel = document.getElementById('dietPanel');
-    let dietHtml = '';
-    let dietDataFound = false;
-    filteredLogsForPanels.forEach(log => {
-        if (log.diet && typeof log.diet === 'object' && Object.keys(log.diet).length > 0) {
-            dietDataFound = true;
-            for (const category in log.diet) {
-                if (log.diet[category] && log.diet[category].length > 0) {
-                    dietHtml += `<div><strong>${escapeHtml(category.replace(/_/g, " "))}:</strong> ${log.diet[category].map(item => `<span class="tag">${escapeHtml(item)}</span>`).join(' ')}</div>`;
+        function getWeekMoodData(weekIdx) {
+            if (!weekSegments[weekIdx]) return [];
+            // For each day in week, average mood_score
+            const week = weekSegments[weekIdx];
+            if (!week.length) return [];
+            const start = getStartOfWeek(week[0].logged_at_date);
+            const days = [];
+            for (let i = 0; i < 7; i++) {
+                const d = addDays(start, i);
+                const dayLogs = week.filter(l => formatDate(l.logged_at_date) === formatDate(d) && l.mood_score !== null && l.mood_score !== undefined);
+                if (dayLogs.length) {
+                    const avg = dayLogs.reduce((s, l) => s + l.mood_score, 0) / dayLogs.length;
+                    days.push({x: luxon.DateTime.fromJSDate(d).toISODate(), y: avg});
+                } else {
+                    days.push({x: luxon.DateTime.fromJSDate(d).toISODate(), y: null});
                 }
             }
+            return days;
         }
-    });
-    dietPanel.innerHTML = dietDataFound ? dietHtml : `<span style="color:#aaa;">No dietary data for this mood range.</span>`;
 
-    // Health Panel
-    const healthPanel = document.getElementById('healthPanel');
-    let healthHtml = '';
-    let healthDataFound = false;
-    filteredLogsForPanels.forEach(log => {
-        if (log.health && log.health.length > 0) {
-            healthDataFound = true;
-            healthHtml += `<div>${log.health.map(h => `<span class="tag">${escapeHtml(h)}</span>`).join(' ')}</div>`;
+        function updateView() {
+            // Update chart data & gradient
+            const weekData = getWeekMoodData(idx);
+            moodChartInstance.data.datasets[0].data = weekData;
+            moodChartInstance.data.datasets[0].backgroundColor = makeGradient(moodChartInstance.ctx);
+            // Update label
+            if (weekData.length) {
+                const a=weekData[0].x, b=weekData.slice(-1)[0].x;
+                document.getElementById('segmentLabel').textContent = `${luxon.DateTime.fromISO(a).toFormat('LLL dd')} – ${luxon.DateTime.fromISO(b).toFormat('LLL dd')}`;
+            } else {
+                document.getElementById('segmentLabel').textContent = '';
+            }
+            document.getElementById('prevWeekBtn').disabled = idx===0;
+            document.getElementById('nextWeekBtn').disabled = idx===weekSegments.length-1;
+            // Panels
+            updatePanels(idx);
+            moodChartInstance.update();
         }
-    });
-    healthPanel.innerHTML = healthDataFound ? healthHtml : `<span style="color:#aaa;">No health data for this mood range.</span>`;
 
-    // Activity Panel
-    const activityPanel = document.getElementById('activityPanel');
-    let activityHtml = '';
-    let activityDataFound = false;
-    filteredLogsForPanels.forEach(log => {
-        if (log.activity && log.activity.length > 0) {
-            activityDataFound = true;
-            activityHtml += `<div>${log.activity.map(a => `<span class="tag">${escapeHtml(a)}</span>`).join(' ')}</div>`;
-        }
-    });
-    activityPanel.innerHTML = activityDataFound ? activityHtml : `<span style="color:#aaa;">No activity data for this mood range.</span>`;
-}
 
-function displayLogEntries(logsToDisplay) {
-    const container = document.getElementById('logsContainer');
-    container.innerHTML = '';
-    if (logsToDisplay && logsToDisplay.length > 0) {
-        const displayableLogs = [...logsToDisplay].reverse();
-        displayableLogs.forEach(log => {
-            const entryDiv = document.createElement('div');
-            entryDiv.className = 'log-entry';
-            let htmlContent = `<div class="log-meta">Logged: ${log.logged_at}</div>`;
-            if (log.original_note) {
-                htmlContent += `<div class="log-original-note"><strong>Original:</strong> ${escapeHtml(log.original_note)}</div>`;
-            }
-            if (log.mood_label) {
-                htmlContent += `<div class="log-section"><h3>Mood</h3><span class="tag">${escapeHtml(log.mood_label)} (${log.mood_score !== null && log.mood_score !== undefined ? log.mood_score : 'N/A'})</span></div>`;
-            }
-            if (log.health && log.health.length > 0) {
-                htmlContent += `<div class="log-section"><h3>Health</h3>${log.health.map(h => `<span class="tag">${escapeHtml(h)}</span>`).join(' ')}</div>`;
-            }
-            if (log.activity && log.activity.length > 0) {
-                htmlContent += `<div class="log-section"><h3>Activity</h3>${log.activity.map(a => `<span class="tag">${escapeHtml(a)}</span>`).join(' ')}</div>`;
-            }
-            if (log.diet && typeof log.diet === 'object' && Object.keys(log.diet).length > 0) {
-                htmlContent += `<div class="log-section"><h3>Diet</h3>`;
-                for (const category in log.diet) {
-                    if (log.diet[category] && log.diet[category].length > 0) {
-                        htmlContent += `<div style="margin-left:10px;"><strong>${escapeHtml(category.replace(/_/g, " "))}:</strong> ${log.diet[category].map(item => `<span class="tag">${escapeHtml(item)}</span>`).join(' ')}</div>`;
+        function updatePanels(weekIdx) {
+            const week = weekSegments[weekIdx] || [];
+            // Diet
+            const dietPanel = document.getElementById('dietPanel');
+            let dietHtml = '';
+            week.forEach(log => {
+                if (log.diet) { // checks if log.diet exists
+                    for (const [cat, arr] of Object.entries(log.diet)) { // iterates as if log.diet is an object
+                        if (arr && arr.length) {
+                            dietHtml += `<div><strong>${escapeHtml(cat)}:</strong> ${arr.map(escapeHtml).join(', ')}</div>`;
+                        }
                     }
                 }
-                htmlContent += `</div>`;
+            });
+            dietPanel.innerHTML = dietHtml || '<span style="color:#aaa;">No data</span>';
+            // Health
+            const healthPanel = document.getElementById('healthPanel');
+            let healthHtml = '';
+            week.forEach(log => {
+                if (log.health && log.health.length) {
+                    healthHtml += `<div>${log.health.map(escapeHtml).join(', ')}</div>`;
+                }
+            });
+            healthPanel.innerHTML = healthHtml || '<span style="color:#aaa;">No data</span>';
+            // Activity
+            const activityPanel = document.getElementById('activityPanel');
+            let activityHtml = '';
+            week.forEach(log => {
+                if (log.activity && log.activity.length) {
+                    activityHtml += `<div>${log.activity.map(escapeHtml).join(', ')}</div>`;
+                }
+            });
+            activityPanel.innerHTML = activityHtml || '<span style="color:#aaa;">No data</span>';
+        }
+
+
+        function displayLogEntries(logsToDisplay) {
+            const container = document.getElementById('logsContainer');
+            container.innerHTML = '';
+            if (logsToDisplay && logsToDisplay.length > 0) {
+                logsToDisplay.slice().reverse().forEach(log => {
+                    const entryDiv = document.createElement('div');
+                    entryDiv.className = 'log-entry';
+                    let htmlContent = `<div class="log-meta">Logged: ${log.logged_at}</div>`;
+                    if(log.original_note) {
+                        htmlContent += `<div class="log-original-note"><strong>Original:</strong> ${escapeHtml(log.original_note)}</div>`;
+                    }
+                    if (log.mood_label) {
+                        htmlContent += `<div class="log-section"><h3>Mood</h3><span class="tag">${escapeHtml(log.mood_label)} (${log.mood_score || 'N/A'})</span></div>`;
+                    }
+                    if (log.health && log.health.length > 0) {
+                        htmlContent += `<div class="log-section"><h3>Health</h3><ul>`;
+                        log.health.forEach(h => { htmlContent += `<li>${escapeHtml(h)}</li>`; });
+                        htmlContent += `</ul></div>`;
+                    }
+                    if (log.activity && log.activity.length > 0) {
+                        htmlContent += `<div class="log-section"><h3>Activity</h3><ul>`;
+                        log.activity.forEach(a => { htmlContent += `<li>${escapeHtml(a)}</li>`; });
+                        htmlContent += `</ul></div>`;
+                    }
+                    entryDiv.innerHTML = htmlContent;
+                    container.appendChild(entryDiv);
+                });
+            } else {
+                container.innerHTML = '<p style="text-align:center;">No logs found for this period or user.</p>';
             }
-            entryDiv.innerHTML = htmlContent;
-            container.appendChild(entryDiv);
-        });
-    } else {
-        container.innerHTML = '<p style="text-align:center;">No logs found for this user.</p>';
-    }
-}
+        }
 
         function escapeHtml(unsafe) {
             if (typeof unsafe !== 'string') {
