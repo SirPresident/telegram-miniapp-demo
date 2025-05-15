@@ -399,27 +399,6 @@
     </div>
 
     <script>
-    // Theme toggle logic
-    const toggle = document.getElementById('themeToggle');
-    const saved = localStorage.getItem('theme');
-    if (saved === 'dark') {
-        document.body.classList.add('dark');
-        toggle.checked = true;
-    }
-    toggle.addEventListener('change', e => {
-        const isDark = e.target.checked;
-        document.body.classList.toggle('dark', isDark);
-        localStorage.setItem('theme', isDark ? 'dark' : 'light');
-        if (window.moodChartInstance) {
-            moodChartInstance.options.scales.x.ticks.color = getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim();
-            moodChartInstance.options.scales.y.ticks.color = getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim();
-            moodChartInstance.options.scales.y.grid.color = getComputedStyle(document.documentElement).getPropertyValue('--shadow-dark').trim();
-            moodChartInstance.data.datasets[0].borderColor = getComputedStyle(document.documentElement).getPropertyValue('--chart-line').trim();
-            moodChartInstance.data.datasets[0].backgroundColor = makeGradient(moodChartInstance.ctx);
-            moodChartInstance.update();
-        }
-    });
-
     // Capsule Tab Logic
     document.addEventListener('DOMContentLoaded', () => {
         const tabBtns = [
@@ -429,9 +408,15 @@
 
         function activateTab(idx) {
             tabBtns.forEach((tab, i) => {
-                tab.btn.classList.toggle('active', i === idx);
-                tab.content.classList.toggle('active', i === idx);
-                tab.content.style.display = i === idx ? '' : 'none';
+                if (i === idx) {
+                    tab.btn.classList.add('active');
+                    tab.content.classList.add('active');
+                    tab.content.style.display = '';
+                } else {
+                    tab.btn.classList.remove('active');
+                    tab.content.classList.remove('active');
+                    tab.content.style.display = 'none';
+                }
             });
         }
 
@@ -439,328 +424,352 @@
             tab.btn.addEventListener('click', () => activateTab(idx));
         });
 
-        activateTab(0); // Activate first tab by default
+        // Responsive: ensure only one is active at start
+        activateTab(0);
     });
+    </script>
 
-    const tg = window.Telegram.WebApp;
-    const BACKEND_URL_BASE = 'https://finarfin-bot-subdomain.loca.lt'; // Replace if your localtunnel changes
-    let telegramUser = null;
-    let allUserLogs = [];
-    let moodChartInstance = null;
-    let weekSegments = [];
-    let currentWeekIndex = 0;
-    let moodSlider = null;
+    <script>
+        // Theme toggle logic
+        const toggle = document.getElementById('themeToggle');
+        const saved = localStorage.getItem('theme');
+        if (saved === 'dark') {
+            document.body.classList.add('dark');
+            toggle.checked = true;
+        }
+        toggle.addEventListener('change', e => {
+            const isDark = e.target.checked;
+            document.body.classList.toggle('dark', isDark);
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            if (window.moodChartInstance) moodChartInstance.update();
+        });
+    </script>
 
-    tg.ready();
-    tg.expand();
+    <script>
+        const tg = window.Telegram.WebApp;
+        const BACKEND_URL_BASE = 'https://finarfin-bot-subdomain.loca.lt'; // Replace!
+        let telegramUser = null;
+        let allUserLogs = [];
+        let moodChartInstance = null;
+        let weekSegments = [];
+        let idx = 0;
+        let slider = null;
 
-    document.addEventListener('DOMContentLoaded', () => {
-        // Telegram User and Data Fetching
-        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            telegramUser = tg.initDataUnsafe.user;
-            document.getElementById('userInfo').innerText = `Logs for: ${telegramUser.first_name || ''} (@${telegramUser.username || 'N/A'})`;
-            if (telegramUser.id) {
-                fetchAllLogsAndSetupUI();
+        tg.ready(); tg.expand();
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                telegramUser = tg.initDataUnsafe.user;
+                document.getElementById('userInfo').innerText = `Logs for: ${telegramUser.first_name || ''} (@${telegramUser.username || 'N/A'})`;
+                if (telegramUser.id) {
+                    fetchAllLogsAndSetupChart();
+                } else {
+                    document.getElementById('loadingMessage').innerText = "Cannot load: User ID unavailable.";
+                }
             } else {
-                document.getElementById('loadingMessage').innerText = "Cannot load logs: User ID unavailable.";
-                console.error("User ID missing.");
+                document.getElementById('userInfo').innerText = "Could not load Telegram user data.";
+                document.getElementById('loadingMessage').innerText = "Cannot load logs: User data unavailable.";
             }
-        } else {
-            document.getElementById('userInfo').innerText = "Could not load Telegram user data.";
-            document.getElementById('loadingMessage').innerText = "Cannot load logs: User data unavailable.";
-            console.error("Telegram.WebApp.initDataUnsafe.user is not available.");
-        }
 
-        // Navigation Button Event Listeners
-        document.getElementById('prevWeekBtn').addEventListener('click', () => {
-            if (currentWeekIndex > 0) {
-                currentWeekIndex--;
-                updateView();
-            }
+            document.getElementById('prevWeekBtn').addEventListener('click', () => { if(idx>0) idx--; updateView(); });
+            document.getElementById('nextWeekBtn').addEventListener('click', () => { if(idx<weekSegments.length-1) idx++; updateView(); });
         });
-        document.getElementById('nextWeekBtn').addEventListener('click', () => {
-            if (currentWeekIndex < weekSegments.length - 1) {
-                currentWeekIndex++;
-                updateView();
+
+        async function fetchAllLogsAndSetupChart() {
+            const loadingDiv = document.getElementById('loadingMessage');
+            loadingDiv.innerText = 'Loading all logs for chart...';
+            loadingDiv.style.display = 'block';
+
+            if (!telegramUser || !telegramUser.id) {
+                loadingDiv.innerText = 'User ID missing for fetching logs.'; return;
             }
-        });
-    });
-
-    async function fetchAllLogsAndSetupUI() {
-        const loadingDiv = document.getElementById('loadingMessage');
-        loadingDiv.innerText = 'Loading all logs...';
-        loadingDiv.style.display = 'block';
-
-        if (!telegramUser || !telegramUser.id) {
-            loadingDiv.innerText = 'User ID missing for fetching logs.';
-            return;
-        }
-        const fetchUrl = `${BACKEND_URL_BASE}/api/get_user_logs/?telegram_id=${telegramUser.id}`;
-
-        try {
-            const response = await fetch(fetchUrl, {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json', 'bypass-tunnel-reminder': 'true' }
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                loadingDiv.style.display = 'none';
-                if (data.logs && data.logs.length > 0) {
-                    allUserLogs = data.logs.map(log => ({
-                        ...log,
-                        logged_at_date: new Date(log.logged_at.replace(' ', 'T') + 'Z')
-                    })).sort((a, b) => a.logged_at_date - b.logged_at_date);
-
-                    weekSegments = splitLogsToWeeks(allUserLogs);
-                    if (weekSegments.length > 0) {
-                        currentWeekIndex = weekSegments.length - 1;
+            const fetchUrl = `${BACKEND_URL_BASE}/api/get_user_logs/?telegram_id=${telegramUser.id}`;
+            try {
+                const response = await fetch(fetchUrl, {
+                    method: 'GET',
+                    headers: {'Content-Type': 'application/json', 'bypass-tunnel-reminder': 'true'}
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    loadingDiv.style.display = 'none';
+                    if (data.logs && data.logs.length > 0) {
+                        allUserLogs = data.logs.map(log => ({
+                            ...log,
+                            logged_at_date: new Date(log.logged_at.replace(' ', 'T') + 'Z')
+                        }));
+                        allUserLogs.sort((a, b) => a.logged_at_date - b.logged_at_date);
+                        weekSegments = splitLogsToWeeks(allUserLogs);
+                        idx = weekSegments.length-1; // show latest week
                         setupChartAndSlider();
                         updateView();
+                        displayLogEntries(allUserLogs);
                     } else {
-                        document.getElementById('logsContainer').innerHTML = '<p style="text-align:center;">No weekly segments could be made.</p>';
+                        document.getElementById('logsContainer').innerHTML = '<p style="text-align:center;">No logs found yet.</p>';
                     }
-                    displayLogEntries(allUserLogs);
                 } else {
-                    document.getElementById('logsContainer').innerHTML = '<p style="text-align:center;">No logs found yet. Send a note to your bot!</p>';
-                    document.querySelector('.inner').style.display = 'none';
-                    document.querySelector('.panels').style.display = 'none';
-                    document.querySelector('.nav-buttons').style.display = 'none';
-                    document.getElementById('segmentLabel').style.display = 'none';
+                    let errTxt = response.statusText; try {const eD = await response.json(); errTxt = eD.error || errTxt;} catch(e){}
+                    loadingDiv.innerText = `Error loading logs: ${response.status} ${errTxt}`;
                 }
-            } else {
-                let errTxt = response.statusText;
-                try { const eD = await response.json(); errTxt = eD.error || errTxt; } catch (e) {}
-                loadingDiv.innerText = `Error loading logs: ${response.status} ${errTxt}`;
+            } catch (error) {
+                loadingDiv.innerText = `Network error loading logs: ${error}`;
+                console.error("Fetch logs error:", error);
             }
-        } catch (error) {
-            loadingDiv.innerText = `Network error loading logs: ${error}`;
-            console.error("Fetch logs error:", error);
         }
-    }
 
-    function splitLogsToWeeks(logs) {
-        if (!logs || !logs.length) return [];
-        const weeks = [];
-        let currentWeek = [];
-        let currentWeekStartDate = getStartOfWeek(logs[0].logged_at_date);
+        function splitLogsToWeeks(logs) {
+            if (!logs.length) return [];
+            // Group logs by week (Monday-Sunday)
+            const weeks = [];
+            let week = [];
+            let weekStart = getStartOfWeek(logs[0].logged_at_date);
+            logs.forEach(log => {
+                const logDate = log.logged_at_date;
+                if (logDate >= weekStart && logDate < addDays(weekStart, 7)) {
+                    week.push(log);
+                } else {
+                    weeks.push(week);
+                    week = [log];
+                    weekStart = getStartOfWeek(logDate);
+                }
+            });
+            if (week.length) weeks.push(week);
+            return weeks;
+        }
 
-        logs.forEach(log => {
-            const logDate = log.logged_at_date;
-            if (logDate >= currentWeekStartDate && logDate < addDays(currentWeekStartDate, 7)) {
-                currentWeek.push(log);
-            } else {
-                if (currentWeek.length > 0) weeks.push(currentWeek);
-                currentWeek = [log];
-                currentWeekStartDate = getStartOfWeek(logDate);
-            }
-        });
-        if (currentWeek.length > 0) weeks.push(currentWeek);
-        return weeks;
-    }
+        function getStartOfWeek(date) {
+            const d = new Date(date);
+            const day = d.getDay();
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+            d.setDate(diff);
+            d.setHours(0,0,0,0);
+            return d;
+        }
+        function addDays(date, days) {
+            const result = new Date(date);
+            result.setDate(result.getDate() + days);
+            return result;
+        }
+        function formatDate(date) {
+            return date.toISOString().split('T')[0];
+        }
 
-    function getStartOfWeek(date) {
-        const d = new Date(date.getTime());
-        const day = d.getDay();
-        const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-        d.setDate(diff);
-        d.setHours(0, 0, 0, 0);
-        return d;
-    }
-
-    function addDays(date, days) {
-        const result = new Date(date.getTime());
-        result.setDate(result.getDate() + days);
-        return result;
-    }
-
-    function formatDate(date) {
-        return date.toISOString().split('T')[0];
-    }
-
-    function setupChartAndSlider() {
-        const ctx = document.getElementById('moodScoreChart').getContext('2d');
-        const thresholdPlugin = {
-            id: 'thresholdPlugin',
-            beforeDraw(c) {
-                const { ctx, chartArea: { left, right, top, bottom }, scales: { y } } = c;
-                if (!c.config.options.thresholds) return;
-                const { min, max } = c.config.options.thresholds;
-
-                ctx.save();
-                ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--highlight-below').trim();
-                const yMinPixel = y.getPixelForValue(min);
-                ctx.fillRect(left, yMinPixel, right - left, bottom - yMinPixel);
-
-                ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--highlight-above').trim();
-                const yMaxPixel = y.getPixelForValue(max);
-                ctx.fillRect(left, top, right - left, yMaxPixel - top);
-
-                ctx.restore();
-            }
-        };
-
-        moodChartInstance = new Chart(ctx, {
-            type: 'line',
-            data: { datasets: [{ label: 'Mood Score', data: [], fill: true, tension: 0.3 }] },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                scales: {
-                    x: { type: 'time', time: { unit: 'day', tooltipFormat: 'MMM dd' }, grid: { display: false } },
-                    y: { min: 1, max: 5, grid: { drawBorder: false }, ticks: { stepSize: 1 } }
+        function setupChartAndSlider() {
+            // Prepare data for the current week
+            const ctx = document.getElementById('moodScoreChart').getContext('2d');
+            // Plugins
+            const thresholdPlugin = {
+                id:'thresholdPlugin',
+                beforeDraw(c){
+                    const {ctx,chartArea:{left,right},scales:{y}} = c;
+                    const {min,max} = c.config.options.thresholds;
+                    ctx.save(); ctx.setLineDash([6,4]);
+                    ctx.strokeStyle='crimson';
+                    ctx.beginPath();
+                    ctx.moveTo(left,y.getPixelForValue(min));
+                    ctx.lineTo(right,y.getPixelForValue(min));
+                    ctx.stroke();
+                    ctx.strokeStyle='seagreen';
+                    ctx.beginPath();
+                    ctx.moveTo(left,y.getPixelForValue(max));
+                    ctx.lineTo(right,y.getPixelForValue(max));
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            };
+            const syncHeight = {
+                id:'syncHeight',
+                afterLayout(c){
+                    const slider = document.getElementById('slider');
+                    const y = c.scales.y;
+                    const top = y.getPixelForValue(c.options.scales.y.max);
+                    const bot = y.getPixelForValue(c.options.scales.y.min);
+                    const OFF = 0;
+                    slider.style.marginTop = (top-OFF)+'px';
+                    slider.style.height    = (bot-top+OFF*2)+'px';
+                }
+            };
+            // Chart instance
+            moodChartInstance = new Chart(ctx,{
+                type:'line',
+                data:{ datasets:[{ label:'Mood', data:[], fill:true, backgroundColor:makeGradient(ctx), borderColor:getComputedStyle(document.documentElement).getPropertyValue('--chart-line').trim(), pointRadius:5, tension:0.3 }]},
+                options:{
+                    responsive:true,
+                    maintainAspectRatio:false,
+                    scales:{
+                        x:{
+                            type:'time',
+                            time:{ unit:'day',tooltipFormat:'MMM dd' },
+                            grid:{display:false},
+                            ticks:{ color:getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() }
+                        },
+                        y:{
+                            min:1,max:5,
+                            grid:{
+                                drawBorder:false,
+                                color:getComputedStyle(document.documentElement).getPropertyValue('--shadow-dark').trim()
+                            },
+                            ticks:{ color:getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim(), stepSize:1 }
+                        }
+                    },
+                    plugins:{
+                        legend:{display:false},
+                        zoom:{ pan:{enabled:true,mode:'x'}, zoom:{wheel:{enabled:false},pinch:{enabled:false}} }
+                    },
+                    thresholds:{ min:2, max:4 }
                 },
-                plugins: { legend: { display: false }, zoom: { pan: { enabled: true, mode: 'x' }, zoom: { wheel: { enabled: false }, pinch: { enabled: false } } } },
-                thresholds: { min: 1, max: 5 }
-            },
-            plugins: [thresholdPlugin]
-        });
-
-        moodSlider = document.getElementById('slider');
-        if (moodSlider.noUiSlider) moodSlider.noUiSlider.destroy();
-        noUiSlider.create(moodSlider, {
-            start: [1, 5], connect: true, orientation: 'vertical', direction: 'rtl',
-            range: { min: 1, max: 5 }, step: 0.1, tooltips: [true, true],
-            format: { to: v => v.toFixed(1), from: v => +v }
-        });
-
-        moodSlider.noUiSlider.on('update', ([minStr, maxStr]) => {
-            const minThreshold = +minStr;
-            const maxThreshold = +maxStr;
-            if (moodChartInstance) {
-                moodChartInstance.options.thresholds.min = minThreshold;
-                moodChartInstance.options.thresholds.max = maxThreshold;
-
-                const currentWeekMoodData = getWeekMoodData(currentWeekIndex);
-                const baseColor = moodChartInstance.data.datasets[0].borderColor;
-                const highlightColor = 'seagreen';
-
-                moodChartInstance.data.datasets[0].pointBackgroundColor = currentWeekMoodData.map(point =>
-                    (point.y !== null && point.y >= minThreshold && point.y <= maxThreshold) ? highlightColor : baseColor
-                );
+                plugins:[ syncHeight, thresholdPlugin ]
+            });
+            // Slider
+            slider = document.getElementById('slider');
+            if (slider.noUiSlider) slider.noUiSlider.destroy();
+            noUiSlider.create(slider,{
+                start:[2,4], connect:true,
+                orientation:'vertical', direction:'rtl',
+                range:{min:1,max:5}, step:0.1,
+                tooltips:[true,true],
+                format:{ to:v=>v.toFixed(1), from:v=>+v }
+            });
+            slider.noUiSlider.on('update',([min,max])=>{
+                min=+min; max=+max;
+                moodChartInstance.options.thresholds.min=min;
+                moodChartInstance.options.thresholds.max=max;
+                // recolor points
+                const base = getComputedStyle(document.documentElement).getPropertyValue('--chart-line').trim();
+                const weekData = getWeekMoodData(idx);
+                moodChartInstance.data.datasets[0].pointBackgroundColor =
+                    weekData.map(pt => (pt.y>=min&&pt.y<=max)?'seagreen':base);
                 moodChartInstance.update('none');
-            }
-            updatePanels(currentWeekIndex, minThreshold, maxThreshold);
-        });
-    }
-
-    function getWeekMoodData(weekIdx) {
-        if (!weekSegments[weekIdx] || weekSegments[weekIdx].length === 0) return [];
-        const currentWeekLogs = weekSegments[weekIdx];
-        const weekStartDate = getStartOfWeek(currentWeekLogs[0].logged_at_date);
-        const dailyAverages = [];
-        for (let i = 0; i < 7; i++) {
-            const day = addDays(weekStartDate, i);
-            const logsForThisDay = currentWeekLogs.filter(log =>
-                formatDate(log.logged_at_date) === formatDate(day) &&
-                typeof log.mood_score === 'number'
-            );
-            if (logsForThisDay.length > 0) {
-                const sum = logsForThisDay.reduce((acc, log) => acc + log.mood_score, 0);
-                dailyAverages.push({ x: luxon.DateTime.fromJSDate(day).toISODate(), y: sum / logsForThisDay.length });
-            } else {
-                dailyAverages.push({ x: luxon.DateTime.fromJSDate(day).toISODate(), y: null });
-            }
-        }
-        return dailyAverages;
-    }
-
-    function updateView() {
-        if (!moodChartInstance || !moodSlider || weekSegments.length === 0) {
-            console.log("UpdateView: Chart, slider, or weekSegments not ready.");
-            return;
+            });
         }
 
-        const currentWeekMoodData = getWeekMoodData(currentWeekIndex);
-        moodChartInstance.data.datasets[0].data = currentWeekMoodData;
-        moodChartInstance.data.datasets[0].borderColor = getComputedStyle(document.documentElement).getPropertyValue('--chart-line').trim();
-        moodChartInstance.data.datasets[0].backgroundColor = makeGradient(moodChartInstance.ctx);
-
-        if (weekSegments[currentWeekIndex].length > 0) {
-            const weekStartDate = getStartOfWeek(weekSegments[currentWeekIndex][0].logged_at_date);
-            const weekEndDate = addDays(weekStartDate, 6);
-            document.getElementById('segmentLabel').textContent =
-                `${luxon.DateTime.fromJSDate(weekStartDate).toFormat('LLL dd')} – ${luxon.DateTime.fromJSDate(weekEndDate).toFormat('LLL dd')}`;
-        } else {
-            document.getElementById('segmentLabel').textContent = (weekSegments.length > 0) ? 'No mood data this week' : 'No data loaded';
+        function makeGradient(ctx){
+            const h = 300, g = ctx.createLinearGradient(0,0,0,h);
+            const root = getComputedStyle(document.documentElement);
+            const s = root.getPropertyValue('--chart-grad-start').trim() || 'rgba(54,162,235,0.6)';
+            const e = root.getPropertyValue('--chart-grad-end').trim()   || 'rgba(54,162,235,0.1)';
+            g.addColorStop(0,s); g.addColorStop(1,e);
+            return g;
         }
 
-        document.getElementById('prevWeekBtn').disabled = currentWeekIndex === 0;
-        document.getElementById('nextWeekBtn').disabled = currentWeekIndex >= weekSegments.length - 1;
-
-        const [minThreshold, maxThreshold] = moodSlider.noUiSlider.get().map(v => +v);
-        updatePanels(currentWeekIndex, minThreshold, maxThreshold);
-
-        const baseColor = moodChartInstance.data.datasets[0].borderColor;
-        const highlightColor = 'seagreen';
-        moodChartInstance.data.datasets[0].pointBackgroundColor = currentWeekMoodData.map(point =>
-            (point.y !== null && point.y >= minThreshold && point.y <= maxThreshold) ? highlightColor : baseColor
-        );
-        moodChartInstance.update();
-    }
-
-    function updatePanels(weekIdx, minMood, maxMood) {
-        const currentWeekLogs = weekSegments[weekIdx] || [];
-        const filteredLogs = currentWeekLogs.filter(log =>
-            typeof log.mood_score === 'number' &&
-            log.mood_score >= minMood &&
-            log.mood_score <= maxMood
-        );
-
-        const panelsData = { diet: [], health: [], activity: [] };
-        filteredLogs.forEach(log => {
-            if (log.diet && typeof log.diet === 'object') {
-                for (const category in log.diet) {
-                    if (log.diet[category] && log.diet[category].length > 0) {
-                        panelsData.diet.push(`<strong>${escapeHtml(category.replace(/_/g, " "))}:</strong> ${log.diet[category].map(item => `<span class="tag">${escapeHtml(item)}</span>`).join(' ')}`);
-                    }
+        function getWeekMoodData(weekIdx) {
+            if (!weekSegments[weekIdx]) return [];
+            // For each day in week, average mood_score
+            const week = weekSegments[weekIdx];
+            if (!week.length) return [];
+            const start = getStartOfWeek(week[0].logged_at_date);
+            const days = [];
+            for (let i = 0; i < 7; i++) {
+                const d = addDays(start, i);
+                const dayLogs = week.filter(l => formatDate(l.logged_at_date) === formatDate(d) && l.mood_score !== null && l.mood_score !== undefined);
+                if (dayLogs.length) {
+                    const avg = dayLogs.reduce((s, l) => s + l.mood_score, 0) / dayLogs.length;
+                    days.push({x: luxon.DateTime.fromJSDate(d).toISODate(), y: avg});
+                } else {
+                    days.push({x: luxon.DateTime.fromJSDate(d).toISODate(), y: null});
                 }
             }
-            if (log.health && log.health.length > 0) {
-                panelsData.health.push(...log.health.map(h => `<span class="tag">${escapeHtml(h)}</span>`));
-            }
-            if (log.activity && log.activity.length > 0) {
-                panelsData.activity.push(...log.activity.map(a => `<span class="tag">${escapeHtml(a)}</span>`));
-            }
-        });
+            return days;
+        }
 
-        document.getElementById('dietPanel').innerHTML = panelsData.diet.length > 0 ? panelsData.diet.join('<br>') : `<span style="color:#aaa;">No diet data for this mood range.</span>`;
-        document.getElementById('healthPanel').innerHTML = panelsData.health.length > 0 ? panelsData.health.join(' ') : `<span style="color:#aaa;">No health data for this mood range.</span>`;
-        document.getElementById('activityPanel').innerHTML = panelsData.activity.length > 0 ? panelsData.activity.join(' ') : `<span style="color:#aaa;">No activity data for this mood range.</span>`;
-    }
+        function updateView() {
+            // Update chart data & gradient
+            const weekData = getWeekMoodData(idx);
+            moodChartInstance.data.datasets[0].data = weekData;
+            moodChartInstance.data.datasets[0].backgroundColor = makeGradient(moodChartInstance.ctx);
+            // Update label
+            if (weekData.length) {
+                const a=weekData[0].x, b=weekData.slice(-1)[0].x;
+                document.getElementById('segmentLabel').textContent = `${luxon.DateTime.fromISO(a).toFormat('LLL dd')} – ${luxon.DateTime.fromISO(b).toFormat('LLL dd')}`;
+            } else {
+                document.getElementById('segmentLabel').textContent = '';
+            }
+            document.getElementById('prevWeekBtn').disabled = idx===0;
+            document.getElementById('nextWeekBtn').disabled = idx===weekSegments.length-1;
+            // Panels
+            updatePanels(idx);
+            moodChartInstance.update();
+        }
 
-    function displayLogEntries(logs) {
-        const container = document.getElementById('logsContainer');
-        container.innerHTML = '';
-        if (logs && logs.length > 0) {
-            [...logs].reverse().forEach(log => {
-                const entryDiv = document.createElement('div');
-                entryDiv.className = 'log-entry';
-                let html = `<div class="log-meta">Logged: ${luxon.DateTime.fromJSDate(log.logged_at_date).toFormat('yyyy-MM-dd HH:mm')}</div>`;
-                if (log.original_note) html += `<div class="log-original-note"><strong>Original:</strong> ${escapeHtml(log.original_note)}</div>`;
-                if (log.mood_label) html += `<div class="log-section"><h3>Mood</h3><span class="tag">${escapeHtml(log.mood_label)} (${typeof log.mood_score === 'number' ? log.mood_score : 'N/A'})</span></div>`;
-                if (log.health && log.health.length) html += `<div class="log-section"><h3>Health</h3>${log.health.map(h => `<span class="tag">${escapeHtml(h)}</span>`).join(' ')}</div>`;
-                if (log.activity && log.activity.length) html += `<div class="log-section"><h3>Activity</h3>${log.activity.map(a => `<span class="tag">${escapeHtml(a)}</span>`).join(' ')}</div>`;
-                if (log.diet && typeof log.diet === 'object' && Object.keys(log.diet).length) {
-                    html += `<div class.log-section"><h3>Diet</h3>`;
-                    for (const cat in log.diet) {
-                        if (log.diet[cat] && log.diet[cat].length) {
-                            html += `<div style="margin-left:10px;"><strong>${escapeHtml(cat.replace(/_/g, " "))}:</strong> ${log.diet[cat].map(i => `<span class="tag">${escapeHtml(i)}</span>`).join(' ')}</div>`;
+
+        function updatePanels(weekIdx) {
+            const week = weekSegments[weekIdx] || [];
+            // Diet
+            const dietPanel = document.getElementById('dietPanel');
+            let dietHtml = '';
+            week.forEach(log => {
+                if (log.diet) { // checks if log.diet exists
+                    for (const [cat, arr] of Object.entries(log.diet)) { // iterates as if log.diet is an object
+                        if (arr && arr.length) {
+                            dietHtml += `<div><strong>${escapeHtml(cat)}:</strong> ${arr.map(escapeHtml).join(', ')}</div>`;
                         }
                     }
-                    html += `</div>`;
                 }
-                entryDiv.innerHTML = html;
-                container.appendChild(entryDiv);
             });
-        } else {
-            container.innerHTML = '<p style="text-align:center;">No logs found for this user.</p>';
+            dietPanel.innerHTML = dietHtml || '<span style="color:#aaa;">No data</span>';
+            // Health
+            const healthPanel = document.getElementById('healthPanel');
+            let healthHtml = '';
+            week.forEach(log => {
+                if (log.health && log.health.length) {
+                    healthHtml += `<div>${log.health.map(escapeHtml).join(', ')}</div>`;
+                }
+            });
+            healthPanel.innerHTML = healthHtml || '<span style="color:#aaa;">No data</span>';
+            // Activity
+            const activityPanel = document.getElementById('activityPanel');
+            let activityHtml = '';
+            week.forEach(log => {
+                if (log.activity && log.activity.length) {
+                    activityHtml += `<div>${log.activity.map(escapeHtml).join(', ')}</div>`;
+                }
+            });
+            activityPanel.innerHTML = activityHtml || '<span style="color:#aaa;">No data</span>';
         }
-    }
 
-    function escapeHtml(unsafe) {
-        if (typeof unsafe !== 'string') return '';
-        return unsafe.replace(/&/g, "&").replace(/</g, "<").replace(/>/g, ">").replace(/"/g, """).replace(/'/g, "'");
-    }
-</script>
+
+        function displayLogEntries(logsToDisplay) {
+            const container = document.getElementById('logsContainer');
+            container.innerHTML = '';
+            if (logsToDisplay && logsToDisplay.length > 0) {
+                logsToDisplay.slice().reverse().forEach(log => {
+                    const entryDiv = document.createElement('div');
+                    entryDiv.className = 'log-entry';
+                    let htmlContent = `<div class="log-meta">Logged: ${log.logged_at}</div>`;
+                    if(log.original_note) {
+                        htmlContent += `<div class="log-original-note"><strong>Original:</strong> ${escapeHtml(log.original_note)}</div>`;
+                    }
+                    if (log.mood_label) {
+                        htmlContent += `<div class="log-section"><h3>Mood</h3><span class="tag">${escapeHtml(log.mood_label)} (${log.mood_score || 'N/A'})</span></div>`;
+                    }
+                    if (log.health && log.health.length > 0) {
+                        htmlContent += `<div class="log-section"><h3>Health</h3><ul>`;
+                        log.health.forEach(h => { htmlContent += `<li>${escapeHtml(h)}</li>`; });
+                        htmlContent += `</ul></div>`;
+                    }
+                    if (log.activity && log.activity.length > 0) {
+                        htmlContent += `<div class="log-section"><h3>Activity</h3><ul>`;
+                        log.activity.forEach(a => { htmlContent += `<li>${escapeHtml(a)}</li>`; });
+                        htmlContent += `</ul></div>`;
+                    }
+                    entryDiv.innerHTML = htmlContent;
+                    container.appendChild(entryDiv);
+                });
+            } else {
+                container.innerHTML = '<p style="text-align:center;">No logs found for this period or user.</p>';
+            }
+        }
+
+        function escapeHtml(unsafe) {
+            if (typeof unsafe !== 'string') {
+                return '';
+            }
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+    </script>
 </body>
 </html>
