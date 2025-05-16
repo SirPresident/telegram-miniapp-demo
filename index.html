@@ -629,15 +629,21 @@
                 tooltips:[true,true],
                 format:{ to:v=>v.toFixed(1), from:v=>+v }
             });
-            slider.noUiSlider.on('update',([min,max])=>{
-                min=+min; max=+max;
-                moodChartInstance.options.thresholds.min=min;
-                moodChartInstance.options.thresholds.max=max;
+            slider.noUiSlider.on('update', ([min, max]) => {
+                min = +min;
+                max = +max;
+                moodChartInstance.options.thresholds.min = min;
+                moodChartInstance.options.thresholds.max = max;
+                
                 // recolor points
                 const base = getComputedStyle(document.documentElement).getPropertyValue('--chart-line').trim();
                 const weekData = getWeekMoodData(idx);
                 moodChartInstance.data.datasets[0].pointBackgroundColor =
-                    weekData.map(pt => (pt.y>=min&&pt.y<=max)?'seagreen':base);
+                    weekData.map(pt => (pt.y >= min && pt.y <= max) ? 'seagreen' : base);
+                
+                // Update panels with filtered data
+                updatePanels(idx);
+                
                 moodChartInstance.update('none');
             });
         }
