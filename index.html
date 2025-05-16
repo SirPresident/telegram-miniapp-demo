@@ -701,41 +701,18 @@
             const [minMood, maxMood] = slider.noUiSlider.get().map(Number);
             const week = weekSegments[weekIdx] || [];
             
-            // First, group logs by date and calculate average mood scores
-            const dailyGroups = new Map();
-            week.forEach(log => {
-                const dateKey = formatDate(log.logged_at_date);
-                if (!dailyGroups.has(dateKey)) {
-                    dailyGroups.set(dateKey, {
-                        logs: [],
-                        totalMoodScore: 0,
-                        validMoodCount: 0
-                    });
-                }
-                const group = dailyGroups.get(dateKey);
-                group.logs.push(log);
-                if (log.mood_score !== null && log.mood_score !== undefined) {
-                    group.totalMoodScore += log.mood_score;
-                    group.validMoodCount++;
-                }
-            });
+            // Filter logs based on mood score range
+            const filteredLogs = week.filter(log => 
+                log.mood_score !== null && 
+                log.mood_score >= minMood && 
+                log.mood_score <= maxMood
+            );
 
-            // Filter days based on average mood score
-            const relevantLogs = [];
-            dailyGroups.forEach(group => {
-                if (group.validMoodCount > 0) {
-                    const avgMood = group.totalMoodScore / group.validMoodCount;
-                    if (avgMood >= minMood && avgMood <= maxMood) {
-                        relevantLogs.push(...group.logs);
-                    }
-                }
-            });
-
-            // Update panels with filtered data
             // Diet Panel
             const dietPanel = document.getElementById('dietPanel');
+            let dietHtml = '';
             const dietItems = new Set();
-            relevantLogs.forEach(log => {
+            filteredLogs.forEach(log => {
                 if (log.diet) {
                     for (const [cat, arr] of Object.entries(log.diet)) {
                         if (arr && arr.length) {
@@ -744,13 +721,13 @@
                     }
                 }
             });
-            const dietHtml = Array.from(dietItems).map(item => `<div>${escapeHtml(item)}</div>`).join('');
+            dietHtml = Array.from(dietItems).map(item => `<div>${escapeHtml(item)}</div>`).join('');
             dietPanel.innerHTML = dietHtml || '<span style="color:#aaa;">No data in selected mood range</span>';
 
             // Health Panel
             const healthPanel = document.getElementById('healthPanel');
-            const healthItems = new Set();
-            relevantLogs.forEach(log => {
+            let healthItems = new Set();
+            filteredLogs.forEach(log => {
                 if (log.health && log.health.length) {
                     log.health.forEach(item => healthItems.add(item));
                 }
@@ -760,8 +737,8 @@
 
             // Activity Panel
             const activityPanel = document.getElementById('activityPanel');
-            const activityItems = new Set();
-            relevantLogs.forEach(log => {
+            let activityItems = new Set();
+            filteredLogs.forEach(log => {
                 if (log.activity && log.activity.length) {
                     log.activity.forEach(item => activityItems.add(item));
                 }
