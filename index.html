@@ -698,18 +698,26 @@
         }
 
         function displaySkills() {
-            const skillsContainer = document.getElementById('skillsContainer');
-            if (!skillsContainer) return;
-            skillsContainer.innerHTML = '';
+        const skillsContainer = document.getElementById('skillsContainer');
+        if (!skillsContainer) return;
+        skillsContainer.innerHTML = '';
 
-            for (const skillName in SKILLS_CONFIG) {
-                const config = SKILLS_CONFIG[skillName];
+        let skillsToShowCount = 0;
+
+        for (const skillName in SKILLS_CONFIG) {
+            const config = SKILLS_CONFIG[skillName];
+
+            if (config.currentXP > 0) {
+                skillsToShowCount++;
+
                 const level = config.currentLevel;
-                const xpNeededForThisLevel = config.xpToCompleteCurrentLevel;
+                const xpNeededForThisLevel = getXPForLevel(level + 1, config.baseXP, config.exponent) - 
+                                        getXPForLevel(level, config.baseXP, config.exponent);
                 const currentXPInThisLevel = config.xpTowardsNextLevel;
                 
-                const progressPercent = (xpNeededForThisLevel > 0) ? 
+                let progressPercent = (xpNeededForThisLevel > 0) ? 
                     (currentXPInThisLevel / xpNeededForThisLevel) * 100 : 0;
+                progressPercent = Math.min(progressPercent, 100);
 
                 const skillDiv = document.createElement('div');
                 skillDiv.className = 'skill-item';
@@ -720,7 +728,7 @@
                         <span class="skill-level">Lvl ${level}</span>
                     </div>
                     <div class="progress-bar-container">
-                        <div class="progress-bar" style="width: ${Math.min(progressPercent, 100)}%;"></div>
+                        <div class="progress-bar" style="width: ${progressPercent}%;"></div>
                     </div>
                     <div class="skill-xp-info">
                         ${currentXPInThisLevel}/${xpNeededForThisLevel} XP
@@ -729,6 +737,11 @@
                 skillsContainer.appendChild(skillDiv);
             }
         }
+
+        if (skillsToShowCount === 0) {
+            skillsContainer.innerHTML = '<p style="text-align:center; color:var(--text-color);">Start logging activities to see your skills grow here!</p>';
+        }
+    }
 
         tg.ready(); tg.expand();
 
@@ -1274,4 +1287,4 @@
         }
     </script>
 </body>
-</html> 
+</html>
