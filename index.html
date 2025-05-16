@@ -690,40 +690,55 @@
             moodChartInstance.update();
         }
 
-// ...existing code...
         function updatePanels(weekIdx) {
+            // Get current slider values
+            const [minMood, maxMood] = slider.noUiSlider.get().map(Number);
             const week = weekSegments[weekIdx] || [];
-            // Diet
+            
+            // Filter logs based on mood score range
+            const filteredLogs = week.filter(log => 
+                log.mood_score !== null && 
+                log.mood_score >= minMood && 
+                log.mood_score <= maxMood
+            );
+
+            // Diet Panel
             const dietPanel = document.getElementById('dietPanel');
             let dietHtml = '';
-            week.forEach(log => {
-                if (log.diet) { // checks if log.diet exists
-                    for (const [cat, arr] of Object.entries(log.diet)) { // iterates as if log.diet is an object
+            const dietItems = new Set();
+            filteredLogs.forEach(log => {
+                if (log.diet) {
+                    for (const [cat, arr] of Object.entries(log.diet)) {
                         if (arr && arr.length) {
-                            dietHtml += `<div><strong>${escapeHtml(cat)}:</strong> ${arr.map(escapeHtml).join(', ')}</div>`;
+                            arr.forEach(item => dietItems.add(`${cat}: ${item}`));
                         }
                     }
                 }
             });
-            dietPanel.innerHTML = dietHtml || '<span style="color:#aaa;">No data</span>';
-            // Health
+            dietHtml = Array.from(dietItems).map(item => `<div>${escapeHtml(item)}</div>`).join('');
+            dietPanel.innerHTML = dietHtml || '<span style="color:#aaa;">No data in selected mood range</span>';
+
+            // Health Panel
             const healthPanel = document.getElementById('healthPanel');
-            let healthHtml = '';
-            week.forEach(log => {
+            let healthItems = new Set();
+            filteredLogs.forEach(log => {
                 if (log.health && log.health.length) {
-                    healthHtml += `<div>${log.health.map(escapeHtml).join(', ')}</div>`;
+                    log.health.forEach(item => healthItems.add(item));
                 }
             });
-            healthPanel.innerHTML = healthHtml || '<span style="color:#aaa;">No data</span>';
-            // Activity
+            const healthHtml = Array.from(healthItems).map(item => `<div>${escapeHtml(item)}</div>`).join('');
+            healthPanel.innerHTML = healthHtml || '<span style="color:#aaa;">No data in selected mood range</span>';
+
+            // Activity Panel
             const activityPanel = document.getElementById('activityPanel');
-            let activityHtml = '';
-            week.forEach(log => {
+            let activityItems = new Set();
+            filteredLogs.forEach(log => {
                 if (log.activity && log.activity.length) {
-                    activityHtml += `<div>${log.activity.map(escapeHtml).join(', ')}</div>`;
+                    log.activity.forEach(item => activityItems.add(item));
                 }
             });
-            activityPanel.innerHTML = activityHtml || '<span style="color:#aaa;">No data</span>';
+            const activityHtml = Array.from(activityItems).map(item => `<div>${escapeHtml(item)}</div>`).join('');
+            activityPanel.innerHTML = activityHtml || '<span style="color:#aaa;">No data in selected mood range</span>';
         }
 
 
