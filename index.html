@@ -346,6 +346,38 @@
         #logsContainer.active {
             display: block;
         }
+
+        .search-input {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-size: 1rem;
+            box-shadow: 
+                inset 4px 4px 12px var(--shadow-dark),
+                inset -4px -4px 12px var(--shadow-light);
+        }
+
+        .search-input:focus {
+            outline: none;
+            box-shadow: 
+                inset 6px 6px 16px var(--shadow-dark),
+                inset -6px -6px 16px var(--shadow-light);
+        }
+
+        .log-group {
+            margin-bottom: 2rem;
+        }
+
+        .log-date-header {
+            font-size: 1.2rem;
+            color: var(--text-color);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--shadow-dark);
+        }
     </style>
 </head>
 <body>
@@ -360,6 +392,10 @@
             <button class="capsule-tab-btn active" id="tab-history" type="button">
                 <span class="capsule-icon">📅</span>
                 <span class="capsule-text">History</span>
+            </button>
+            <button class="capsule-tab-btn" id="tab-logs" type="button">
+                <span class="capsule-icon">📝</span>
+                <span class="capsule-text">Logs</span>
             </button>
             <button class="capsule-tab-btn" id="tab-levelup" type="button">
                 <span class="capsule-icon">⬆</span>
@@ -408,6 +444,16 @@
                 </div>
             </div>
         </div>
+        <div id="logs" class="content" style="display:none;">
+            <div class="container">
+                <div class="box">
+                    <div class="search-container" style="margin-bottom: 2rem;">
+                        <input type="text" id="logSearch" placeholder="Search in logs..." class="search-input">
+                    </div>
+                    <div id="allLogsContainer"></div>
+                </div>
+            </div>
+        </div>
         <div id="levelup" class="content" style="display:none;">
             <!-- Placeholder for Level up page -->
             <div class="container">
@@ -424,6 +470,7 @@
     document.addEventListener('DOMContentLoaded', () => {
         const tabBtns = [
             { btn: document.getElementById('tab-history'), content: document.getElementById('history') },
+            { btn: document.getElementById('tab-logs'), content: document.getElementById('logs') },
             { btn: document.getElementById('tab-levelup'), content: document.getElementById('levelup') }
         ];
 
@@ -442,10 +489,21 @@
         }
 
         tabBtns.forEach((tab, idx) => {
-            tab.btn.addEventListener('click', () => activateTab(idx));
+            tab.btn.addEventListener('click', () => {
+                activateTab(idx);
+                if (idx === 1) { // Logs tab
+                    displayAllLogs();
+                }
+            });
         });
 
-        // Responsive: ensure only one is active at start
+        // Search functionality
+        const searchInput = document.getElementById('logSearch');
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            filterLogs(searchTerm);
+        });
+
         activateTab(0);
     });
     </script>
@@ -867,6 +925,17 @@
                         log.activity.forEach(a => { htmlContent += `<li>${escapeHtml(a)}</li>`; });
                         htmlContent += `</ul></div>`;
                     }
+                    if (log.diet) {
+                        htmlContent += `<div class="log-section"><h3>Diet</h3><ul>`;
+                        for (const [category, items] of Object.entries(log.diet)) {
+                            if (items && items.length) {
+                                items.forEach(item => {
+                                    html += `<li>${escapeHtml(category)}: ${escapeHtml(item)}</li>`;
+                                });
+                            }
+                        }
+                        htmlContent += `</ul></div>`;
+                    }
                     entryDiv.innerHTML = htmlContent;
                     container.appendChild(entryDiv);
                 });
@@ -875,16 +944,118 @@
             }
         }
 
-        function escapeHtml(unsafe) {
-            if (typeof unsafe !== 'string') {
-                return '';
+        function displayAllLogs() {
+            const container = document.getElementById('allLogsContainer');
+            if (!allUserLogs || !allUserLogs.length) {
+                container.innerHTML = '<p style="text-align:center;">No logs found.</p>';
+                return;
             }
-            return unsafe
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
+
+            // Group logs by date
+            const groupedLogs = new Map();
+            allUserLogs.forEach(log => {
+                const dateKey = formatDate(log.logged_at_date);
+                if (!groupedLogs.has(dateKey)) {
+                    groupedLogs.set(dateKey, []);
+                }
+                groupedLogs.get(dateKey).push(log);
+            });
+
+            // Sort dates in descending order
+            const sortedDates = Array.from(groupedLogs.keys()).sort().reverse();
+            
+            // Generate HTML
+            container.innerHTML = sortedDates.map(date => {
+                const logs = groupedLogs.get(date);
+                return `
+                    <div class="log-group" data-date="${date}">
+                        <div class="log-date-header">${luxon.DateTime.fromISO(date).toFormat('LLLL d, yyyy')}</div>
+                        ${logs.map(log => createLogEntryHtml(log)).join('')}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function createLogEntryHtml(log) {
+            let html = `<div class="log-entry" data-log-content="${escapeHtml(JSON.stringify(log))}">
+                <div class="log-meta">Logged: ${log.logged_at}</div>`;
+            
+            if(log.original_note) {
+                html += `<div class="log-original-note"><strong>Original:</strong> ${escapeHtml(log.original_note)}</div>`;
+            }
+            if (log.mood_label) {
+                html += `<div class="log-section"><h3>Mood</h3><span class="tag">${escapeHtml(log.mood_label)} (${log.mood_score || 'N/A'})</span></div>`;
+            }
+            if (log.health && log.health.length > 0) {
+                html += `<div class="log-section"><h3>Health</h3><ul>`;
+                log.health.forEach(h => { html += `<li>${escapeHtml(h)}</li>`; });
+                html += `</ul></div>`;
+            }
+            if (log.activity && log.activity.length > 0) {
+                html += `<div class="log-section"><h3>Activity</h3><ul>`;
+                log.activity.forEach(a => { html += `<li>${escapeHtml(a)}</li>`; });
+                html += `</ul></div>`;
+            }
+            if (log.diet) {
+                html += `<div class="log-section"><h3>Diet</h3><ul>`;
+                for (const [category, items] of Object.entries(log.diet)) {
+                    if (items && items.length) {
+                        items.forEach(item => {
+                            html += `<li>${escapeHtml(category)}: ${escapeHtml(item)}</li>`;
+                        });
+                    }
+                }
+                html += `</ul></div>`;
+            }
+            html += `</div>`;
+            return html;
+        }
+
+        function filterLogs(searchTerm) {
+            const logEntries = document.querySelectorAll('.log-entry');
+            const groups = document.querySelectorAll('.log-group');
+            
+            groups.forEach(group => {
+                let hasVisibleLogs = false;
+                const logsInGroup = group.querySelectorAll('.log-entry');
+                
+                logsInGroup.forEach(entry => {
+                    const logData = JSON.parse(entry.dataset.logContent);
+                    const shouldShow = searchInLog(logData, searchTerm);
+                    entry.style.display = shouldShow ? '' : 'none';
+                    if (shouldShow) hasVisibleLogs = true;
+                });
+                
+                group.style.display = hasVisibleLogs ? '' : 'none';
+            });
+        }
+
+        function searchInLog(log, term) {
+            if (!term) return true;
+            
+            // Search in original note
+            if (log.original_note && log.original_note.toLowerCase().includes(term)) return true;
+            
+            // Search in mood label
+            if (log.mood_label && log.mood_label.toLowerCase().includes(term)) return true;
+            
+            // Search in health items
+            if (log.health && log.health.some(h => h.toLowerCase().includes(term))) return true;
+            
+            // Search in activities
+            if (log.activity && log.activity.some(a => a.toLowerCase().includes(term))) return true;
+            
+            // Search in diet items
+            if (log.diet) {
+                for (const [category, items] of Object.entries(log.diet)) {
+                    if (items && items.some(item => 
+                        item.toLowerCase().includes(term) || 
+                        category.toLowerCase().includes(term)
+                    )) return true;
+                }
+            }
+            
+            return false;
         }
     </script>
 </body>
