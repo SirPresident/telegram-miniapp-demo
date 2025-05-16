@@ -325,6 +325,27 @@
             font-size: 0.95em;
             padding: 4px 8px;
         }
+
+        /* Add these styles in the existing <style> section */
+        .panel-item {
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .panel-item:hover {
+            background-color: var(--shadow-dark);
+        }
+
+        #logsContainer {
+            display: none;
+            margin-top: 2rem;
+        }
+
+        #logsContainer.active {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -502,7 +523,6 @@
                         idx = weekSegments.length-1; // show latest week
                         setupChartAndSlider();
                         updateView();
-                        displayLogEntries(allUserLogs);
                     } else {
                         document.getElementById('logsContainer').innerHTML = '<p style="text-align:center;">No logs found yet.</p>';
                     }
@@ -742,6 +762,17 @@
                     .map(([item, count]) => ({item, count}));
             }
 
+            // Helper function to create panel HTML
+            function createPanelHtml(sortedItems, type) {
+                return sortedItems.length ? 
+                    sortedItems.map(({item, count}) => 
+                        `<div class="panel-item" data-item="${escapeHtml(item)}" data-type="${type}">
+                            ${escapeHtml(item)} <span style="color:#aaa;">(${count}×)</span>
+                        </div>`
+                    ).join('') : 
+                    '<span style="color:#aaa;">No data in selected mood range</span>';
+            }
+
             // Update panels with filtered data
             // Diet Panel
             const dietPanel = document.getElementById('dietPanel');
@@ -756,10 +787,7 @@
                 }
             });
             const sortedDietItems = processItems(dietItems);
-            const dietHtml = sortedDietItems
-                .map(({item, count}) => `<div>${escapeHtml(item)} <span style="color:#aaa;">(${count}×)</span></div>`)
-                .join('');
-            dietPanel.innerHTML = dietHtml || '<span style="color:#aaa;">No data in selected mood range</span>';
+            dietPanel.innerHTML = createPanelHtml(sortedDietItems, 'diet');
 
             // Health Panel
             const healthPanel = document.getElementById('healthPanel');
@@ -770,10 +798,7 @@
                 }
             });
             const sortedHealthItems = processItems(healthItems);
-            const healthHtml = sortedHealthItems
-                .map(({item, count}) => `<div>${escapeHtml(item)} <span style="color:#aaa;">(${count}×)</span></div>`)
-                .join('');
-            healthPanel.innerHTML = healthHtml || '<span style="color:#aaa;">No data in selected mood range</span>';
+            healthPanel.innerHTML = createPanelHtml(sortedHealthItems, 'health');
 
             // Activity Panel
             const activityPanel = document.getElementById('activityPanel');
@@ -784,12 +809,39 @@
                 }
             });
             const sortedActivityItems = processItems(activityItems);
-            const activityHtml = sortedActivityItems
-                .map(({item, count}) => `<div>${escapeHtml(item)} <span style="color:#aaa;">(${count}×)</span></div>`)
-                .join('');
-            activityPanel.innerHTML = activityHtml || '<span style="color:#aaa;">No data in selected mood range</span>';
+            activityPanel.innerHTML = createPanelHtml(sortedActivityItems, 'activity');
+
+            // Add click handlers
+            document.querySelectorAll('.panel-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const itemText = item.dataset.item;
+                    const itemType = item.dataset.type;
+                    showRelevantLogs(itemText, itemType, relevantLogs);
+                });
+            });
         }
 
+
+        // Add this new function to handle showing relevant logs
+        function showRelevantLogs(itemText, itemType, logs) {
+            const relevantLogs = logs.filter(log => {
+                if (itemType === 'diet') {
+                    return log.diet && Object.entries(log.diet).some(([cat, arr]) => 
+                        arr && arr.length && arr.some(item => `${cat}: ${item}` === itemText)
+                    );
+                } else {
+                    return log[itemType] && log[itemType].includes(itemText);
+                }
+            });
+            
+            // Display the filtered logs
+            const container = document.getElementById('logsContainer');
+            container.classList.add('active');
+            displayLogEntries(relevantLogs);
+            
+            // Scroll logs into view
+            container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
 
         function displayLogEntries(logsToDisplay) {
             const container = document.getElementById('logsContainer');
