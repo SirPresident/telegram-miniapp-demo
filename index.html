@@ -930,7 +930,7 @@
                         for (const [category, items] of Object.entries(log.diet)) {
                             if (items && items.length) {
                                 items.forEach(item => {
-                                    html += `<li>${escapeHtml(category)}: ${escapeHtml(item)}</li>`;
+                                    htmlContent += `<li>${escapeHtml(category)}: ${escapeHtml(item)}</li>`; // Changed html to htmlContent
                                 });
                             }
                         }
@@ -977,38 +977,38 @@
         }
 
         function createLogEntryHtml(log) {
-            let html = `<div class="log-entry" data-log-content="${escapeHtml(JSON.stringify(log))}">
+            let htmlContent = `<div class="log-entry" data-log-content="${escapeHtml(JSON.stringify(log))}">
                 <div class="log-meta">Logged: ${log.logged_at}</div>`;
             
             if(log.original_note) {
-                html += `<div class="log-original-note"><strong>Original:</strong> ${escapeHtml(log.original_note)}</div>`;
+                htmlContent += `<div class="log-original-note"><strong>Original:</strong> ${escapeHtml(log.original_note)}</div>`;
             }
             if (log.mood_label) {
-                html += `<div class="log-section"><h3>Mood</h3><span class="tag">${escapeHtml(log.mood_label)} (${log.mood_score || 'N/A'})</span></div>`;
+                htmlContent += `<div class="log-section"><h3>Mood</h3><span class="tag">${escapeHtml(log.mood_label)} (${log.mood_score || 'N/A'})</span></div>`;
             }
             if (log.health && log.health.length > 0) {
-                html += `<div class="log-section"><h3>Health</h3><ul>`;
-                log.health.forEach(h => { html += `<li>${escapeHtml(h)}</li>`; });
-                html += `</ul></div>`;
+                htmlContent += `<div class="log-section"><h3>Health</h3><ul>`;
+                log.health.forEach(h => { htmlContent += `<li>${escapeHtml(h)}</li>`; });
+                htmlContent += `</ul></div>`;
             }
             if (log.activity && log.activity.length > 0) {
-                html += `<div class="log-section"><h3>Activity</h3><ul>`;
-                log.activity.forEach(a => { html += `<li>${escapeHtml(a)}</li>`; });
-                html += `</ul></div>`;
+                htmlContent += `<div class="log-section"><h3>Activity</h3><ul>`;
+                log.activity.forEach(a => { htmlContent += `<li>${escapeHtml(a)}</li>`; });
+                htmlContent += `</ul></div>`;
             }
             if (log.diet) {
-                html += `<div class="log-section"><h3>Diet</h3><ul>`;
+                htmlContent += `<div class="log-section"><h3>Diet</h3><ul>`;
                 for (const [category, items] of Object.entries(log.diet)) {
                     if (items && items.length) {
                         items.forEach(item => {
-                            html += `<li>${escapeHtml(category)}: ${escapeHtml(item)}</li>`;
+                            htmlContent += `<li>${escapeHtml(category)}: ${escapeHtml(item)}</li>`;
                         });
                     }
                 }
-                html += `</ul></div>`;
+                htmlContent += `</ul></div>`;
             }
-            html += `</div>`;
-            return html;
+            htmlContent += `</div>`;
+            return htmlContent;
         }
 
         function filterLogs(searchTerm) {
@@ -1056,6 +1056,15 @@
             }
             
             return false;
+        }
+
+        function escapeHtml(unsafe) {
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
         }
     </script>
 </body>
