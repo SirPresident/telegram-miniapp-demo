@@ -378,6 +378,95 @@
             padding-bottom: 0.5rem;
             border-bottom: 2px solid var(--shadow-dark);
         }
+
+        /* New styles for skills grid */
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .skill-item {
+            background: var(--bg-color);
+            border-radius: 12px;
+            padding: 1rem;
+            box-shadow:
+                4px 4px 12px var(--shadow-dark),
+                -4px -4px 12px var(--shadow-light);
+            transition: background 0.3s, box-shadow 0.3s;
+        }
+
+        .skill-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .skill-icon {
+            font-size: 1.8rem;
+            margin-right: 0.75rem;
+            width: 30px;
+            text-align: center;
+        }
+
+        .skill-name {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--text-color);
+            flex-grow: 1;
+        }
+
+        .skill-level {
+            font-size: 0.9rem;
+            color: var(--highlight-above);
+            background-color: var(--shadow-dark);
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            background-color: var(--shadow-dark);
+            border-radius: 5px;
+            height: 12px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: var(--chart-line);
+            width: 0%;
+            border-radius: 5px;
+            transition: width 0.5s ease-in-out;
+        }
+
+        .skill-xp-info {
+            font-size: 0.8em;
+            color: var(--text-color);
+            text-align: right;
+        }
+
+        .skill-focus-section select {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--shadow-dark);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-size: 1rem;
+            box-shadow: inset 2px 2px 5px var(--shadow-dark), inset -2px -2px 5px var(--shadow-light);
+            margin-top: 0.5rem;
+        }
+
+        #dailyTaskContainer {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-gradient-end);
+            border-radius: 8px;
+            min-height: 40px;
+            color: var(--text-color);
+        }
     </style>
 </head>
 <body>
@@ -455,11 +544,26 @@
             </div>
         </div>
         <div id="levelup" class="content" style="display:none;">
-            <!-- Placeholder for Level up page -->
             <div class="container">
-                <div class="box" style="text-align:center;">
-                    <h2 style="margin-bottom:1rem;">Level up</h2>
-                    <p>Coming soon: gamified progress, achievements, and more!</p>
+                <div class="box">
+                    <h2 style="text-align:center; margin-bottom:1.5rem;">Your Skill Progression</h2>
+                    <div id="skillsContainer" class="skills-grid">
+                        <!-- Skills will be dynamically added here by JavaScript -->
+                    </div>
+                    <div class="skill-focus-section" style="margin-top: 2rem; text-align:center;">
+                        <h3>Focus Skill</h3>
+                        <select id="skillFocusSelect">
+                            <option value="none">None</option>
+                            <option value="strength">Strength</option>
+                            <option value="endurance">Endurance</option>
+                            <option value="intelligence">Intelligence</option>
+                            <option value="charisma">Charisma</option>
+                            <option value="perception">Perception</option>
+                        </select>
+                        <div id="dailyTaskContainer" style="margin-top: 1rem;">
+                            Your daily task will appear here.
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -488,11 +592,14 @@
             });
         }
 
-        tabBtns.forEach((tab, idx) => {
+        tabBtns.forEach((tab, tabIndex) => {
             tab.btn.addEventListener('click', () => {
-                activateTab(idx);
-                if (idx === 1) { // Logs tab
+                activateTab(tabIndex);
+                if (tab.content.id === 'logs') {
                     displayAllLogs();
+                } else if (tab.content.id === 'levelup') {
+                    calculateSkillLevels();
+                    displaySkills();
                 }
             });
         });
@@ -534,6 +641,95 @@
         let idx = 0;
         let slider = null;
 
+        const SKILLS_CONFIG = {
+            strength:     { icon: '💪', baseXP: 100, exponent: 1.5, currentXP: 0, currentLevel: 0 },
+            endurance:    { icon: '🏃', baseXP: 100, exponent: 1.5, currentXP: 0, currentLevel: 0 },
+            intelligence: { icon: '🧠', baseXP: 120, exponent: 1.6, currentXP: 0, currentLevel: 0 },
+            charisma:     { icon: '🗣️', baseXP: 100, exponent: 1.5, currentXP: 0, currentLevel: 0 },
+            perception:   { icon: '👁️', baseXP: 110, exponent: 1.55, currentXP: 0, currentLevel: 0 },
+            wellbeing:    { icon: '🧘', baseXP: 80,  exponent: 1.4, currentXP: 0, currentLevel: 0 }
+        };
+
+        function getXPForLevel(level, baseXP, exponent) {
+            if (level <= 0) return 0;
+            let totalXPNeeded = 0;
+            for (let i = 1; i <= level; i++) {
+                totalXPNeeded += Math.floor(baseXP * Math.pow(i, exponent - 1));
+            }
+            return totalXPNeeded;
+        }
+
+        function calculateSkillLevels() {
+            for (const skillName in SKILLS_CONFIG) {
+                const config = SKILLS_CONFIG[skillName];
+                config.currentXP = 0;
+                config.currentLevel = 0;
+            }
+
+            allUserLogs.forEach(log => {
+                for (const skillName in SKILLS_CONFIG) {
+                    const xpField = `${skillName}_xp_gained`;
+                    if (log[xpField] && typeof log[xpField] === 'number') {
+                        SKILLS_CONFIG[skillName].currentXP += log[xpField];
+                    }
+                }
+            });
+
+            for (const skillName in SKILLS_CONFIG) {
+                const config = SKILLS_CONFIG[skillName];
+                let level = 0;
+                let xpRemaining = config.currentXP;
+                let xpForNextLevel = 0;
+
+                while (true) {
+                    xpForNextLevel = getXPForLevel(level + 1, config.baseXP, config.exponent) - 
+                                    getXPForLevel(level, config.baseXP, config.exponent);
+                    if (xpRemaining >= xpForNextLevel && xpForNextLevel > 0) {
+                        xpRemaining -= xpForNextLevel;
+                        level++;
+                    } else {
+                        break;
+                    }
+                }
+                config.currentLevel = level;
+                config.xpTowardsNextLevel = xpRemaining;
+                config.xpToCompleteCurrentLevel = xpForNextLevel;
+            }
+        }
+
+        function displaySkills() {
+            const skillsContainer = document.getElementById('skillsContainer');
+            if (!skillsContainer) return;
+            skillsContainer.innerHTML = '';
+
+            for (const skillName in SKILLS_CONFIG) {
+                const config = SKILLS_CONFIG[skillName];
+                const level = config.currentLevel;
+                const xpNeededForThisLevel = config.xpToCompleteCurrentLevel;
+                const currentXPInThisLevel = config.xpTowardsNextLevel;
+                
+                const progressPercent = (xpNeededForThisLevel > 0) ? 
+                    (currentXPInThisLevel / xpNeededForThisLevel) * 100 : 0;
+
+                const skillDiv = document.createElement('div');
+                skillDiv.className = 'skill-item';
+                skillDiv.innerHTML = `
+                    <div class="skill-header">
+                        <span class="skill-icon">${config.icon}</span>
+                        <span class="skill-name">${skillName.charAt(0).toUpperCase() + skillName.slice(1)}</span>
+                        <span class="skill-level">Lvl ${level}</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" style="width: ${Math.min(progressPercent, 100)}%;"></div>
+                    </div>
+                    <div class="skill-xp-info">
+                        ${currentXPInThisLevel}/${xpNeededForThisLevel} XP
+                    </div>
+                `;
+                skillsContainer.appendChild(skillDiv);
+            }
+        }
+
         tg.ready(); tg.expand();
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -574,13 +770,23 @@
                     if (data.logs && data.logs.length > 0) {
                         allUserLogs = data.logs.map(log => ({
                             ...log,
-                            logged_at_date: new Date(log.logged_at.replace(' ', 'T') + 'Z')
+                            logged_at_date: new Date(log.logged_at.replace(' ', 'T') + 'Z'),
+                            strength_xp_gained: log.strength_xp_gained || 0,
+                            endurance_xp_gained: log.endurance_xp_gained || 0,
+                            intelligence_xp_gained: log.intelligence_xp_gained || 0,
+                            charisma_xp_gained: log.charisma_xp_gained || 0,
+                            perception_xp_gained: log.perception_xp_gained || 0,
+                            wellbeing_xp_gained: log.wellbeing_xp_gained || 0
                         }));
                         allUserLogs.sort((a, b) => a.logged_at_date - b.logged_at_date);
                         weekSegments = splitLogsToWeeks(allUserLogs);
-                        idx = weekSegments.length-1; // show latest week
+                        idx = weekSegments.length-1;
                         setupChartAndSlider();
                         updateView();
+                        
+                        // Calculate and display skills
+                        calculateSkillLevels();
+                        displaySkills();
                     } else {
                         document.getElementById('logsContainer').innerHTML = '<p style="text-align:center;">No logs found yet.</p>';
                     }
