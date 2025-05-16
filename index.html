@@ -224,7 +224,7 @@
             color: var(--text-color);
         }
         .capsule-tab-btn.active {
-            width: 130px; /* Enough for "Level up" or "History" */
+            width: 130px; /* Enough for "Level up" or "Home" */
             border-radius: 24px;
             background: var(--highlight-above);
         }
@@ -389,23 +389,23 @@
         </label>
         <!-- Capsule Tab Navigation -->
         <div class="capsule-tab-group">
-            <button class="capsule-tab-btn active" id="tab-history" type="button">
-                <span class="capsule-icon">📅</span>
-                <span class="capsule-text">History</span>
+            <button class="capsule-tab-btn active" id="tab-home" type="button">
+                <span class="capsule-icon">🏡</span>
+                <span class="capsule-text">Home</span>
             </button>
             <button class="capsule-tab-btn" id="tab-logs" type="button">
                 <span class="capsule-icon">📝</span>
                 <span class="capsule-text">Logs</span>
             </button>
             <button class="capsule-tab-btn" id="tab-levelup" type="button">
-                <span class="capsule-icon">⬆</span>
+                <span class="capsule-icon">⬆⬆</span>
                 <span class="capsule-text">Level up</span>
             </button>
         </div>
     </div>
 
     <div class="tab-content" style="width:100%;">
-        <div id="history" class="content active">
+        <div id="home" class="content active">
             <!-- Existing main app content goes here (container, box, chart, panels, logs, etc.) -->
             <div class="container">
                 <div class="box">
@@ -469,7 +469,7 @@
     // Capsule Tab Logic
     document.addEventListener('DOMContentLoaded', () => {
         const tabBtns = [
-            { btn: document.getElementById('tab-history'), content: document.getElementById('history') },
+            { btn: document.getElementById('tab-home'), content: document.getElementById('home') },
             { btn: document.getElementById('tab-logs'), content: document.getElementById('logs') },
             { btn: document.getElementById('tab-levelup'), content: document.getElementById('levelup') }
         ];
