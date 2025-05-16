@@ -731,42 +731,62 @@
                 }
             });
 
+            // Helper function to count and sort items
+            function processItems(items) {
+                const countMap = new Map();
+                items.forEach(item => {
+                    countMap.set(item, (countMap.get(item) || 0) + 1);
+                });
+                return Array.from(countMap.entries())
+                    .sort((a, b) => b[1] - a[1])  // Sort by count descending
+                    .map(([item, count]) => ({item, count}));
+            }
+
             // Update panels with filtered data
             // Diet Panel
             const dietPanel = document.getElementById('dietPanel');
-            const dietItems = new Set();
+            const dietItems = [];
             relevantLogs.forEach(log => {
                 if (log.diet) {
                     for (const [cat, arr] of Object.entries(log.diet)) {
                         if (arr && arr.length) {
-                            arr.forEach(item => dietItems.add(`${cat}: ${item}`));
+                            arr.forEach(item => dietItems.push(`${cat}: ${item}`));
                         }
                     }
                 }
             });
-            const dietHtml = Array.from(dietItems).map(item => `<div>${escapeHtml(item)}</div>`).join('');
+            const sortedDietItems = processItems(dietItems);
+            const dietHtml = sortedDietItems
+                .map(({item, count}) => `<div>${escapeHtml(item)} <span style="color:#aaa;">(${count}×)</span></div>`)
+                .join('');
             dietPanel.innerHTML = dietHtml || '<span style="color:#aaa;">No data in selected mood range</span>';
 
             // Health Panel
             const healthPanel = document.getElementById('healthPanel');
-            const healthItems = new Set();
+            const healthItems = [];
             relevantLogs.forEach(log => {
                 if (log.health && log.health.length) {
-                    log.health.forEach(item => healthItems.add(item));
+                    log.health.forEach(item => healthItems.push(item));
                 }
             });
-            const healthHtml = Array.from(healthItems).map(item => `<div>${escapeHtml(item)}</div>`).join('');
+            const sortedHealthItems = processItems(healthItems);
+            const healthHtml = sortedHealthItems
+                .map(({item, count}) => `<div>${escapeHtml(item)} <span style="color:#aaa;">(${count}×)</span></div>`)
+                .join('');
             healthPanel.innerHTML = healthHtml || '<span style="color:#aaa;">No data in selected mood range</span>';
 
             // Activity Panel
             const activityPanel = document.getElementById('activityPanel');
-            const activityItems = new Set();
+            const activityItems = [];
             relevantLogs.forEach(log => {
                 if (log.activity && log.activity.length) {
-                    log.activity.forEach(item => activityItems.add(item));
+                    log.activity.forEach(item => activityItems.push(item));
                 }
             });
-            const activityHtml = Array.from(activityItems).map(item => `<div>${escapeHtml(item)}</div>`).join('');
+            const sortedActivityItems = processItems(activityItems);
+            const activityHtml = sortedActivityItems
+                .map(({item, count}) => `<div>${escapeHtml(item)} <span style="color:#aaa;">(${count}×)</span></div>`)
+                .join('');
             activityPanel.innerHTML = activityHtml || '<span style="color:#aaa;">No data in selected mood range</span>';
         }
 
