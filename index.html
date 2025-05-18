@@ -224,7 +224,7 @@
             color: var(--text-color);
         }
         .capsule-tab-btn.active {
-            width: 130px; /* Enough for "Level up" or "History" */
+            width: 130px; /* Enough for "Level up" or "Home" */
             border-radius: 24px;
             background: var(--highlight-above);
         }
@@ -325,6 +325,148 @@
             font-size: 0.95em;
             padding: 4px 8px;
         }
+
+        /* Add these styles in the existing <style> section */
+        .panel-item {
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .panel-item:hover {
+            background-color: var(--shadow-dark);
+        }
+
+        #logsContainer {
+            display: none;
+            margin-top: 2rem;
+        }
+
+        #logsContainer.active {
+            display: block;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-size: 1rem;
+            box-shadow: 
+                inset 4px 4px 12px var(--shadow-dark),
+                inset -4px -4px 12px var(--shadow-light);
+        }
+
+        .search-input:focus {
+            outline: none;
+            box-shadow: 
+                inset 6px 6px 16px var(--shadow-dark),
+                inset -6px -6px 16px var(--shadow-light);
+        }
+
+        .log-group {
+            margin-bottom: 2rem;
+        }
+
+        .log-date-header {
+            font-size: 1.2rem;
+            color: var(--text-color);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--shadow-dark);
+        }
+
+        /* New styles for skills grid */
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .skill-item {
+            background: var(--bg-color);
+            border-radius: 12px;
+            padding: 1rem;
+            box-shadow:
+                4px 4px 12px var(--shadow-dark),
+                -4px -4px 12px var(--shadow-light);
+            transition: background 0.3s, box-shadow 0.3s;
+        }
+
+        .skill-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .skill-icon {
+            font-size: 1.8rem;
+            margin-right: 0.75rem;
+            width: 30px;
+            text-align: center;
+        }
+
+        .skill-name {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--text-color);
+            flex-grow: 1;
+        }
+
+        .skill-level {
+            font-size: 0.9rem;
+            color: var(--highlight-above);
+            background-color: var(--shadow-dark);
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            background-color: var(--shadow-dark);
+            border-radius: 5px;
+            height: 12px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: var(--chart-line);
+            width: 0%;
+            border-radius: 5px;
+            transition: width 0.5s ease-in-out;
+        }
+
+        .skill-xp-info {
+            font-size: 0.8em;
+            color: var(--text-color);
+            text-align: right;
+        }
+
+        .skill-focus-section select {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--shadow-dark);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-size: 1rem;
+            box-shadow: inset 2px 2px 5px var(--shadow-dark), inset -2px -2px 5px var(--shadow-light);
+            margin-top: 0.5rem;
+        }
+
+        #dailyTaskContainer {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-gradient-end);
+            border-radius: 8px;
+            min-height: 40px;
+            color: var(--text-color);
+        }
     </style>
 </head>
 <body>
@@ -336,19 +478,23 @@
         </label>
         <!-- Capsule Tab Navigation -->
         <div class="capsule-tab-group">
-            <button class="capsule-tab-btn active" id="tab-history" type="button">
-                <span class="capsule-icon">📅</span>
-                <span class="capsule-text">History</span>
+            <button class="capsule-tab-btn active" id="tab-home" type="button">
+                <span class="capsule-icon">🏡</span>
+                <span class="capsule-text">Home</span>
+            </button>
+            <button class="capsule-tab-btn" id="tab-logs" type="button">
+                <span class="capsule-icon">📝</span>
+                <span class="capsule-text">Logs</span>
             </button>
             <button class="capsule-tab-btn" id="tab-levelup" type="button">
-                <span class="capsule-icon">⬆</span>
+                <span class="capsule-icon">⬆⬆</span>
                 <span class="capsule-text">Level up</span>
             </button>
         </div>
     </div>
 
     <div class="tab-content" style="width:100%;">
-        <div id="history" class="content active">
+        <div id="home" class="content active">
             <!-- Existing main app content goes here (container, box, chart, panels, logs, etc.) -->
             <div class="container">
                 <div class="box">
@@ -387,12 +533,37 @@
                 </div>
             </div>
         </div>
-        <div id="levelup" class="content" style="display:none;">
-            <!-- Placeholder for Level up page -->
+        <div id="logs" class="content" style="display:none;">
             <div class="container">
-                <div class="box" style="text-align:center;">
-                    <h2 style="margin-bottom:1rem;">Level up</h2>
-                    <p>Coming soon: gamified progress, achievements, and more!</p>
+                <div class="box">
+                    <div class="search-container" style="margin-bottom: 2rem;">
+                        <input type="text" id="logSearch" placeholder="Search in logs..." class="search-input">
+                    </div>
+                    <div id="allLogsContainer"></div>
+                </div>
+            </div>
+        </div>
+        <div id="levelup" class="content" style="display:none;">
+            <div class="container">
+                <div class="box">
+                    <h2 style="text-align:center; margin-bottom:1.5rem;">Your Skill Progression</h2>
+                    <div id="skillsContainer" class="skills-grid">
+                        <!-- Skills will be dynamically added here by JavaScript -->
+                    </div>
+                    <div class="skill-focus-section" style="margin-top: 2rem; text-align:center;">
+                        <h3>Focus Skill</h3>
+                        <select id="skillFocusSelect">
+                            <option value="none">None</option>
+                            <option value="strength">Strength</option>
+                            <option value="endurance">Endurance</option>
+                            <option value="intelligence">Intelligence</option>
+                            <option value="charisma">Charisma</option>
+                            <option value="perception">Perception</option>
+                        </select>
+                        <div id="dailyTaskContainer" style="margin-top: 1rem;">
+                            Your daily task will appear here.
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -402,7 +573,8 @@
     // Capsule Tab Logic
     document.addEventListener('DOMContentLoaded', () => {
         const tabBtns = [
-            { btn: document.getElementById('tab-history'), content: document.getElementById('history') },
+            { btn: document.getElementById('tab-home'), content: document.getElementById('home') },
+            { btn: document.getElementById('tab-logs'), content: document.getElementById('logs') },
             { btn: document.getElementById('tab-levelup'), content: document.getElementById('levelup') }
         ];
 
@@ -420,11 +592,25 @@
             });
         }
 
-        tabBtns.forEach((tab, idx) => {
-            tab.btn.addEventListener('click', () => activateTab(idx));
+        tabBtns.forEach((tab, tabIndex) => {
+            tab.btn.addEventListener('click', () => {
+                activateTab(tabIndex);
+                if (tab.content.id === 'logs') {
+                    displayAllLogs();
+                } else if (tab.content.id === 'levelup') {
+                    calculateSkillLevels();
+                    displaySkills();
+                }
+            });
         });
 
-        // Responsive: ensure only one is active at start
+        // Search functionality
+        const searchInput = document.getElementById('logSearch');
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            filterLogs(searchTerm);
+        });
+
         activateTab(0);
     });
     </script>
@@ -454,6 +640,108 @@
         let weekSegments = [];
         let idx = 0;
         let slider = null;
+
+        const SKILLS_CONFIG = {
+            strength:     { icon: '💪', baseXP: 100, exponent: 1.5, currentXP: 0, currentLevel: 0 },
+            endurance:    { icon: '🏃', baseXP: 100, exponent: 1.5, currentXP: 0, currentLevel: 0 },
+            intelligence: { icon: '🧠', baseXP: 120, exponent: 1.6, currentXP: 0, currentLevel: 0 },
+            charisma:     { icon: '🗣️', baseXP: 100, exponent: 1.5, currentXP: 0, currentLevel: 0 },
+            perception:   { icon: '👁️', baseXP: 110, exponent: 1.55, currentXP: 0, currentLevel: 0 },
+            wellbeing:    { icon: '🧘', baseXP: 80,  exponent: 1.4, currentXP: 0, currentLevel: 0 }
+        };
+
+        function getXPForLevel(level, baseXP, exponent) {
+            if (level <= 0) return 0;
+            let totalXPNeeded = 0;
+            for (let i = 1; i <= level; i++) {
+                totalXPNeeded += Math.floor(baseXP * Math.pow(i, exponent - 1));
+            }
+            return totalXPNeeded;
+        }
+
+        function calculateSkillLevels() {
+            for (const skillName in SKILLS_CONFIG) {
+                const config = SKILLS_CONFIG[skillName];
+                config.currentXP = 0;
+                config.currentLevel = 0;
+            }
+
+            allUserLogs.forEach(log => {
+                for (const skillName in SKILLS_CONFIG) {
+                    const xpField = `${skillName}_xp_gained`;
+                    if (log[xpField] && typeof log[xpField] === 'number') {
+                        SKILLS_CONFIG[skillName].currentXP += log[xpField];
+                    }
+                }
+            });
+
+            for (const skillName in SKILLS_CONFIG) {
+                const config = SKILLS_CONFIG[skillName];
+                let level = 0;
+                let xpRemaining = config.currentXP;
+                let xpForNextLevel = 0;
+
+                while (true) {
+                    xpForNextLevel = getXPForLevel(level + 1, config.baseXP, config.exponent) - 
+                                    getXPForLevel(level, config.baseXP, config.exponent);
+                    if (xpRemaining >= xpForNextLevel && xpForNextLevel > 0) {
+                        xpRemaining -= xpForNextLevel;
+                        level++;
+                    } else {
+                        break;
+                    }
+                }
+                config.currentLevel = level;
+                config.xpTowardsNextLevel = xpRemaining;
+                config.xpToCompleteCurrentLevel = xpForNextLevel;
+            }
+        }
+
+        function displaySkills() {
+        const skillsContainer = document.getElementById('skillsContainer');
+        if (!skillsContainer) return;
+        skillsContainer.innerHTML = '';
+
+        let skillsToShowCount = 0;
+
+        for (const skillName in SKILLS_CONFIG) {
+            const config = SKILLS_CONFIG[skillName];
+
+            if (config.currentXP > 0) {
+                skillsToShowCount++;
+
+                const level = config.currentLevel;
+                const xpNeededForThisLevel = getXPForLevel(level + 1, config.baseXP, config.exponent) - 
+                                        getXPForLevel(level, config.baseXP, config.exponent);
+                const currentXPInThisLevel = config.xpTowardsNextLevel;
+                
+                let progressPercent = (xpNeededForThisLevel > 0) ? 
+                    (currentXPInThisLevel / xpNeededForThisLevel) * 100 : 0;
+                progressPercent = Math.min(progressPercent, 100);
+
+                const skillDiv = document.createElement('div');
+                skillDiv.className = 'skill-item';
+                skillDiv.innerHTML = `
+                    <div class="skill-header">
+                        <span class="skill-icon">${config.icon}</span>
+                        <span class="skill-name">${skillName.charAt(0).toUpperCase() + skillName.slice(1)}</span>
+                        <span class="skill-level">Lvl ${level}</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" style="width: ${progressPercent}%;"></div>
+                    </div>
+                    <div class="skill-xp-info">
+                        ${currentXPInThisLevel}/${xpNeededForThisLevel} XP
+                    </div>
+                `;
+                skillsContainer.appendChild(skillDiv);
+            }
+        }
+
+        if (skillsToShowCount === 0) {
+            skillsContainer.innerHTML = '<p style="text-align:center; color:var(--text-color);">Start logging activities to see your skills grow here!</p>';
+        }
+    }
 
         tg.ready(); tg.expand();
 
@@ -495,14 +783,23 @@
                     if (data.logs && data.logs.length > 0) {
                         allUserLogs = data.logs.map(log => ({
                             ...log,
-                            logged_at_date: new Date(log.logged_at.replace(' ', 'T') + 'Z')
+                            logged_at_date: new Date(log.logged_at.replace(' ', 'T') + 'Z'),
+                            strength_xp_gained: log.strength_xp_gained || 0,
+                            endurance_xp_gained: log.endurance_xp_gained || 0,
+                            intelligence_xp_gained: log.intelligence_xp_gained || 0,
+                            charisma_xp_gained: log.charisma_xp_gained || 0,
+                            perception_xp_gained: log.perception_xp_gained || 0,
+                            wellbeing_xp_gained: log.wellbeing_xp_gained || 0
                         }));
                         allUserLogs.sort((a, b) => a.logged_at_date - b.logged_at_date);
                         weekSegments = splitLogsToWeeks(allUserLogs);
-                        idx = weekSegments.length-1; // show latest week
+                        idx = weekSegments.length-1;
                         setupChartAndSlider();
                         updateView();
-                        displayLogEntries(allUserLogs);
+                        
+                        // Calculate and display skills
+                        calculateSkillLevels();
+                        displaySkills();
                     } else {
                         document.getElementById('logsContainer').innerHTML = '<p style="text-align:center;">No logs found yet.</p>';
                     }
@@ -742,6 +1039,17 @@
                     .map(([item, count]) => ({item, count}));
             }
 
+            // Helper function to create panel HTML
+            function createPanelHtml(sortedItems, type) {
+                return sortedItems.length ? 
+                    sortedItems.map(({item, count}) => 
+                        `<div class="panel-item" data-item="${escapeHtml(item)}" data-type="${type}">
+                            ${escapeHtml(item)} <span style="color:#aaa;">(${count}×)</span>
+                        </div>`
+                    ).join('') : 
+                    '<span style="color:#aaa;">No data in selected mood range</span>';
+            }
+
             // Update panels with filtered data
             // Diet Panel
             const dietPanel = document.getElementById('dietPanel');
@@ -756,10 +1064,7 @@
                 }
             });
             const sortedDietItems = processItems(dietItems);
-            const dietHtml = sortedDietItems
-                .map(({item, count}) => `<div>${escapeHtml(item)} <span style="color:#aaa;">(${count}×)</span></div>`)
-                .join('');
-            dietPanel.innerHTML = dietHtml || '<span style="color:#aaa;">No data in selected mood range</span>';
+            dietPanel.innerHTML = createPanelHtml(sortedDietItems, 'diet');
 
             // Health Panel
             const healthPanel = document.getElementById('healthPanel');
@@ -770,10 +1075,7 @@
                 }
             });
             const sortedHealthItems = processItems(healthItems);
-            const healthHtml = sortedHealthItems
-                .map(({item, count}) => `<div>${escapeHtml(item)} <span style="color:#aaa;">(${count}×)</span></div>`)
-                .join('');
-            healthPanel.innerHTML = healthHtml || '<span style="color:#aaa;">No data in selected mood range</span>';
+            healthPanel.innerHTML = createPanelHtml(sortedHealthItems, 'health');
 
             // Activity Panel
             const activityPanel = document.getElementById('activityPanel');
@@ -784,12 +1086,39 @@
                 }
             });
             const sortedActivityItems = processItems(activityItems);
-            const activityHtml = sortedActivityItems
-                .map(({item, count}) => `<div>${escapeHtml(item)} <span style="color:#aaa;">(${count}×)</span></div>`)
-                .join('');
-            activityPanel.innerHTML = activityHtml || '<span style="color:#aaa;">No data in selected mood range</span>';
+            activityPanel.innerHTML = createPanelHtml(sortedActivityItems, 'activity');
+
+            // Add click handlers
+            document.querySelectorAll('.panel-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const itemText = item.dataset.item;
+                    const itemType = item.dataset.type;
+                    showRelevantLogs(itemText, itemType, relevantLogs);
+                });
+            });
         }
 
+
+        // Add this new function to handle showing relevant logs
+        function showRelevantLogs(itemText, itemType, logs) {
+            const relevantLogs = logs.filter(log => {
+                if (itemType === 'diet') {
+                    return log.diet && Object.entries(log.diet).some(([cat, arr]) => 
+                        arr && arr.length && arr.some(item => `${cat}: ${item}` === itemText)
+                    );
+                } else {
+                    return log[itemType] && log[itemType].includes(itemText);
+                }
+            });
+            
+            // Display the filtered logs
+            const container = document.getElementById('logsContainer');
+            container.classList.add('active');
+            displayLogEntries(relevantLogs);
+            
+            // Scroll logs into view
+            container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
 
         function displayLogEntries(logsToDisplay) {
             const container = document.getElementById('logsContainer');
@@ -815,6 +1144,17 @@
                         log.activity.forEach(a => { htmlContent += `<li>${escapeHtml(a)}</li>`; });
                         htmlContent += `</ul></div>`;
                     }
+                    if (log.diet) {
+                        htmlContent += `<div class="log-section"><h3>Diet</h3><ul>`;
+                        for (const [category, items] of Object.entries(log.diet)) {
+                            if (items && items.length) {
+                                items.forEach(item => {
+                                    htmlContent += `<li>${escapeHtml(category)}: ${escapeHtml(item)}</li>`; // Changed html to htmlContent
+                                });
+                            }
+                        }
+                        htmlContent += `</ul></div>`;
+                    }
                     entryDiv.innerHTML = htmlContent;
                     container.appendChild(entryDiv);
                 });
@@ -823,10 +1163,121 @@
             }
         }
 
-        function escapeHtml(unsafe) {
-            if (typeof unsafe !== 'string') {
-                return '';
+        function displayAllLogs() {
+            const container = document.getElementById('allLogsContainer');
+            if (!allUserLogs || !allUserLogs.length) {
+                container.innerHTML = '<p style="text-align:center;">No logs found.</p>';
+                return;
             }
+
+            // Group logs by date
+            const groupedLogs = new Map();
+            allUserLogs.forEach(log => {
+                const dateKey = formatDate(log.logged_at_date);
+                if (!groupedLogs.has(dateKey)) {
+                    groupedLogs.set(dateKey, []);
+                }
+                groupedLogs.get(dateKey).push(log);
+            });
+
+            // Sort dates in descending order
+            const sortedDates = Array.from(groupedLogs.keys()).sort().reverse();
+            
+            // Generate HTML
+            container.innerHTML = sortedDates.map(date => {
+                const logs = groupedLogs.get(date);
+                return `
+                    <div class="log-group" data-date="${date}">
+                        <div class="log-date-header">${luxon.DateTime.fromISO(date).toFormat('LLLL d, yyyy')}</div>
+                        ${logs.map(log => createLogEntryHtml(log)).join('')}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function createLogEntryHtml(log) {
+            let htmlContent = `<div class="log-entry" data-log-content="${escapeHtml(JSON.stringify(log))}">
+                <div class="log-meta">Logged: ${log.logged_at}</div>`;
+            
+            if(log.original_note) {
+                htmlContent += `<div class="log-original-note"><strong>Original:</strong> ${escapeHtml(log.original_note)}</div>`;
+            }
+            if (log.mood_label) {
+                htmlContent += `<div class="log-section"><h3>Mood</h3><span class="tag">${escapeHtml(log.mood_label)} (${log.mood_score || 'N/A'})</span></div>`;
+            }
+            if (log.health && log.health.length > 0) {
+                htmlContent += `<div class="log-section"><h3>Health</h3><ul>`;
+                log.health.forEach(h => { htmlContent += `<li>${escapeHtml(h)}</li>`; });
+                htmlContent += `</ul></div>`;
+            }
+            if (log.activity && log.activity.length > 0) {
+                htmlContent += `<div class="log-section"><h3>Activity</h3><ul>`;
+                log.activity.forEach(a => { htmlContent += `<li>${escapeHtml(a)}</li>`; });
+                htmlContent += `</ul></div>`;
+            }
+            if (log.diet) {
+                htmlContent += `<div class="log-section"><h3>Diet</h3><ul>`;
+                for (const [category, items] of Object.entries(log.diet)) {
+                    if (items && items.length) {
+                        items.forEach(item => {
+                            htmlContent += `<li>${escapeHtml(category)}: ${escapeHtml(item)}</li>`;
+                        });
+                    }
+                }
+                htmlContent += `</ul></div>`;
+            }
+            htmlContent += `</div>`;
+            return htmlContent;
+        }
+
+        function filterLogs(searchTerm) {
+            const logEntries = document.querySelectorAll('.log-entry');
+            const groups = document.querySelectorAll('.log-group');
+            
+            groups.forEach(group => {
+                let hasVisibleLogs = false;
+                const logsInGroup = group.querySelectorAll('.log-entry');
+                
+                logsInGroup.forEach(entry => {
+                    const logData = JSON.parse(entry.dataset.logContent);
+                    const shouldShow = searchInLog(logData, searchTerm);
+                    entry.style.display = shouldShow ? '' : 'none';
+                    if (shouldShow) hasVisibleLogs = true;
+                });
+                
+                group.style.display = hasVisibleLogs ? '' : 'none';
+            });
+        }
+
+        function searchInLog(log, term) {
+            if (!term) return true;
+            
+            // Search in original note
+            if (log.original_note && log.original_note.toLowerCase().includes(term)) return true;
+            
+            // Search in mood label
+            if (log.mood_label && log.mood_label.toLowerCase().includes(term)) return true;
+            
+            // Search in health items
+            if (log.health && log.health.some(h => h.toLowerCase().includes(term))) return true;
+            
+            // Search in activities
+            if (log.activity && log.activity.some(a => a.toLowerCase().includes(term))) return true;
+            
+            // Search in diet items
+            if (log.diet) {
+                for (const [category, items] of Object.entries(log.diet)) {
+                    if (items && items.some(item => 
+                        item.toLowerCase().includes(term) || 
+                        category.toLowerCase().includes(term)
+                    )) return true;
+                }
+            }
+            
+            return false;
+        }
+
+        function escapeHtml(unsafe) {
             return unsafe
                 .replace(/&/g, "&amp;")
                 .replace(/</g, "&lt;")
