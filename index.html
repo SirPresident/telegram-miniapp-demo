@@ -975,22 +975,37 @@
         }
 
         function updateView() {
-            // Update chart data & gradient
-            const weekData = getWeekMoodData(idx);
+            const weekData = getWeekMoodData(idx); // This should give 7 {x, y} points
             moodChartInstance.data.datasets[0].data = weekData;
             moodChartInstance.data.datasets[0].backgroundColor = makeGradient(moodChartInstance.ctx);
-            // Update label
-            if (weekData.length) {
-                const a=weekData[0].x, b=weekData.slice(-1)[0].x;
-                document.getElementById('segmentLabel').textContent = `${luxon.DateTime.fromISO(a).toFormat('LLL dd')} – ${luxon.DateTime.fromISO(b).toFormat('LLL dd')}`;
-            } else {
-                document.getElementById('segmentLabel').textContent = '';
+
+            // Update label and button states
+            const currentWeekSegment = weekSegments[idx];
+            if (currentWeekSegment && currentWeekSegment.length > 0) {
+                // Calculate the start and end of the week for the X-axis
+                const weekStartDate = getStartOfWeek(currentWeekSegment[0].logged_at_date);
+                const weekEndDate = addDays(weekStartDate, 6); // Monday + 6 days = Sunday
+
+                // Set min and max for the x-axis to ensure full week display
+                moodChartInstance.options.scales.x.min = luxon.DateTime.fromJSDate(weekStartDate).toISODate();
+                moodChartInstance.options.scales.x.max = luxon.DateTime.fromJSDate(weekEndDate).toISODate();
+                
+                // Update segment label using these explicit start/end dates for consistency
+                document.getElementById('segmentLabel').textContent = 
+                    `${luxon.DateTime.fromJSDate(weekStartDate).toFormat('LLL dd')} – ${luxon.DateTime.fromJSDate(weekEndDate).toFormat('LLL dd')}`;
+
+            } else { // Handle empty week segment
+                document.getElementById('segmentLabel').textContent = 'No data for this week';
+                // Optionally clear or set default min/max for x-axis if no data
+                // moodChartInstance.options.scales.x.min = undefined;
+                // moodChartInstance.options.scales.x.max = undefined;
             }
-            document.getElementById('prevWeekBtn').disabled = idx===0;
-            document.getElementById('nextWeekBtn').disabled = idx===weekSegments.length-1;
-            // Panels
-            updatePanels(idx);
-            moodChartInstance.update();
+
+            document.getElementById('prevWeekBtn').disabled = (idx === 0);
+            document.getElementById('nextWeekBtn').disabled = (idx === weekSegments.length - 1);
+            
+            updatePanels(idx); // Update panels based on the current week and slider
+            moodChartInstance.update(); // Update the chart
         }
 
         function updatePanels(weekIdx) {
