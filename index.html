@@ -888,16 +888,16 @@
             // Chart instance
             moodChartInstance = new Chart(ctx,{
                 type:'line',
-                data:{ datasets:[{ label:'Mood', data:[], fill:true, backgroundColor:makeGradient(ctx), borderColor:getComputedStyle(document.documentElement).getPropertyValue('--chart-line').trim(), pointRadius:5, tension:0.3 }]},
+                data:{ datasets:[{ label:'Mood', data:[], fill:true, backgroundColor:makeGradient(ctx), borderColor:getComputedStyle(document.documentElement).getPropertyValue('--chart-line').trim(), pointRadius:5, tension:0.3, snapGaps: true }]},
                 options:{
                     responsive:true,
                     maintainAspectRatio:false,
                     scales:{
                         x:{
                             type:'time',
-                            time:{ unit:'day',tooltipFormat:'MMM dd' },
+                            time:{ unit:'day',tooltipFormat:'MMM dd', displayFormats:{ day:'MMM dd' } },
                             grid:{display:false},
-                            ticks:{ color:getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() }
+                            ticks:{ color:getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim(), source: 'data' }
                         },
                         y:{
                             min:1,max:5,
@@ -956,7 +956,6 @@
 
         function getWeekMoodData(weekIdx) {
             if (!weekSegments[weekIdx]) return [];
-            // For each day in week, average mood_score
             const week = weekSegments[weekIdx];
             if (!week.length) return [];
             const start = getStartOfWeek(week[0].logged_at_date);
@@ -964,12 +963,13 @@
             for (let i = 0; i < 7; i++) {
                 const d = addDays(start, i);
                 const dayLogs = week.filter(l => formatDate(l.logged_at_date) === formatDate(d) && l.mood_score !== null && l.mood_score !== undefined);
-                if (dayLogs.length) {
-                    const avg = dayLogs.reduce((s, l) => s + l.mood_score, 0) / dayLogs.length;
-                    days.push({x: luxon.DateTime.fromJSDate(d).toISODate(), y: avg});
-                } else {
-                    days.push({x: luxon.DateTime.fromJSDate(d).toISODate(), y: null});
-                }
+                const avg = dayLogs.length 
+                    ? dayLogs.reduce((s, l) => s + l.mood_score, 0) / dayLogs.length 
+                    : null;
+                days.push({
+                    x: luxon.DateTime.fromJSDate(d).toISODate(),
+                    y: avg
+                });
             }
             return days;
         }
