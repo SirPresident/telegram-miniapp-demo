@@ -954,25 +954,25 @@
             return g;
         }
 
-        function getWeekMoodData(weekIdx) {
-            if (!weekSegments[weekIdx]) return [];
-            const week = weekSegments[weekIdx];
-            if (!week.length) return [];
-            const start = getStartOfWeek(week[0].logged_at_date);
-            const days = [];
-            for (let i = 0; i < 10; i++) {
-                const d = addDays(start, i);
-                const dayLogs = week.filter(l => formatDate(l.logged_at_date) === formatDate(d) && l.mood_score !== null && l.mood_score !== undefined);
-                const avg = dayLogs.length 
-                    ? dayLogs.reduce((s, l) => s + l.mood_score, 0) / dayLogs.length 
-                    : null;
-                days.push({
-                    x: luxon.DateTime.fromJSDate(d).toISODate(),
-                    y: avg
-                });
-            }
-            return days;
-        }
+function getWeekMoodData(weekIdx) {
+    if (!weekSegments[weekIdx]) return [];
+    const week = weekSegments[weekIdx];
+    if (!week.length) return [];
+    const start = getStartOfWeek(week[0].logged_at_date);
+    const days = [];
+    for (let i = 0; i < 10; i++) {  // Changed from 7 to 10
+        const d = addDays(start, i);
+        const dayLogs = week.filter(l => formatDate(l.logged_at_date) === formatDate(d) && l.mood_score !== null && l.mood_score !== undefined);
+        const avg = dayLogs.length 
+            ? dayLogs.reduce((s, l) => s + l.mood_score, 0) / dayLogs.length 
+            : null;
+        days.push({
+            x: luxon.DateTime.fromJSDate(d).toISODate(),
+            y: avg
+        });
+    }
+    return days;
+}
 
         function updateView() {
             const weekData = getWeekMoodData(idx); // This should give 7 {x, y} points
@@ -984,7 +984,7 @@
             if (currentWeekSegment && currentWeekSegment.length > 0) {
                 // Calculate the start and end of the week for the X-axis
                 const weekStartDate = getStartOfWeek(currentWeekSegment[0].logged_at_date);
-                const weekEndDate = addDays(weekStartDate, 6); // Monday + 6 days = Sunday
+                const weekEndDate = addDays(weekStartDate, 9); // Monday + 6 days = Sunday
 
                 // Set min and max for the x-axis to ensure full week display
                 moodChartInstance.options.scales.x.min = luxon.DateTime.fromJSDate(weekStartDate).toISODate();
