@@ -783,7 +783,7 @@
                     if (data.logs && data.logs.length > 0) {
                         allUserLogs = data.logs.map(log => ({
                             ...log,
-                            logged_at_date: new Date(log.logged_at.replace(' ', 'T') + 'Z'),
+                            logged_at_date: new Date(log.logged_at.replace(' ', 'T')),
                             strength_xp_gained: log.strength_xp_gained || 0,
                             endurance_xp_gained: log.endurance_xp_gained || 0,
                             intelligence_xp_gained: log.intelligence_xp_gained || 0,
