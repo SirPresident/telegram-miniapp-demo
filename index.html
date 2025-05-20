@@ -813,25 +813,25 @@
             }
         }
 
-        function splitLogsToWeeks(logs) {
-            if (!logs.length) return [];
-            // Group logs by week (Monday-Sunday)
-            const weeks = [];
-            let week = [];
-            let weekStart = getStartOfWeek(logs[0].logged_at_date);
-            logs.forEach(log => {
-                const logDate = log.logged_at_date;
-                if (logDate >= weekStart && logDate < addDays(weekStart, 7)) {
-                    week.push(log);
-                } else {
-                    weeks.push(week);
-                    week = [log];
-                    weekStart = getStartOfWeek(logDate);
-                }
-            });
-            if (week.length) weeks.push(week);
-            return weeks;
+function splitLogsToWeeks(logs) {
+    if (!logs.length) return [];
+    // Group logs by 10-day periods
+    const weeks = [];
+    let week = [];
+    let weekStart = getStartOfWeek(logs[0].logged_at_date);
+    logs.forEach(log => {
+        const logDate = log.logged_at_date;
+        if (logDate >= weekStart && logDate < addDays(weekStart, 10)) { // Changed from 7 to 10
+            week.push(log);
+        } else {
+            weeks.push(week);
+            week = [log];
+            weekStart = getStartOfWeek(logDate);
         }
+    });
+    if (week.length) weeks.push(week);
+    return weeks;
+}
 
         function getStartOfWeek(date) {
             const d = new Date(date);
