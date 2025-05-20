@@ -781,9 +781,11 @@
                     const data = await response.json();
                     loadingDiv.style.display = 'none';
                     if (data.logs && data.logs.length > 0) {
-                        allUserLogs = data.logs.map(log => ({
+                        // allUserLogs = data.logs.map(log => ({
+                        const allUserLogs = data.logs.map(log => ({
                             ...log,
-                            logged_at_date: new Date(log.logged_at.replace(' ', 'T')), // Remove the + 'Z'
+                            // logged_at_date: new Date(log.logged_at.replace(' ', 'T')), // Remove the + 'Z'
+                            logged_at_date: new Date(log.logged_at),
                             strength_xp_gained: log.strength_xp_gained || 0,
                             endurance_xp_gained: log.endurance_xp_gained || 0,
                             intelligence_xp_gained: log.intelligence_xp_gained || 0,
