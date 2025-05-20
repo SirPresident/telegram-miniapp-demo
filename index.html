@@ -813,34 +813,37 @@
             }
         }
 
-        function splitLogsToWeeks(logs) {
-            if (!logs.length) return [];
-            // Group logs by week (Monday-Sunday)
-            const weeks = [];
-            let week = [];
-            let weekStart = getStartOfWeek(logs[0].logged_at_date);
-            logs.forEach(log => {
-                const logDate = log.logged_at_date;
-                if (logDate >= weekStart && logDate < addDays(weekStart, 7)) {
-                    week.push(log);
-                } else {
-                    weeks.push(week);
-                    week = [log];
-                    weekStart = getStartOfWeek(logDate);
-                }
-            });
+function splitLogsToWeeks(logs) {
+    if (!logs.length) return [];
+    const weeks = [];
+    let week = [];
+    let weekStart = getStartOfWeek(logs[0].logged_at_date);
+    let weekEnd = addDays(weekStart, 7); // End of week (start of next week)
+    
+    logs.forEach(log => {
+        const logDate = log.logged_at_date;
+        // Use more inclusive date comparison
+        if (logDate >= weekStart && logDate < weekEnd) {
+            week.push(log);
+        } else {
             if (week.length) weeks.push(week);
-            return weeks;
+            week = [log];
+            weekStart = getStartOfWeek(logDate);
+            weekEnd = addDays(weekStart, 7);
         }
+    });
+    if (week.length) weeks.push(week);
+    return weeks;
+}
 
-        function getStartOfWeek(date) {
-            const d = new Date(date);
-            const day = d.getDay();
-            const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-            d.setDate(diff);
-            d.setHours(0,0,0,0);
-            return d;
-        }
+function getStartOfWeek(date) {
+    const d = new Date(date);
+    d.setHours(0,0,0,0); // Reset time part first
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust days
+    d.setDate(diff);
+    return d;
+}
         function addDays(date, days) {
             const result = new Date(date);
             result.setDate(result.getDate() + days);
