@@ -960,7 +960,7 @@
             if (!week.length) return [];
             const start = getStartOfWeek(week[0].logged_at_date);
             const days = [];
-            for (let i = 0; i < 7; i++) {
+            for (let i = 0; i < 10; i++) {
                 const d = addDays(start, i);
                 const dayLogs = week.filter(l => formatDate(l.logged_at_date) === formatDate(d) && l.mood_score !== null && l.mood_score !== undefined);
                 const avg = dayLogs.length 
