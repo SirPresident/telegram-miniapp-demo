@@ -783,7 +783,7 @@
                     if (data.logs && data.logs.length > 0) {
                         allUserLogs = data.logs.map(log => ({
                             ...log,
-                            logged_at_date: new Date(log.logged_at.replace(' ', 'T') + 'Z'),
+                            logged_at_date: new Date(log.logged_at.replace(' ', 'T')), // Remove the + 'Z'
                             strength_xp_gained: log.strength_xp_gained || 0,
                             endurance_xp_gained: log.endurance_xp_gained || 0,
                             intelligence_xp_gained: log.intelligence_xp_gained || 0,
@@ -895,7 +895,7 @@ function splitLogsToWeeks(logs) {
                     scales:{
                         x:{
                             type:'time',
-                            time:{ unit:'day',tooltipFormat:'MMM dd', displayFormats:{ day:'MMM dd' } },
+                            time:{ unit:'day',tooltipFormat:'MMM dd', displayFormats:{ day:'MMM dd' }, timezone: 'local' },
                             grid:{display:false},
                             ticks:{ color:getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim(), source: 'data' }
                         },
