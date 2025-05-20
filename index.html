@@ -1237,6 +1237,119 @@
                 .replace(/"/g, "&quot;")
                 .replace(/'/g, "&#039;");
         }
+
+        function setupChartAndSlider() {
+            // Setup Chart
+            const ctx = document.getElementById('moodScoreChart').getContext('2d');
+            
+            function makeGradient(ctx) {
+                const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+                gradient.addColorStop(0, getComputedStyle(document.documentElement).getPropertyValue('--chart-grad-start').trim());
+                gradient.addColorStop(1, getComputedStyle(document.documentElement).getPropertyValue('--chart-grad-end').trim());
+                return gradient;
+            }
+
+            moodChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: [{
+                        label: 'Mood',
+                        data: [],
+                        fill: true,
+                        backgroundColor: makeGradient(ctx),
+                        borderColor: getComputedStyle(document.documentElement).getPropertyValue('--chart-line').trim(),
+                        pointRadius: 5,
+                        tension: 0.3,
+                        spanGaps: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'day',
+                                tooltipFormat: 'MMM dd',
+                                displayFormats: {
+                                    day: 'MMM dd'
+                                }
+                            },
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim(),
+                                source: 'data'
+                            }
+                        },
+                        y: {
+                            min: 0,
+                            max: 5,
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim()
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        zoom: {
+                            zoom: {
+                                wheel: {
+                                    enabled: true
+                                },
+                                pinch: {
+                                    enabled: true
+                                },
+                                mode: 'x'
+                            },
+                            pan: {
+                                enabled: true,
+                                mode: 'x'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Setup Slider
+            const sliderElement = document.getElementById('slider');
+            slider = noUiSlider.create(sliderElement, {
+                start: [0, 5],
+                connect: true,
+                orientation: 'vertical',
+                direction: 'rtl',
+                range: {
+                    'min': 0,
+                    'max': 5
+                },
+                step: 0.5,
+                tooltips: true,
+                format: {
+                    to: value => value.toFixed(1),
+                    from: value => Number(value)
+                }
+            });
+
+            // Update panels when slider values change
+            slider.on('change', () => {
+                updatePanels(idx);
+            });
+        }
+
+        // Add makeGradient as a global function since it's used elsewhere
+        function makeGradient(ctx) {
+            const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+            gradient.addColorStop(0, getComputedStyle(document.documentElement).getPropertyValue('--chart-grad-start').trim());
+            gradient.addColorStop(1, getComputedStyle(document.documentElement).getPropertyValue('--chart-grad-end').trim());
+            return gradient;
+        }
     </script>
 </body>
 </html>
