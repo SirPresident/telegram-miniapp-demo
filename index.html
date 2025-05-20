@@ -769,42 +769,85 @@
             loadingDiv.style.display = 'block';
 
             if (!telegramUser || !telegramUser.id) {
-                loadingDiv.innerText = 'User ID missing for fetching logs.'; return;
+                loadingDiv.innerText = 'User ID missing for fetching logs.';
+                return;
             }
+
             const fetchUrl = `${BACKEND_URL_BASE}/api/get_user_logs/?telegram_id=${telegramUser.id}`;
             try {
                 const response = await fetch(fetchUrl, {
                     method: 'GET',
                     headers: {'Content-Type': 'application/json', 'bypass-tunnel-reminder': 'true'}
                 });
+
                 if (response.ok) {
                     const data = await response.json();
                     loadingDiv.style.display = 'none';
+
                     if (data.logs && data.logs.length > 0) {
-                        allUserLogs = data.logs.map(log => ({
-                            ...log,
-                            logged_at_date: new Date(log.logged_at.replace(' ', 'T') + 'Z'),
-                            strength_xp_gained: log.strength_xp_gained || 0,
-                            endurance_xp_gained: log.endurance_xp_gained || 0,
-                            intelligence_xp_gained: log.intelligence_xp_gained || 0,
-                            charisma_xp_gained: log.charisma_xp_gained || 0,
-                            perception_xp_gained: log.perception_xp_gained || 0,
-                            wellbeing_xp_gained: log.wellbeing_xp_gained || 0
-                        }));
-                        allUserLogs.sort((a, b) => a.logged_at_date - b.logged_at_date);
+                        allUserLogs = data.logs.map(log => {
+                            const luxonDt = luxon.DateTime.fromISO(log.logged_at);
+                            if (!luxonDt.isValid) {
+                                console.error("Invalid date string from backend:", log.logged_at, "for log ID:", log.id);
+                                return { ...log, luxon_logged_at: null, logged_at_date: new Date(NaN) };
+                            }
+                            return {
+                                ...log,
+                                luxon_logged_at: luxonDt,
+                                logged_at_date: luxonDt.toJSDate(),
+                                strength_xp_gained: log.strength_xp_gained || 0,
+                                endurance_xp_gained: log.endurance_xp_gained || 0,
+                                intelligence_xp_gained: log.intelligence_xp_gained || 0,
+                                charisma_xp_gained: log.charisma_xp_gained || 0,
+                                perception_xp_gained: log.perception_xp_gained || 0,
+                                wellbeing_xp_gained: log.wellbeing_xp_gained || 0
+                            };
+                        }).filter(log => log.luxon_logged_at !== null);
+
+                        if (!allUserLogs.length && data.logs.length > 0) {
+                            document.getElementById('logsContainer').innerHTML = 
+                                '<p style="text-align:center;">Some logs had invalid dates and could not be processed.</p>';
+                            return;
+                        }
+
+                        if (!allUserLogs.length) {
+                            document.getElementById('logsContainer').innerHTML = 
+                                '<p style="text-align:center;">No valid logs found yet.</p>';
+                            return;
+                        }
+
+                        allUserLogs.sort((a, b) => a.luxon_logged_at.toMillis() - b.luxon_logged_at.toMillis());
                         weekSegments = splitLogsToWeeks(allUserLogs);
-                        idx = weekSegments.length-1;
-                        setupChartAndSlider();
-                        updateView();
-                        
-                        // Calculate and display skills
-                        calculateSkillLevels();
-                        displaySkills();
+                        idx = weekSegments.length - 1;
+                        if (idx < 0) idx = 0;
+
+                        if (weekSegments.length > 0) {
+                            setupChartAndSlider();
+                            updateView();
+                            
+                            // Calculate and display skills
+                            calculateSkillLevels();
+                            displaySkills();
+                        } else {
+                            document.getElementById('logsContainer').innerHTML = 
+                                '<p style="text-align:center;">No weekly data to display.</p>';
+                        }
+
+                        if (document.getElementById('tab-logs') && 
+                            document.getElementById('tab-logs').classList.contains('active')) {
+                            displayAllLogs();
+                        }
+
                     } else {
-                        document.getElementById('logsContainer').innerHTML = '<p style="text-align:center;">No logs found yet.</p>';
+                        document.getElementById('logsContainer').innerHTML = 
+                            '<p style="text-align:center;">No logs found yet.</p>';
                     }
                 } else {
-                    let errTxt = response.statusText; try {const eD = await response.json(); errTxt = eD.error || errTxt;} catch(e){}
+                    let errTxt = response.statusText;
+                    try {
+                        const eD = await response.json();
+                        errTxt = eD.error || errTxt;
+                    } catch(e){}
                     loadingDiv.innerText = `Error loading logs: ${response.status} ${errTxt}`;
                 }
             } catch (error) {
@@ -815,197 +858,91 @@
 
         function splitLogsToWeeks(logs) {
             if (!logs.length) return [];
-            // Group logs by week (Monday-Sunday)
             const weeks = [];
-            let week = [];
-            let weekStart = getStartOfWeek(logs[0].logged_at_date);
+            let currentWeekData = [];
+            let currentWeekStartLuxon = getStartOfWeek(logs[0].luxon_logged_at);
+
             logs.forEach(log => {
-                const logDate = log.logged_at_date;
-                if (logDate >= weekStart && logDate < addDays(weekStart, 7)) {
-                    week.push(log);
+                if (log.luxon_logged_at >= currentWeekStartLuxon && 
+                    log.luxon_logged_at < currentWeekStartLuxon.plus({ weeks: 1 })) {
+                    currentWeekData.push(log);
                 } else {
-                    weeks.push(week);
-                    week = [log];
-                    weekStart = getStartOfWeek(logDate);
+                    if (currentWeekData.length > 0) weeks.push(currentWeekData);
+                    currentWeekData = [log];
+                    currentWeekStartLuxon = getStartOfWeek(log.luxon_logged_at);
                 }
             });
-            if (week.length) weeks.push(week);
+            if (currentWeekData.length > 0) weeks.push(currentWeekData);
             return weeks;
         }
 
-        function getStartOfWeek(date) {
-            const d = new Date(date);
-            const day = d.getDay();
-            const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-            d.setDate(diff);
-            d.setHours(0,0,0,0);
-            return d;
-        }
-        function addDays(date, days) {
-            const result = new Date(date);
-            result.setDate(result.getDate() + days);
-            return result;
-        }
-        function formatDate(date) {
-            return date.toISOString().split('T')[0];
+        function getStartOfWeek(luxonDateTime) {
+            return luxonDateTime.startOf('week');
         }
 
-        function setupChartAndSlider() {
-            // Prepare data for the current week
-            const ctx = document.getElementById('moodScoreChart').getContext('2d');
-            // Plugins
-            const thresholdPlugin = {
-                id:'thresholdPlugin',
-                beforeDraw(c){
-                    const {ctx,chartArea:{left,right},scales:{y}} = c;
-                    const {min,max} = c.config.options.thresholds;
-                    ctx.save(); ctx.setLineDash([6,4]);
-                    ctx.strokeStyle='crimson';
-                    ctx.beginPath();
-                    ctx.moveTo(left,y.getPixelForValue(min));
-                    ctx.lineTo(right,y.getPixelForValue(min));
-                    ctx.stroke();
-                    ctx.strokeStyle='seagreen';
-                    ctx.beginPath();
-                    ctx.moveTo(left,y.getPixelForValue(max));
-                    ctx.lineTo(right,y.getPixelForValue(max));
-                    ctx.stroke();
-                    ctx.restore();
-                }
-            };
-            const syncHeight = {
-                id:'syncHeight',
-                afterLayout(c){
-                    const slider = document.getElementById('slider');
-                    const y = c.scales.y;
-                    const top = y.getPixelForValue(c.options.scales.y.max);
-                    const bot = y.getPixelForValue(c.options.scales.y.min);
-                    const OFF = 0;
-                    slider.style.marginTop = (top-OFF)+'px';
-                    slider.style.height    = (bot-top+OFF*2)+'px';
-                }
-            };
-            // Chart instance
-            moodChartInstance = new Chart(ctx,{
-                type:'line',
-                data:{ datasets:[{ label:'Mood', data:[], fill:true, backgroundColor:makeGradient(ctx), borderColor:getComputedStyle(document.documentElement).getPropertyValue('--chart-line').trim(), pointRadius:5, tension:0.3, snapGaps: true }]},
-                options:{
-                    responsive:true,
-                    maintainAspectRatio:false,
-                    scales:{
-                        x:{
-                            type:'time',
-                            time:{ unit:'day',tooltipFormat:'MMM dd', displayFormats:{ day:'MMM dd' } },
-                            grid:{display:false},
-                            ticks:{ color:getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim(), source: 'data' }
-                        },
-                        y:{
-                            min:1,max:5,
-                            grid:{
-                                drawBorder:false,
-                                color:getComputedStyle(document.documentElement).getPropertyValue('--shadow-dark').trim()
-                            },
-                            ticks:{ color:getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim(), stepSize:1 }
-                        }
-                    },
-                    plugins:{
-                        legend:{display:false},
-                        zoom:{ pan:{enabled:true,mode:'x'}, zoom:{wheel:{enabled:false},pinch:{enabled:false}} }
-                    },
-                    thresholds:{ min:2, max:4 }
-                },
-                plugins:[ syncHeight, thresholdPlugin ]
-            });
-            // Slider
-            slider = document.getElementById('slider');
-            if (slider.noUiSlider) slider.noUiSlider.destroy();
-            noUiSlider.create(slider,{
-                start:[1,5], connect:true,
-                orientation:'vertical', direction:'rtl',
-                range:{min:1,max:5}, step:0.1,
-                tooltips:[true,true],
-                format:{ to:v=>v.toFixed(1), from:v=>+v }
-            });
-            slider.noUiSlider.on('update', ([min, max]) => {
-                min = +min;
-                max = +max;
-                moodChartInstance.options.thresholds.min = min;
-                moodChartInstance.options.thresholds.max = max;
-                
-                // recolor points
-                const base = getComputedStyle(document.documentElement).getPropertyValue('--chart-line').trim();
-                const weekData = getWeekMoodData(idx);
-                moodChartInstance.data.datasets[0].pointBackgroundColor =
-                    weekData.map(pt => (pt.y >= min && pt.y <= max) ? 'seagreen' : base);
-                
-                // Update panels with filtered data
-                updatePanels(idx);
-                
-                moodChartInstance.update('none');
-            });
+        function addDays(luxonDateTime, days) {
+            return luxonDateTime.plus({ days: days });
         }
 
-        function makeGradient(ctx){
-            const h = 300, g = ctx.createLinearGradient(0,0,0,h);
-            const root = getComputedStyle(document.documentElement);
-            const s = root.getPropertyValue('--chart-grad-start').trim() || 'rgba(54,162,235,0.6)';
-            const e = root.getPropertyValue('--chart-grad-end').trim()   || 'rgba(54,162,235,0.1)';
-            g.addColorStop(0,s); g.addColorStop(1,e);
-            return g;
+        function formatDate(luxonDateTime) {
+            if (!luxonDateTime || !luxonDateTime.isValid) return "Invalid Date";
+            return luxonDateTime.toISODate();
         }
 
         function getWeekMoodData(weekIdx) {
-            if (!weekSegments[weekIdx]) return [];
-            const week = weekSegments[weekIdx];
-            if (!week.length) return [];
-            const start = getStartOfWeek(week[0].logged_at_date);
-            const days = [];
+            if (!weekSegments[weekIdx] || !weekSegments[weekIdx].length) return [];
+            const weekLogs = weekSegments[weekIdx];
+
+            const startOfChartWeek = getStartOfWeek(weekLogs[0].luxon_logged_at);
+
+            const daysData = [];
             for (let i = 0; i < 7; i++) {
-                const d = addDays(start, i);
-                const dayLogs = week.filter(l => formatDate(l.logged_at_date) === formatDate(d) && l.mood_score !== null && l.mood_score !== undefined);
-                const avg = dayLogs.length 
-                    ? dayLogs.reduce((s, l) => s + l.mood_score, 0) / dayLogs.length 
+                const currentChartDayLuxon = addDays(startOfChartWeek, i);
+                const currentChartDayString = formatDate(currentChartDayLuxon);
+
+                const logsForThisDay = weekLogs.filter(l => 
+                    l.luxon_logged_at && l.luxon_logged_at.isValid &&
+                    formatDate(l.luxon_logged_at) === currentChartDayString &&
+                    l.mood_score !== null && l.mood_score !== undefined
+                );
+                
+                const avgMood = logsForThisDay.length 
+                    ? logsForThisDay.reduce((sum, log) => sum + log.mood_score, 0) / logsForThisDay.length
                     : null;
-                days.push({
-                    x: luxon.DateTime.fromJSDate(d).toISODate(),
-                    y: avg
+                
+                daysData.push({
+                    x: currentChartDayLuxon.toMillis(),
+                    y: avgMood 
                 });
             }
-            return days;
+            return daysData;
         }
 
         function updateView() {
-            const weekData = getWeekMoodData(idx); // This should give 7 {x, y} points
-            moodChartInstance.data.datasets[0].data = weekData;
+            const weekDataForChart = getWeekMoodData(idx);
+            moodChartInstance.data.datasets[0].data = weekDataForChart;
             moodChartInstance.data.datasets[0].backgroundColor = makeGradient(moodChartInstance.ctx);
 
-            // Update label and button states
             const currentWeekSegment = weekSegments[idx];
             if (currentWeekSegment && currentWeekSegment.length > 0) {
-                // Calculate the start and end of the week for the X-axis
-                const weekStartDate = getStartOfWeek(currentWeekSegment[0].logged_at_date);
-                const weekEndDate = addDays(weekStartDate, 6); // Monday + 6 days = Sunday
+                const firstLogLuxonDate = currentWeekSegment[0].luxon_logged_at;
+                const weekStartDateLuxon = getStartOfWeek(firstLogLuxonDate);
+                const weekEndDateLuxon = weekStartDateLuxon.plus({ days: 6 });
 
-                // Set min and max for the x-axis to ensure full week display
-                moodChartInstance.options.scales.x.min = luxon.DateTime.fromJSDate(weekStartDate).toISODate();
-                moodChartInstance.options.scales.x.max = luxon.DateTime.fromJSDate(weekEndDate).toISODate();
+                moodChartInstance.options.scales.x.min = weekStartDateLuxon.startOf('day').toMillis();
+                moodChartInstance.options.scales.x.max = weekEndDateLuxon.endOf('day').toMillis();
                 
-                // Update segment label using these explicit start/end dates for consistency
                 document.getElementById('segmentLabel').textContent = 
-                    `${luxon.DateTime.fromJSDate(weekStartDate).toFormat('LLL dd')} – ${luxon.DateTime.fromJSDate(weekEndDate).toFormat('LLL dd')}`;
-
-            } else { // Handle empty week segment
+                    `${weekStartDateLuxon.toFormat('LLL dd')} – ${weekEndDateLuxon.toFormat('LLL dd')}`;
+            } else {
                 document.getElementById('segmentLabel').textContent = 'No data for this week';
-                // Optionally clear or set default min/max for x-axis if no data
-                // moodChartInstance.options.scales.x.min = undefined;
-                // moodChartInstance.options.scales.x.max = undefined;
             }
 
             document.getElementById('prevWeekBtn').disabled = (idx === 0);
             document.getElementById('nextWeekBtn').disabled = (idx === weekSegments.length - 1);
             
-            updatePanels(idx); // Update panels based on the current week and slider
-            moodChartInstance.update(); // Update the chart
+            updatePanels(idx);
+            moodChartInstance.update();
         }
 
         function updatePanels(weekIdx) {
