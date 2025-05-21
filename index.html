@@ -518,7 +518,7 @@
             <div class="container">
                 <div class="box">
                     <div id="header" style="margin-bottom:1rem;">
-                        <h1 style="font-size:1.4rem;">My AI Processed Logs</h1>
+                        <h1 style="font-size:1.4rem;">Mood tracker</h1>
                         <div id="userInfo">Loading user...</div>
                     </div>
                     <div class="inner">
@@ -777,7 +777,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
                 telegramUser = tg.initDataUnsafe.user;
-                document.getElementById('userInfo').innerText = `Logs for: ${telegramUser.first_name || ''} (@${telegramUser.username || 'N/A'})`;
+                // document.getElementById('userInfo').innerText = `Logs for: ${telegramUser.first_name || ''} (@${telegramUser.username || 'N/A'})`;
                 if (telegramUser.id) {
                     fetchAllLogsAndSetupChart();
                 } else {
