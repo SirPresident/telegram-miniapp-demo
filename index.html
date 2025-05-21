@@ -516,6 +516,14 @@
                         <button id="prevWeekBtn">Previous</button>
                         <button id="nextWeekBtn">Next</button>
                     </div>
+                    <div style="display:flex; justify-content:flex-end; align-items:center; margin: 1rem 0;">
+                        <label for="panelRangeSelect" style="margin-right:0.5rem; color:var(--text-color); font-weight:500;">Show data for:</label>
+                        <select id="panelRangeSelect" style="padding: 6px 12px; border-radius: 8px; border: 1px solid var(--shadow-dark); background: var(--bg-color); color: var(--text-color); font-size: 1rem;">
+                            <option value="week">This week</option>
+                            <option value="month">This month</option>
+                            <option value="all">All logs</option>
+                        </select>
+                    </div>
                     <div class="panels">
                         <div class="panel"><h3>Dietary</h3>
                             <div id="dietPanel"></div>
@@ -762,6 +770,13 @@
 
             document.getElementById('prevWeekBtn').addEventListener('click', () => { if(idx>0) idx--; updateView(); });
             document.getElementById('nextWeekBtn').addEventListener('click', () => { if(idx<weekSegments.length-1) idx++; updateView(); });
+
+            // Panel range select event
+            const panelRangeSelect = document.getElementById('panelRangeSelect');
+            panelRangeSelect.addEventListener('change', (e) => {
+                panelRange = e.target.value;
+                updatePanels(idx);
+            });
         });
 
         function setupChartAndSlider() {
@@ -1006,14 +1021,35 @@
             moodChartInstance.update();
         }
 
+        // Add a global to track the selected range
+        let panelRange = 'week';
+
+        // Modify updatePanels to use the selected range
         function updatePanels(weekIdx) {
             // Get current slider values
             const [minMood, maxMood] = slider.noUiSlider.get().map(Number);
-            const week = weekSegments[weekIdx] || [];
-            
+
+            // Determine which logs to use based on panelRange
+            let logsToUse = [];
+            if (panelRange === 'week') {
+                logsToUse = weekSegments[weekIdx] || [];
+            } else if (panelRange === 'month') {
+                // Get the month and year of the current week
+                const weekLogs = weekSegments[weekIdx] || [];
+                if (weekLogs.length > 0) {
+                    const month = weekLogs[0].luxon_logged_at.month;
+                    const year = weekLogs[0].luxon_logged_at.year;
+                    logsToUse = allUserLogs.filter(log =>
+                        log.luxon_logged_at.month === month && log.luxon_logged_at.year === year
+                    );
+                }
+            } else if (panelRange === 'all') {
+                logsToUse = allUserLogs;
+            }
+
             // Group logs by local date using Luxon
             const dailyGroups = new Map();
-            week.forEach(log => {
+            logsToUse.forEach(log => {
                 const dateKey = log.luxon_logged_at.toISODate();
                 if (!dailyGroups.has(dateKey)) {
                     dailyGroups.set(dateKey, {
