@@ -1284,7 +1284,7 @@
                 log.activity.forEach(a => { htmlContent += `<li>${escapeHtml(a)}</li>`; });
                 htmlContent += `</ul></div>`;
             }
-            if (log.diet) {
+            if (log.diet && log.diet.length > 0) {
                 htmlContent += `<div class="log-section"><h3>Diet</h3><ul>`;
                 for (const [category, items] of Object.entries(log.diet)) {
                     if (items && items.length) {
