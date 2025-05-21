@@ -764,6 +764,107 @@
             document.getElementById('nextWeekBtn').addEventListener('click', () => { if(idx<weekSegments.length-1) idx++; updateView(); });
         });
 
+        function setupChartAndSlider() {
+            // Setup Slider
+            const sliderElement = document.getElementById('slider');
+            slider = noUiSlider.create(sliderElement, {
+                start: [1, 10],
+                connect: true,
+                orientation: 'vertical',
+                direction: 'rtl',
+                range: {
+                    'min': 1,
+                    'max': 10
+                },
+                step: 1,
+                tooltips: true,
+                format: {
+                    to: value => Math.round(value),
+                    from: value => Math.round(value)
+                }
+            });
+
+            slider.on('change', () => updateView());
+
+            // Setup Chart
+            const ctx = document.getElementById('moodScoreChart').getContext('2d');
+            function makeGradient(ctx) {
+                const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+                gradient.addColorStop(0, 'var(--chart-grad-start)');
+                gradient.addColorStop(1, 'var(--chart-grad-end)');
+                return gradient;
+            }
+
+            moodChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: [{
+                        label: 'Mood Score',
+                        data: [],
+                        borderColor: 'var(--chart-line)',
+                        borderWidth: 2,
+                        pointBackgroundColor: 'var(--chart-line)',
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        fill: true,
+                        backgroundColor: makeGradient(ctx),
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        zoom: {
+                            pan: {
+                                enabled: true,
+                                mode: 'x',
+                            },
+                            zoom: {
+                                wheel: {
+                                    enabled: true,
+                                },
+                                pinch: {
+                                    enabled: true,
+                                },
+                                mode: 'x',
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'day',
+                                displayFormats: {
+                                    day: 'MMM d'
+                                }
+                            },
+                            grid: {
+                                color: 'var(--shadow-dark)'
+                            },
+                            ticks: {
+                                color: 'var(--text-color)'
+                            }
+                        },
+                        y: {
+                            min: 1,
+                            max: 10,
+                            grid: {
+                                color: 'var(--shadow-dark)'
+                            },
+                            ticks: {
+                                color: 'var(--text-color)'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Make gradient function available globally
+            window.makeGradient = makeGradient;
+        }
+
         async function fetchAllLogsAndSetupChart() {
             const loadingDiv = document.getElementById('loadingMessage');
             loadingDiv.innerText = 'Loading all logs for chart...';
