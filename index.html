@@ -564,7 +564,7 @@
             <div class="container">
                 <div class="box">
                     <div class="search-container" style="margin-bottom: 2rem;">
-                        <input type="text" id="logSearch" placeholder="Search in logs..." class="search-input">
+                        <input type="text" id="logSearch" placeholder="🔍 Search in logs..." class="search-input">
                     </div>
                     <div id="allLogsContainer"></div>
                 </div>
@@ -1213,7 +1213,7 @@
                         log.activity.forEach(a => { htmlContent += `<li>${escapeHtml(a)}</li>`; });
                         htmlContent += `</ul></div>`;
                     }
-                    if (log.diet) {
+                    if (log.diet && log.diet > 0) {
                         htmlContent += `<div class="log-section"><h3>Diet</h3><ul>`;
                         for (const [category, items] of Object.entries(log.diet)) {
                             if (items && items.length) {
