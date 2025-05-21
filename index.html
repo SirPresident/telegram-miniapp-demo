@@ -855,14 +855,29 @@
                             grid: { display: false },
                             ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() }
                         },
-                        y:{
-                            min:1,max:5,
-                            grid:{
-                                drawBorder:false,
-                                color:getComputedStyle(document.documentElement).getPropertyValue('--shadow-dark').trim()
-                            },
-                            ticks:{ color:getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim(), stepSize:1 }
-                        }
+y: {
+    min: 1,
+    max: 5,
+    grid: {
+        drawBorder: false,
+        color: getComputedStyle(document.documentElement).getPropertyValue('--shadow-dark').trim()
+    },
+    ticks: {
+        color: getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim(),
+        stepSize: 1,
+        callback: function(value) {
+            // Map 1-5 to emojis
+            const moodEmojis = {
+                1: "😣",
+                2: "😢",
+                3: "😐",
+                4: "😊",
+                5: "😁"
+            };
+            return moodEmojis[value] || value;
+        }
+    }
+}
                     },
                     plugins:{
                         legend:{display:false},
