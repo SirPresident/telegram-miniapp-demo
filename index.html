@@ -764,6 +764,110 @@
             document.getElementById('nextWeekBtn').addEventListener('click', () => { if(idx<weekSegments.length-1) idx++; updateView(); });
         });
 
+        function setupChartAndSlider() {
+            // Prepare data for the current week
+            const ctx = document.getElementById('moodScoreChart').getContext('2d');
+            // Plugins
+            const thresholdPlugin = {
+                id:'thresholdPlugin',
+                beforeDraw(c){
+                    const {ctx,chartArea:{left,right},scales:{y}} = c;
+                    const {min,max} = c.config.options.thresholds;
+                    ctx.save(); ctx.setLineDash([6,4]);
+                    ctx.strokeStyle='crimson';
+                    ctx.beginPath();
+                    ctx.moveTo(left,y.getPixelForValue(min));
+                    ctx.lineTo(right,y.getPixelForValue(min));
+                    ctx.stroke();
+                    ctx.strokeStyle='seagreen';
+                    ctx.beginPath();
+                    ctx.moveTo(left,y.getPixelForValue(max));
+                    ctx.lineTo(right,y.getPixelForValue(max));
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            };
+            const syncHeight = {
+                id:'syncHeight',
+                afterLayout(c){
+                    const slider = document.getElementById('slider');
+                    const y = c.scales.y;
+                    const top = y.getPixelForValue(c.options.scales.y.max);
+                    const bot = y.getPixelForValue(c.options.scales.y.min);
+                    const OFF = 0;
+                    slider.style.marginTop = (top-OFF)+'px';
+                    slider.style.height    = (bot-top+OFF*2)+'px';
+                }
+            };
+            // Chart instance
+            moodChartInstance = new Chart(ctx,{
+                type:'line',
+                data:{ datasets:[{ label:'Mood', data:[], fill:true, backgroundColor:makeGradient(ctx), borderColor:getComputedStyle(document.documentElement).getPropertyValue('--chart-line').trim(), pointRadius:5, tension:0.3 }]},
+                options:{
+                    responsive:true,
+                    maintainAspectRatio:false,
+                    scales:{
+                        x:{
+                            type:'time',
+                            time:{ unit:'day',tooltipFormat:'MMM dd' },
+                            grid:{display:false},
+                            ticks:{ color:getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() }
+                        },
+                        y:{
+                            min:1,max:5,
+                            grid:{
+                                drawBorder:false,
+                                color:getComputedStyle(document.documentElement).getPropertyValue('--shadow-dark').trim()
+                            },
+                            ticks:{ color:getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim(), stepSize:1 }
+                        }
+                    },
+                    plugins:{
+                        legend:{display:false},
+                        zoom:{ pan:{enabled:true,mode:'x'}, zoom:{wheel:{enabled:false},pinch:{enabled:false}} }
+                    },
+                    thresholds:{ min:2, max:4 }
+                },
+                plugins:[ syncHeight, thresholdPlugin ]
+            });
+            // Slider
+            slider = document.getElementById('slider');
+            if (slider.noUiSlider) slider.noUiSlider.destroy();
+            noUiSlider.create(slider,{
+                start:[1,5], connect:true,
+                orientation:'vertical', direction:'rtl',
+                range:{min:1,max:5}, step:0.1,
+                tooltips:[true,true],
+                format:{ to:v=>v.toFixed(1), from:v=>+v }
+            });
+            slider.noUiSlider.on('update', ([min, max]) => {
+                min = +min;
+                max = +max;
+                moodChartInstance.options.thresholds.min = min;
+                moodChartInstance.options.thresholds.max = max;
+                
+                // recolor points
+                const base = getComputedStyle(document.documentElement).getPropertyValue('--chart-line').trim();
+                const weekData = getWeekMoodData(idx);
+                moodChartInstance.data.datasets[0].pointBackgroundColor =
+                    weekData.map(pt => (pt.y >= min && pt.y <= max) ? 'seagreen' : base);
+                
+                // Update panels with filtered data
+                updatePanels(idx);
+                
+                moodChartInstance.update('none');
+            });
+        }
+
+        function makeGradient(ctx){
+            const h = 300, g = ctx.createLinearGradient(0,0,0,h);
+            const root = getComputedStyle(document.documentElement);
+            const s = root.getPropertyValue('--chart-grad-start').trim() || 'rgba(54,162,235,0.6)';
+            const e = root.getPropertyValue('--chart-grad-end').trim()   || 'rgba(54,162,235,0.1)';
+            g.addColorStop(0,s); g.addColorStop(1,e);
+            return g;
+        }
+
         async function fetchAllLogsAndSetupChart() {
             const loadingDiv = document.getElementById('loadingMessage');
             loadingDiv.innerText = 'Loading all logs for chart...';
