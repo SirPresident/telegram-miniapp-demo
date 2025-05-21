@@ -15,31 +15,31 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.js"></script>
     <style>
         :root {
-            --bg-color: #f8fafb;
-            --bg-gradient-start: #f8fafb;
-            --bg-gradient-end:   #e8ecf0;
+            --bg-color:          #fbfbfb;
+            --bg-gradient-start: #00ffff;
+            --bg-gradient-end:   #EDEDED;
             --shadow-dark: rgba(0,0,0,0.08);
             --shadow-light: rgba(255,255,255,0.7);
             --text-color: #6c7a89;
             --chart-line: #36A2EB;
             --chart-grad-start: rgba(54,162,235,0.6);
             --chart-grad-end:   rgba(54,162,235,0.1);
-            --highlight-above:  rgba(144,238,144,0.4);
-            --highlight-below:  rgba(173,216,230,0.2);
+            --highlight-above:  #00ffff;
+            --highlight-below:  #00ffff;
             --btn-bg: #f8fafb;
         }
         .dark {
             --bg-color: #1f1f1f;
-            --bg-gradient-start: #1f1f1f;
+            --bg-gradient-start: #00567d;
             --bg-gradient-end:   #262626;
             --shadow-dark: rgba(0,0,0,0.6);
-            --shadow-light: rgba(255,255,255,0.1);
+            --shadow-light: rgba(255, 0, 0, 0.1);
             --text-color: #d1d1d1;
             --chart-line: #dfe6ef;
             --chart-grad-start: rgba(78,154,241,0.6);
             --chart-grad-end:   rgba(78,154,241,0.1);
-            --highlight-above:  rgba(144,238,144,0.4);
-            --highlight-below:  rgba(173,216,230,0.2);
+            --highlight-above:  #00567d;
+            --highlight-below:  #00567d;
             --btn-bg: #1f1f1f;
         }
         * { box-sizing:border-box; margin:0; padding:0; }
@@ -71,11 +71,10 @@
         .box {
             background:var(--bg-color);
             border-radius:20px; padding:2rem;
+            /* Use only shadow-inner style */
             box-shadow:
-                10px 10px 30px var(--shadow-dark),
-                -10px -10px 30px var(--shadow-light),
-                inset 4px 4px 15px var(--shadow-dark),
-                inset -4px -4px 15px var(--shadow-light);
+                inset 4px 4px 10px var(--shadow-dark),
+                inset -4px -4px 10px var(--shadow-light);
             transition:0.3s;
         }
         .inner {
@@ -119,11 +118,10 @@
             background: var(--bg-color);
             border-radius: 12px;
             padding: 1rem;
+            /* Use only shadow-outer style */
             box-shadow:
-                4px 4px 12px var(--shadow-dark),
-                -4px -4px 12px var(--shadow-light),
-                inset 2px 2px 6px var(--shadow-dark),
-                -2px -2px 6px var(--shadow-light);
+                4px 4px 30px var(--shadow-dark),
+                -10px -10px 30px var(--shadow-light);
             transition: background 0.3s, box-shadow 0.3s;
             height: auto;
             min-width: 220px; /* prevent panels from getting too narrow */
@@ -173,7 +171,10 @@
             background: var(--bg-color);
             border-radius: 30px;
             padding: 8px 12px;
-            box-shadow: 8px 8px 24px var(--shadow-dark), -8px -8px 24px var(--shadow-light);
+            /* Use only shadow-outer style */
+            box-shadow:
+                4px 4px 30px var(--shadow-dark),
+                -10px -10px 30px var(--shadow-light);
         }
         .capsule-tab-btn {
             position: relative;
@@ -181,7 +182,10 @@
             height: 48px;
             border-radius: 50%;
             background: var(--highlight-below);
-            box-shadow: 2px 2px 8px var(--shadow-dark), -2px -2px 8px var(--shadow-light);
+            /* Use only shadow-outer style */
+            box-shadow:
+                4px 4px 30px var(--shadow-dark),
+                -10px -10px 30px var(--shadow-light);
             border: none;
             outline: none;
             cursor: pointer;
@@ -199,6 +203,12 @@
             min-width: 48px;
             z-index: 1;
         }
+        .capsule-icon img {
+            width: 1.2em;
+            height: 1.2em;
+            display: inline-block;
+            vertical-align: middle;
+            }
         .capsule-tab-btn .capsule-icon,
         .capsule-tab-btn .capsule-text {
             position: absolute;
@@ -257,9 +267,10 @@
         /* ————————————— Neumorphic noUiSlider Styling ————————————— */
         #slider {
             background: var(--bg-color);
+            /* Use only shadow-outer style */
             box-shadow:
-                4px 4px 12px var(--shadow-dark),
-               -4px -4px 12px var(--shadow-light);
+                4px 4px 30px var(--shadow-dark),
+                -10px -10px 30px var(--shadow-light);
             border-radius: 10px;
             margin-right: 30px;
             min-width: 26px;
@@ -290,9 +301,10 @@
             height: 26px;
             border-radius: 50%;
             background: var(--bg-gradient-start);
+            /* Use only shadow-outer style */
             box-shadow:
-                2px 2px 6px var(--shadow-dark),
-                -2px -2px 6px var(--shadow-light);
+                4px 4px 30px var(--shadow-dark),
+                -10px -10px 30px var(--shadow-light);
             border: none;
             top: auto;
             transform: translateY(0);
@@ -308,9 +320,10 @@
 
         /* handle pressed state */
         #slider .noUi-handle:active {
+            /* Use only shadow-inner style */
             box-shadow:
-                inset 2px 2px 6px var(--shadow-dark),
-                inset -2px -2px 6px var(--shadow-light);
+                inset 4px 4px 10px var(--shadow-dark),
+                inset -4px -4px 10px var(--shadow-light);
         }
 
         /* Optional: style tooltips to match neumorphic look */
@@ -479,15 +492,21 @@
         <!-- Capsule Tab Navigation -->
         <div class="capsule-tab-group">
             <button class="capsule-tab-btn active" id="tab-home" type="button">
-                <span class="capsule-icon">🏡</span>
+                <span class="capsule-icon">
+                    <img src="assets\icons\Home.svg" alt="Home icon" />
+                </span>
                 <span class="capsule-text">Home</span>
             </button>
             <button class="capsule-tab-btn" id="tab-logs" type="button">
-                <span class="capsule-icon">📝</span>
-                <span class="capsule-text">Logs</span>
+                <span class="capsule-icon">
+                    <img src="assets\icons\Search.svg" alt="Search icon" />
+                </span>
+                <span class="capsule-text">Search</span>
             </button>
             <button class="capsule-tab-btn" id="tab-levelup" type="button">
-                <span class="capsule-icon">⬆⬆</span>
+                <span class="capsule-icon">
+                    <img src="assets\icons\Arrow up.svg" alt="Home icon" />
+                </span>
                 <span class="capsule-text">Level up</span>
             </button>
         </div>
@@ -569,7 +588,8 @@
                             <option value="perception">Perception</option>
                         </select>
                         <div id="dailyTaskContainer" style="margin-top: 1rem;">
-                            Your daily task will appear here.
+                            <!-- Your daily task will appear here. -->
+                             Coming soon... 👀
                         </div>
                     </div>
                 </div>
