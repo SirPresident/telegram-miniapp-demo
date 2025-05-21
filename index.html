@@ -764,107 +764,6 @@
             document.getElementById('nextWeekBtn').addEventListener('click', () => { if(idx<weekSegments.length-1) idx++; updateView(); });
         });
 
-        function setupChartAndSlider() {
-            // Setup Slider
-            const sliderElement = document.getElementById('slider');
-            slider = noUiSlider.create(sliderElement, {
-                start: [1, 10],
-                connect: true,
-                orientation: 'vertical',
-                direction: 'rtl',
-                range: {
-                    'min': 1,
-                    'max': 10
-                },
-                step: 1,
-                tooltips: true,
-                format: {
-                    to: value => Math.round(value),
-                    from: value => Math.round(value)
-                }
-            });
-
-            slider.on('change', () => updateView());
-
-            // Setup Chart
-            const ctx = document.getElementById('moodScoreChart').getContext('2d');
-            function makeGradient(ctx) {
-                const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-                gradient.addColorStop(0, 'var(--chart-grad-start)');
-                gradient.addColorStop(1, 'var(--chart-grad-end)');
-                return gradient;
-            }
-
-            moodChartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    datasets: [{
-                        label: 'Mood Score',
-                        data: [],
-                        borderColor: 'var(--chart-line)',
-                        borderWidth: 2,
-                        pointBackgroundColor: 'var(--chart-line)',
-                        pointRadius: 4,
-                        pointHoverRadius: 6,
-                        fill: true,
-                        backgroundColor: makeGradient(ctx),
-                        tension: 0.3
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        zoom: {
-                            pan: {
-                                enabled: true,
-                                mode: 'x',
-                            },
-                            zoom: {
-                                wheel: {
-                                    enabled: true,
-                                },
-                                pinch: {
-                                    enabled: true,
-                                },
-                                mode: 'x',
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            type: 'time',
-                            time: {
-                                unit: 'day',
-                                displayFormats: {
-                                    day: 'MMM d'
-                                }
-                            },
-                            grid: {
-                                color: 'var(--shadow-dark)'
-                            },
-                            ticks: {
-                                color: 'var(--text-color)'
-                            }
-                        },
-                        y: {
-                            min: 1,
-                            max: 10,
-                            grid: {
-                                color: 'var(--shadow-dark)'
-                            },
-                            ticks: {
-                                color: 'var(--text-color)'
-                            }
-                        }
-                    }
-                }
-            });
-
-            // Make gradient function available globally
-            window.makeGradient = makeGradient;
-        }
-
         async function fetchAllLogsAndSetupChart() {
             const loadingDiv = document.getElementById('loadingMessage');
             loadingDiv.innerText = 'Loading all logs for chart...';
@@ -885,13 +784,22 @@
                     if (data.logs && data.logs.length > 0) {
                         allUserLogs = data.logs.map(log => ({
                             ...log,
-                            luxon_logged_at: DateTime.fromISO(log.logged_at.replace(' ', 'T') + 'Z').setZone(DateTime.local().zoneName)
+                            // Create a Luxon DateTime object in user's local timezone
+                            luxon_logged_at: DateTime.fromISO(log.logged_at.replace(' ', 'T') + 'Z').setZone(DateTime.local().zoneName),
+                            strength_xp_gained: log.strength_xp_gained || 0,
+                            endurance_xp_gained: log.endurance_xp_gained || 0,
+                            intelligence_xp_gained: log.intelligence_xp_gained || 0,
+                            charisma_xp_gained: log.charisma_xp_gained || 0,
+                            perception_xp_gained: log.perception_xp_gained || 0,
+                            wellbeing_xp_gained: log.wellbeing_xp_gained || 0
                         }));
-                        allUserLogs.sort((a, b) => a.luxon_logged_at.valueOf() - b.luxon_logged_at.valueOf());
+                        allUserLogs.sort((a, b) => a.luxon_logged_at - b.luxon_logged_at);
                         weekSegments = splitLogsToWeeks(allUserLogs);
                         idx = weekSegments.length-1;
                         setupChartAndSlider();
                         updateView();
+                        
+                        // Calculate and display skills
                         calculateSkillLevels();
                         displaySkills();
                     } else {
@@ -911,11 +819,11 @@
             if (!logs.length) return [];
             const weeks = [];
             let currentWeekData = [];
+            // Use the local start of the week for the first log
             let currentWeekStartLuxon = logs[0].luxon_logged_at.startOf('week');
 
             logs.forEach(log => {
-                if (log.luxon_logged_at >= currentWeekStartLuxon && 
-                    log.luxon_logged_at < currentWeekStartLuxon.plus({ weeks: 1 })) {
+                if (log.luxon_logged_at >= currentWeekStartLuxon && log.luxon_logged_at < currentWeekStartLuxon.plus({ weeks: 1 })) {
                     currentWeekData.push(log);
                 } else {
                     if (currentWeekData.length > 0) {
@@ -936,19 +844,21 @@
             const weekLogs = weekSegments[weekIdx];
             if (!weekLogs.length) return [];
 
+            // Determine the actual start of this week segment (Monday in local time)
             const weekActualStartLuxon = weekLogs[0].luxon_logged_at.startOf('week');
             
             const daysData = [];
             for (let i = 0; i < 7; i++) {
                 const currentDayLuxon = weekActualStartLuxon.plus({ days: i });
+                // Filter logs that fall on this specific local day
                 const dayLogs = weekLogs.filter(l =>
                     l.luxon_logged_at.toISODate() === currentDayLuxon.toISODate() &&
                     l.mood_score !== null && l.mood_score !== undefined
                 );
 
                 const avg = dayLogs.length
-                    ? dayLogs.reduce((s, l) => s + l.mood_score, 0) / dayLogs.length
-                    : null;
+                            ? dayLogs.reduce((s, l) => s + l.mood_score, 0) / dayLogs.length
+                            : null;
                 daysData.push({
                     x: currentDayLuxon.toISODate(),
                     y: avg
@@ -986,9 +896,11 @@
         }
 
         function updatePanels(weekIdx) {
+            // Get current slider values
             const [minMood, maxMood] = slider.noUiSlider.get().map(Number);
             const week = weekSegments[weekIdx] || [];
             
+            // Group logs by local date using Luxon
             const dailyGroups = new Map();
             week.forEach(log => {
                 const dateKey = log.luxon_logged_at.toISODate();
@@ -1160,6 +1072,7 @@
                 return;
             }
 
+            // Group logs by local date using Luxon
             const groupedLogs = new Map();
             allUserLogs.forEach(log => {
                 const dateKey = log.luxon_logged_at.toISODate();
@@ -1169,8 +1082,10 @@
                 groupedLogs.get(dateKey).push(log);
             });
 
+            // Sort dates in descending order
             const sortedDates = Array.from(groupedLogs.keys()).sort().reverse();
             
+            // Generate HTML
             container.innerHTML = sortedDates.map(date => {
                 const logs = groupedLogs.get(date);
                 return `
