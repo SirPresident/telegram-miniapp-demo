@@ -806,12 +806,19 @@
                 options:{
                     responsive:true,
                     maintainAspectRatio:false,
-                    scales:{
-                        x:{
-                            type:'time',
-                            time:{ unit:'day',tooltipFormat:'MMM dd' },
-                            grid:{display:false},
-                            ticks:{ color:getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() }
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'day',
+                                tooltipFormat: 'MMM dd yyyy HH:mm', // More specific tooltip
+                                displayFormats: {
+                                    day: 'MMM dd'
+                                },
+                                // timezone: DateTime.local().zoneName // Optional: force local timezone
+                            },
+                            grid: { display: false },
+                            ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() }
                         },
                         y:{
                             min:1,max:5,
