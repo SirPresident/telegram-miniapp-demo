@@ -23,7 +23,7 @@
             --text-color: #6c7a89;
             --chart-line: #36A2EB;
             --chart-grad-start: rgba(54,162,235,0.6);
-            --chart-grad-end:   rgb(255, 0, 55);
+            --chart-grad-end:   rgba(54,162,235,0.1);
             --highlight-above:  #f4f4f4c4;
             --highlight-below:  #f4f4f4c4;
             --btn-bg: #f8fafb;
@@ -70,11 +70,11 @@
         .container { width:100%; max-width:900px; }
         .box {
             background:var(--bg-color);
-            border-radius:10px; padding:2rem;
+            border-radius:20px; padding:2rem;
             /* Use only shadow-inner style */
             box-shadow:
-                inset 4px 4px 4px var(--shadow-dark),
-                inset -4px -4px 4px var(--shadow-light);
+                inset 4px 4px 10px var(--shadow-dark),
+                inset -4px -4px 10px var(--shadow-light);
             transition:0.3s;
         }
         .inner {
@@ -269,12 +269,12 @@
             background: var(--bg-color);
             /* Use only shadow-outer style */
             box-shadow:
-                4px 4px 0px var(--shadow-dark),
-                -10px -10px 0px var(--shadow-light);
+                4px 4px 30px var(--shadow-dark),
+                -10px -10px 30px var(--shadow-light);
             border-radius: 10px;
             margin-right: 30px;
-            min-width: 5px;
-            width: 5px;
+            min-width: 26px;
+            width: 26px;
             display: flex;
             align-items: stretch;
             justify-content: center;
