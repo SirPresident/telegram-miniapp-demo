@@ -14,12 +14,16 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css" rel="stylesheet"/>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.js"></script>
     <style>
+        /* Update root variables */
         :root {
-            --bg-color: #c5c5c5;
-            --bg-gradient-start: #5b5b5b;
-            --bg-gradient-end: #e8ecf0;
+            --shadow-offset: 0px;
+            --shadow-blur: 6px;
+            --bg-color: #aaaaaa;
+            --handle-color: #1f1f1f;
+            --bg-gradient-start: #0084ff;
+            --bg-gradient-end: #0026ff;
             --shadow-dark: rgba(0, 0, 0, 0.08);
-            --shadow-light: #505050;
+            --shadow-light: #151515;
             --text-color: #171717;
             --chart-line: #36A2EB;
             --chart-grad-start: rgb(0, 255, 0);
@@ -31,14 +35,13 @@
 
         .dark {
             --bg-color: #1f1f1f;
-            --bg-gradient-start: #5b5b5b;
-            --bg-gradient-end: #262626;
+            --handle-color: #aaaaaa;
+            --bg-gradient-start: #0033ff;
+            --bg-gradient-end: #001eff;
             --shadow-dark: rgba(0, 0, 0, 0.6);
             --shadow-light: rgba(255, 255, 255, 0.1);
             --text-color: #d1d1d1;
             --chart-line: #dfe6ef;
-            --chart-grad-start: rgb(0, 255, 0);
-            --chart-grad-end: rgba(255, 50, 50, .3);
             --highlight-above: #262626;
             --highlight-below: #1f1f1f;
             --btn-bg: #1f1f1f;
@@ -88,10 +91,14 @@
             flex:0 0 20px; margin-left:10px;
         }
         .chart-wrap {
-            flex:1 1 0; min-width:200px;
-        }
-        .chart-wrap canvas {
-            width:100%!important; height:300px!important; border-radius:12px;
+            flex: 1 1 0;
+            min-width: 200px;
+            background: var(--bg-color);
+            padding: 1rem;
+            border-radius: 7px;
+            box-shadow: 
+                var(--shadow-offset) var(--shadow-offset) calc(var(--shadow-blur) * 1.5) var(--shadow-dark),
+                calc(-1 * var(--shadow-offset)) calc(-1 * var(--shadow-offset)) calc(var(--shadow-blur) * 1.5) var(--shadow-light);
         }
         .segment-label { text-align:center; margin:1rem 0 0.5rem; font-weight:bold; }
         .nav-buttons {
@@ -103,41 +110,40 @@
             border: none;
             padding: .5rem 1rem;
             border-radius: 7px;
-            box-shadow:
-                2px 2px 10px var(--shadow-dark),
-                -4px -4px 10px var(--shadow-light);
+            box-shadow: 
+                var(--shadow-offset) var(--shadow-offset) calc(var(--shadow-blur) * 1.5) var(--shadow-dark),
+                calc(-1 * var(--shadow-offset)) calc(-1 * var(--shadow-offset)) calc(var(--shadow-blur) * 1.5) var(--shadow-light);
             font-size: 1rem;
             cursor: pointer;
-            transition: 0.3s;
+            transition: 0.2s;
         }
         .nav-buttons button:disabled { opacity:0.4; cursor:default; }
         .nav-buttons button:active {
             transform: translateY(2px);
             box-shadow: 
-                inset 2px 2px 10px var(--shadow-dark),
-                inset -4px -4px 10px var(--shadow-light);
+                inset var(--shadow-offset) var(--shadow-offset) var(--shadow-blur) var(--shadow-dark),
+                inset calc(-1 * var(--shadow-offset)) calc(-1 * var(--shadow-offset)) calc(var(--shadow-blur) var(--shadow-light);
         }
         .panels {
-            display: flex;
-            gap: 1rem;
-            margin-top: 1.5rem;
-            padding: 1rem;
-            height: auto;
-            flex-wrap: wrap; /* allow wrapping on small screens */
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: .2rem;
+            margin-top: .5rem;
+            padding: 0;
+            width: 100vw;
+            margin-left: calc(-50vw + 50%);
+            margin-right: calc(-50vw + 50%);
         }
         .panel {
-            flex: 1;
             background: var(--bg-color);
-            border-radius: 7px;
+            border-radius: 0;
             padding: 1rem;
-            /* Use only shadow-outer style */
             box-shadow:
-                2px 2px 10px var(--shadow-dark),
-                -4px -4px 10px var(--shadow-light);
+                0px 0px 10px var(--shadow-dark),
+                0px 0px 10px var(--shadow-light);
             transition: background 0.3s, box-shadow 0.3s;
             height: auto;
-            min-width: 220px; /* prevent panels from getting too narrow */
-            box-sizing: border-box;
+            margin-bottom: 1rem;
         }
         /* Responsive: stack panels vertically on small screens */
         @media (max-width: 800px) {
@@ -182,11 +188,11 @@
             display: flex;
             align-items: center;
             gap: 1.5rem;
-            background: var(--bg-color);
-            border-radius: 7px;
+            background: var(--bg-gradient-start);
             box-shadow:
-                2px 2px 10px var(--shadow-dark),
-                -4px -4px 10px var(--shadow-light);
+                0px 0px 10px var(--shadow-dark),
+                0px 0px 10px var(--shadow-light);
+            border-radius: 7px;
             padding: 3px 16px;
         }
         .capsule-tabs::before {
@@ -220,8 +226,8 @@
             background: var(--highlight-below);
             /* Use only shadow-outer style */
             box-shadow:
-                2px 2px 10px var(--shadow-dark),
-                -4px -4px 10px var(--shadow-light);
+                0px 0px 10px var(--shadow-dark),
+                0px 0px 10px var(--shadow-light);
             border: none;
             outline: none;
             cursor: pointer;
