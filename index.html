@@ -23,7 +23,7 @@
             --text-color: #6c7a89;
             --chart-line: #36A2EB;
             --chart-grad-start: rgba(54,162,235,0.6);
-            --chart-grad-end:   rgba(54,162,235,0.1);
+            --chart-grad-end:   rgb(255, 0, 55);
             --highlight-above:  #f4f4f4c4;
             --highlight-below:  #f4f4f4c4;
             --btn-bg: #f8fafb;
@@ -58,7 +58,7 @@
             border-radius:34px; cursor:pointer; transition:0.3s;
         }
         .slider-switch:before {
-            content:""; position:absolute; width:0px; height:26px;
+            content:""; position:absolute; width:26px; height:26px;
             left:4px; bottom:4px; background:var(--bg-gradient-start);
             box-shadow:2px 2px 6px var(--shadow-dark), -2px -2px 6px var(--shadow-light);
             border-radius:50%; transition:0.3s;
@@ -73,15 +73,15 @@
             border-radius:10px; padding:2rem;
             /* Use only shadow-inner style */
             box-shadow:
-                inset 4px 4px 10px var(--shadow-dark),
-                inset -4px -4px 10px var(--shadow-light);
+                inset 4px 4px 4px var(--shadow-dark),
+                inset -4px -4px 4px var(--shadow-light);
             transition:0.3s;
         }
         .inner {
             display:flex; align-items:flex-start; overflow-x:auto;
         }
         #slider {
-            flex:0 0 20px; margin-right:30px;
+            flex:0 0 0px; margin-right:0px;
         }
         .chart-wrap {
             flex:1 1 0; min-width:200px;
