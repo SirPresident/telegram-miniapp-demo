@@ -118,26 +118,28 @@
                 inset -4px -4px 10px var(--shadow-light);
         }
         .panels {
-            display: grid;
-            grid-template-columns: 1fr;  /* Force single column */
-            gap: .2rem;
-            margin-top: .5rem;
-            padding: 0;  /* Remove padding */
-            width: 100vw;  /* Full viewport width */
-            margin-left: calc(-50vw + 50%);  /* Break out of container */
-            margin-right: calc(-50vw + 50%);
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            padding: 1rem;
+            height: auto;
+            flex-wrap: wrap; /* allow wrapping on small screens */
         }
         .panel {
+            flex: 1;
             background: var(--bg-color);
-            border-radius: 0;  /* Remove border radius */
+            border-radius: 7px;
             padding: 1rem;
-            box-shadow: 0px 0px 10px var(--shadow-light);
+            /* Use only shadow-outer style */
+            box-shadow:
+                2px 2px 10px var(--shadow-dark),
+                -4px -4px 10px var(--shadow-light);
             transition: background 0.3s, box-shadow 0.3s;
             height: auto;
-            margin-bottom: 1rem;
+            min-width: 220px; /* prevent panels from getting too narrow */
+            box-sizing: border-box;
         }
-
-        /* Remove the media query for panels since we want them always stacked */
+        /* Responsive: stack panels vertically on small screens */
         @media (max-width: 800px) {
             .panels {
                 flex-direction: column;
@@ -254,8 +256,6 @@
             height: 100%;
             font-size: 1.5rem;
             transition:
-                opacity 0.25s cubic-bezier(.4,2,.6,1),
-                transform 0.
                 opacity 0.25s cubic-bezier(.4,2,.6,1),
                 transform 0.35s cubic-bezier(.4,2,.6,1);
             pointer-events: none;
