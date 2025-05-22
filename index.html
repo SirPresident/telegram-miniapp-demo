@@ -558,7 +558,7 @@
                 <div class="box">
                     <div id="header" style="margin-bottom:1rem;">
                         <h1 style="font-size:1.4rem;">Mood chart</h1>
-                        <!-- <div id="userInfo">Loading user...</div> -->
+                        <div style="font-size:1.1rem; color:var(--text-color);" id="todayDate"></div>
                     </div>
                     <div class="inner">
                         <!-- Vertical dual-handle slider -->
@@ -700,6 +700,12 @@
 
     <script>
         const DateTime = luxon.DateTime;
+        // Update today's date
+        const todayDate = document.getElementById('todayDate');
+        todayDate.textContent = DateTime.now().toFormat('LLL dd, yyyy')+ " - Today";;
+    </script>
+
+    <script>
         // Update today's date
         const todayDate = document.getElementById('todayDate');
         todayDate.textContent = DateTime.now().toFormat('LLL dd, yyyy')+ " - Today";;
