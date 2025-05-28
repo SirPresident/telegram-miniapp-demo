@@ -726,12 +726,6 @@
     </script>
 
     <script>
-        // Update today's date
-        const todayDate = document.getElementById('todayDate');
-        todayDate.textContent = DateTime.now().toFormat('LLL dd, yyyy')+ " - Today";;
-    </script>
-
-    <script>
         const tg = window.Telegram.WebApp;
         const BACKEND_URL_BASE = 'https://finarfin-bot-subdomain.loca.lt'; // Replace!
         let telegramUser = null;
@@ -1113,7 +1107,7 @@
                 moodChartInstance.options.scales.x.max = weekEndDateLuxon.toISODate();
                 
                 document.getElementById('segmentLabel').textContent = 
-                    `${weekStartDateLuxon.toFormat('LLL dd')} – ${weekEndDateLuxon.toFormat('LLL dd')}`;
+                    `${weekStartDateLuxon.toFormat('dd')} – ${weekEndDateLuxon.toFormat('dd')}`;
             } else {
                 document.getElementById('segmentLabel').textContent = 'No data for this week';
                 moodChartInstance.options.scales.x.min = undefined;
