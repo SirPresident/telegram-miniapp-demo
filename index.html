@@ -15,12 +15,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.js"></script>
     <style>
         :root {
-            --bg-color: #c5c5c5;
-            --bg-gradient-start: #5b5b5b;
-            --bg-gradient-end: #e8ecf0;
+            --bg-color: #ffffff;
+            --bg-gradient-start: #f0f0f0;
+            --bg-gradient-end: #f0f0f0;
             /* --shadow-dark: rgba(0, 0, 0, 0.08); */
             /* --shadow-light: #505050; */
-            --text-color: #171717;
+            --text-color: #000000;
             --chart-line: #36A2EB;
             --chart-grad-start: rgb(0, 255, 0);
             --chart-grad-end: rgba(255, 50, 50, .3);
@@ -28,15 +28,16 @@
             --highlight-below: #c5c5c5;
             --btn-bg: #c5c5c5;
             --border-color: rgba(0, 0, 0, 0.1);
+            --bg-color-rgb: 255, 255, 255;  /* RGB values for white */
         }
 
         .dark {
-            --bg-color: #1f1f1f;
-            --bg-gradient-start: #5b5b5b;
-            --bg-gradient-end: #262626;
+            --bg-color: #303030;
+            --bg-gradient-start: #212121;
+            --bg-gradient-end: #212121;
             /* --shadow-dark: rgba(0, 0, 0, 0.6); */
             /* --shadow-light: rgba(255, 255, 255, 0.1); */
-            --text-color: #d1d1d1;
+            --text-color: #ffffff;
             --chart-line: #dfe6ef;
             --chart-grad-start: rgb(0, 255, 0);
             --chart-grad-end: rgba(255, 50, 50, .3);
@@ -44,6 +45,7 @@
             --highlight-below: #1f1f1f;
             --btn-bg: #1f1f1f;
             --border-color: rgba(255, 255, 255, 0.1);
+            --bg-color-rgb: 48, 48, 48;  /* RGB values for dark mode background */
         }
 
         * { box-sizing:border-box; margin:0; padding:0; }
@@ -171,24 +173,15 @@
             display: flex;
             align-items: center;
             gap: 1.5rem;
-            background: var(--bg-color);
+            background: rgba(var(--bg-color-rgb), 0.6);  /* Semi-transparent background */
             border-radius: 7px;
             box-shadow: none;
             border: 1px solid var(--border-color);
             padding: 3px 16px;
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
         }
-        .capsule-tabs::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border-radius: 20px;
-            z-index: -1;
-        }
+
         .capsule-tab-group {
             display: flex;
             gap: 1.2rem;
