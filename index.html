@@ -1114,7 +1114,7 @@
                 moodChartInstance.options.scales.x.max = weekEndDateLuxon.toISODate();
                 
                 document.getElementById('segmentLabel').textContent = 
-                    `${weekStartDateLuxon.toFormat('dd')} – ${weekEndDateLuxon.toFormat('dd')}`;
+                    `${weekStartDateLuxon.toFormat('LLL dd')} – ${weekEndDateLuxon.toFormat('LLL dd')}`;
             } else {
                 document.getElementById('segmentLabel').textContent = 'No data for this week';
                 moodChartInstance.options.scales.x.min = undefined;
