@@ -907,7 +907,7 @@
                     const top = y.getPixelForValue(c.options.scales.y.max);
                     const bot = y.getPixelForValue(c.options.scales.y.min);
                     const OFF = 0;
-                    slider.style.marginTop = (top-OFF)+'px';
+                    slider.style.marginTop = (top-OFF+15)+'px';
                     slider.style.height    = (bot-top+OFF*2)+'px';
                 }
             };
@@ -1122,7 +1122,7 @@
                 
                 document.getElementById('segmentLabel').textContent = 
                 //     `${weekStartDateLuxon.toFormat('LLL dd')} – ${weekEndDateLuxon.toFormat('LLL dd')}`;
-                    `${weekStartDateLuxon.toFormat('LLLL, yyyy')}`;
+                    `${weekStartDateLuxon.toFormat('LLLL - yyyy')}`;
             } else {
                 document.getElementById('segmentLabel').textContent = 'No data for this week';
                 moodChartInstance.options.scales.x.min = undefined;
