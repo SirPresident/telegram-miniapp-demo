@@ -83,9 +83,6 @@
         .inner {
             display:flex; align-items:flex-start; overflow-x:auto;
         }
-        #slider {
-            flex:0 0 20px; margin-left:10px;
-        }
         .chart-wrap {
             flex:1 1 0;
             min-width: 200px;
@@ -297,25 +294,36 @@
         }
         /* ————————————— Neumorphic noUiSlider Styling ————————————— */
         #slider {
+            /* Flex item properties (how it behaves in its parent .inner) */
+            /* --- THIS IS THE KEY FOR THE OVERALL WIDTH OF THE SLIDER ELEMENT --- */
+            flex-grow: 0;
+            flex-shrink: 0;
+            flex-basis: 8px; /* SET YOUR DESIRED FINAL WIDTH HERE */
+            /* OR shorthand: flex: 0 0 8px; */
+
+            /* Margins - decide which ones you want */
+            margin-left: 5px;   /* From your second attempt, or choose what looks best */
+            margin-right: 15px; /* From your second attempt */
+
+            /* Appearance and flex container properties (how it lays out its own children) */
             background: var(--bg-color);
-            /* Use only shadow-outer style */
             box-shadow: none;
             border: 1px solid var(--border-color);
-            border-radius: 10px;
-            margin-right: 10px;
-            min-width: 0px;
-            width: 0px;
+            border-radius: 4px; /* If width is 8px, radius 4px makes ends perfectly round */
+            width: 8px;         /* Explicitly set width, consistent with flex-basis */
+            min-width: 8px;     /* Consistent with flex-basis */
+
             display: flex;
             align-items: stretch;
             justify-content: center;
         }
 
         /* Hide the white capsule outline */
-        #slider .noUi-base {
+        /* #slider .noUi-base {
             background: transparent;
             box-shadow: none;
             border: none !important;
-        }
+        } */
 
         /* the filled-in “connect” bar between handles */
         #slider .noUi-connect {
@@ -327,15 +335,18 @@
 
         /* the draggable handles */
         #slider .noUi-handle {
-            width: 26px;
-            height: 26px;
-            border-radius: 50%;
+            width: 18px;
+            height: 12px;
+            border-radius: 0% 50% 50% 0%;
             background: var(--bg-gradient-start);
             /* Use only shadow-outer style */
             box-shadow: none;
             border: 1px solid var(--border-color);
-            top: auto;
-            transform: translateY(0);
+            /* left: auto;
+            top: auto; */
+            /* right: -10px !important;  */
+            bottom: -8px;
+            /* transform: translateY(0); */
             transition: box-shadow 0.3s;
             cursor: grab;
         }
