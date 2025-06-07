@@ -588,6 +588,50 @@
             -webkit-user-select: none;
             user-select: none;
         }
+
+        /* Add to your existing CSS */
+.log-date-header {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    cursor: pointer;
+    border-radius: 7px;
+    transition: background-color 0.2s;
+    user-select: none;
+}
+
+.log-date-header:hover {
+    background-color: var(--highlight-below);
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.expand-icon {
+    display: inline-block;
+    width: 20px;
+    transition: transform 0.2s;
+}
+
+.logs-count {
+    margin-left: 10px;
+    font-size: 0.9em;
+    color: var(--text-color);
+    opacity: 0.7;
+}
+
+.log-entries {
+    padding: 0 12px;
+    margin-left: 20px;
+    border-left: 2px solid var(--border-color);
+}
+
+.log-group {
+    margin-bottom: 1rem;
+}
     </style>
 </head>
 <body>
@@ -1370,36 +1414,59 @@
         }
 
         function displayAllLogs() {
-            const container = document.getElementById('allLogsContainer');
-            if (!allUserLogs || !allUserLogs.length) {
-                container.innerHTML = '<p style="text-align:center;">No logs found.</p>';
-                return;
-            }
+    const container = document.getElementById('allLogsContainer');
+    if (!allUserLogs || !allUserLogs.length) {
+        container.innerHTML = '<p style="text-align:center;">No logs found.</p>';
+        return;
+    }
 
-            // Group logs by local date using Luxon
-            const groupedLogs = new Map();
-            allUserLogs.forEach(log => {
-                const dateKey = log.luxon_logged_at.toISODate();
-                if (!groupedLogs.has(dateKey)) {
-                    groupedLogs.set(dateKey, []);
-                }
-                groupedLogs.get(dateKey).push(log);
-            });
-
-            // Sort dates in descending order
-            const sortedDates = Array.from(groupedLogs.keys()).sort().reverse();
-            
-            // Generate HTML
-            container.innerHTML = sortedDates.map(date => {
-                const logs = groupedLogs.get(date);
-                return `
-                    <div class="log-group" data-date="${date}">
-                        <div class="log-date-header">${DateTime.fromISO(date).toFormat('LLLL d, yyyy')}</div>
-                        ${logs.map(log => createLogEntryHtml(log)).join('')}
-                    </div>
-                `;
-            }).join('');
+    // Group logs by local date using Luxon
+    const groupedLogs = new Map();
+    allUserLogs.forEach(log => {
+        const dateKey = log.luxon_logged_at.toISODate();
+        if (!groupedLogs.has(dateKey)) {
+            groupedLogs.set(dateKey, []);
         }
+        groupedLogs.get(dateKey).push(log);
+    });
+
+    // Sort dates in descending order
+    const sortedDates = Array.from(groupedLogs.keys()).sort().reverse();
+    
+    // Generate HTML with collapsible sections
+    container.innerHTML = sortedDates.map(date => {
+        const logs = groupedLogs.get(date);
+        const logsCount = logs.length;
+        return `
+            <div class="log-group" data-date="${date}">
+                <div class="log-date-header collapsible">
+                    <div class="header-content">
+                        <span class="expand-icon">▶</span>
+                        ${DateTime.fromISO(date).toFormat('LLLL d, yyyy')}
+                        <span class="logs-count">(${logsCount} log${logsCount !== 1 ? 's' : ''})</span>
+                    </div>
+                </div>
+                <div class="log-entries" style="display: none;">
+                    ${logs.map(log => createLogEntryHtml(log)).join('')}
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    // Add click handlers for collapsible sections
+    document.querySelectorAll('.log-date-header').forEach(header => {
+        header.addEventListener('click', () => {
+            const entries = header.nextElementSibling;
+            const icon = header.querySelector('.expand-icon');
+            const isExpanded = entries.style.display !== 'none';
+            
+            // Toggle visibility
+            entries.style.display = isExpanded ? 'none' : 'block';
+            icon.textContent = isExpanded ? '▶' : '▼';
+            header.classList.toggle('expanded', !isExpanded);
+        });
+    });
+}
 
         function createLogEntryHtml(log) {
             let htmlContent = `<div class="log-entry" data-log-content="${escapeHtml(JSON.stringify(log))}">
