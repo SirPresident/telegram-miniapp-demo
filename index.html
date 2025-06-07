@@ -589,15 +589,22 @@
             user-select: none;
         }
 
-        /* Add to your existing CSS */
+/* Update these CSS styles in your <style> section */
+.log-group {
+    margin-bottom: 1rem;
+}
+
 .log-date-header {
-    display: flex;
-    align-items: center;
-    padding: 12px;
-    cursor: pointer;
+    background: var(--bg-color);
     border-radius: 7px;
+    padding: 1rem;
+    box-shadow: none;
+    border: 1px solid var(--border-color);
+    cursor: pointer;
     transition: background-color 0.2s;
     user-select: none;
+    display: flex;
+    align-items: center;
 }
 
 .log-date-header:hover {
@@ -607,30 +614,44 @@
 .header-content {
     display: flex;
     align-items: center;
-    gap: 10px;
+    width: 100%;
+    font-size: 1.1rem;
+    color: var(--text-color);
 }
 
 .expand-icon {
-    display: inline-block;
-    width: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    margin-right: 12px;
     transition: transform 0.2s;
 }
 
 .logs-count {
-    margin-left: 10px;
+    margin-left: auto;
     font-size: 0.9em;
     color: var(--text-color);
     opacity: 0.7;
 }
 
 .log-entries {
-    padding: 0 12px;
-    margin-left: 20px;
-    border-left: 2px solid var(--border-color);
+    margin-top: 0.5rem;
+    padding: 0;
 }
 
-.log-group {
-    margin-bottom: 1rem;
+.log-entry {
+    margin-top: 0.5rem;
+    background: var(--bg-color);
+    border-radius: 7px;
+    padding: 1rem;
+    box-shadow: none;
+    border: 1px solid var(--border-color);
+}
+
+.log-date-header.expanded {
+    background-color: var(--highlight-above);
 }
     </style>
 </head>
@@ -1416,7 +1437,25 @@
         function displayAllLogs() {
     const container = document.getElementById('allLogsContainer');
     if (!allUserLogs || !allUserLogs.length) {
-        container.innerHTML = '<p style="text-align:center;">No logs found.</p>';
+        
+    container.innerHTML = sortedDates.map(date => {
+        const logs = groupedLogs.get(date);
+        const logsCount = logs.length;
+        return `
+            <div class="log-group" data-date="${date}">
+                <div class="log-date-header">
+                    <div class="header-content">
+                        <span class="expand-icon">▶</span>
+                        ${DateTime.fromISO(date).toFormat('LLLL d, yyyy')}
+                        <span class="logs-count">${logsCount} log${logsCount !== 1 ? 's' : ''}</span>
+                    </div>
+                </div>
+                <div class="log-entries" style="display: none;">
+                    ${logs.map(log => createLogEntryHtml(log)).join('')}
+                </div>
+            </div>
+        `;
+    }).join('');
         return;
     }
 
