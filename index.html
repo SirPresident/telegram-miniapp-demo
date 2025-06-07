@@ -1503,24 +1503,38 @@
             return htmlContent;
         }
 
-        function filterLogs(searchTerm) {
-            const logEntries = document.querySelectorAll('.log-entry');
-            const groups = document.querySelectorAll('.log-group');
-            
-            groups.forEach(group => {
-                let hasVisibleLogs = false;
-                const logsInGroup = group.querySelectorAll('.log-entry');
-                
-                logsInGroup.forEach(entry => {
-                    const logData = JSON.parse(entry.dataset.logContent);
-                    const shouldShow = searchInLog(logData, searchTerm);
-                    entry.style.display = shouldShow ? '' : 'none';
-                    if (shouldShow) hasVisibleLogs = true;
-                });
-                
-                group.style.display = hasVisibleLogs ? '' : 'none';
-            });
+function filterLogs(searchTerm) {
+    const groups = document.querySelectorAll('.log-group');
+    
+    groups.forEach(group => {
+        const entries = group.querySelectorAll('.log-entry');
+        let hasVisibleLogs = false;
+        
+        entries.forEach(entry => {
+            const logData = JSON.parse(entry.dataset.logContent);
+            const shouldShow = searchInLog(logData, searchTerm);
+            entry.style.display = shouldShow ? '' : 'none';
+            if (shouldShow) hasVisibleLogs = true;
+        });
+        
+        group.style.display = hasVisibleLogs ? '' : 'none';
+        
+        // If searching, automatically expand groups with matches
+        const entriesContainer = group.querySelector('.log-entries');
+        const header = group.querySelector('.log-date-header');
+        const icon = header.querySelector('.expand-icon');
+        
+        if (searchTerm && hasVisibleLogs) {
+            entriesContainer.style.display = 'block';
+            icon.textContent = '▼';
+            header.classList.add('expanded');
+        } else if (!searchTerm) {
+            entriesContainer.style.display = 'none';
+            icon.textContent = '▶';
+            header.classList.remove('expanded');
         }
+    });
+}
 
         function searchInLog(log, term) {
             if (!term) return true;
