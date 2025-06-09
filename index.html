@@ -751,14 +751,15 @@ body.dark .side-menu {
         max-width: 100vw;
     }
 }
+body.dark .hamburger-svg {
+    filter: invert(1);
+}
     </style>
 </head>
 <body>
     <div class="hamburger-menu">
     <button id="hamburgerBtn" aria-label="Open menu">
-        <span class="hamburger-bar"></span>
-        <span class="hamburger-bar"></span>
-        <span class="hamburger-bar"></span>
+        <img src="assets/icons/Menu.svg" alt="Menu" class="hamburger-svg" />
     </button>
     <div class="side-menu" id="sideMenu">
         <div class="side-menu-content">
