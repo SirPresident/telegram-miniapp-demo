@@ -1371,68 +1371,71 @@
             });
         }
 
-
-        // Add this new function to handle showing relevant logs
-        function showRelevantLogs(itemText, itemType, logs) {
-            const relevantLogs = logs.filter(log => {
-                if (itemType === 'diet') {
-                    return log.diet && Object.entries(log.diet).some(([cat, arr]) => 
-                        arr && arr.length && arr.some(item => `${cat}: ${item}` === itemText)
-                    );
-                } else {
-                    return log[itemType] && log[itemType].includes(itemText);
-                }
-            });
-            
-            // Display the filtered logs
-            const container = document.getElementById('logsContainer');
-            container.classList.add('active');
-            displayLogEntries(relevantLogs);
-            container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+// ...existing code...
+function showRelevantLogs(itemText, itemType, logs) {
+    const relevantLogs = logs.filter(log => {
+        if (itemType === 'diet') {
+            return log.diet && Object.entries(log.diet).some(([cat, arr]) => 
+                arr && arr.length && arr.some(item => `${cat}: ${item}` === itemText)
+            );
+        } else {
+            return log[itemType] && log[itemType].includes(itemText);
         }
+    });
+    
+    // Display the filtered logs
+    const container = document.getElementById('logsContainer');
+    container.classList.add('active');
+    // Add the clicked entry as a title above the logs
+    container.innerHTML = `<h2 style="margin-bottom:1rem; color:var(--text-color); font-size:1.2rem;">${escapeHtml(itemText)}</h2>`;
+    displayLogEntries(relevantLogs, container);
+    container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 
-        function displayLogEntries(logsToDisplay) {
-            const container = document.getElementById('logsContainer');
-            container.innerHTML = '';
-            if (logsToDisplay && logsToDisplay.length > 0) {
-                logsToDisplay.slice().reverse().forEach(log => {
-                    const entryDiv = document.createElement('div');
-                    entryDiv.className = 'log-entry';
-                    let htmlContent = `<div class="log-meta">Logged: ${log.logged_at}</div>`;
-                    if(log.original_note) {
-                        htmlContent += `<div class="log-original-note"><strong>Original:</strong> ${escapeHtml(log.original_note)}</div>`;
-                    }
-                    if (log.mood_label) {
-                        htmlContent += `<div class="log-section"><h3>Mood</h3><span class="tag">${escapeHtml(log.mood_label)} (${log.mood_score || 'N/A'})</span></div>`;
-                    }
-                    if (log.health && log.health.length > 0) {
-                        htmlContent += `<div class="log-section"><h3>Health</h3><ul>`;
-                        log.health.forEach(h => { htmlContent += `<li>${escapeHtml(h)}</li>`; });
-                        htmlContent += `</ul></div>`;
-                    }
-                    if (log.activity && log.activity.length > 0) {
-                        htmlContent += `<div class="log-section"><h3>Activity</h3><ul>`;
-                        log.activity.forEach(a => { htmlContent += `<li>${escapeHtml(a)}</li>`; });
-                        htmlContent += `</ul></div>`;
-                    }
-                    if (log.diet && log.diet > 0) {
-                        htmlContent += `<div class="log-section"><h3>Diet</h3><ul>`;
-                        for (const [category, items] of Object.entries(log.diet)) {
-                            if (items && items.length) {
-                                items.forEach(item => {
-                                    htmlContent += `<li>${escapeHtml(category)}: ${escapeHtml(item)}</li>`; // Changed html to htmlContent
-                                });
-                            }
-                        }
-                        htmlContent += `</ul></div>`;
-                    }
-                    entryDiv.innerHTML = htmlContent;
-                    container.appendChild(entryDiv);
-                });
-            } else {
-                container.innerHTML = '<p style="text-align:center;">No logs found for this period or user.</p>';
+// Update displayLogEntries to accept the container as an argument
+function displayLogEntries(logsToDisplay, container = document.getElementById('logsContainer')) {
+    // If container already has a title, don't overwrite it
+    if (!container.querySelector('h2')) container.innerHTML = '';
+    if (logsToDisplay && logsToDisplay.length > 0) {
+        logsToDisplay.slice().reverse().forEach(log => {
+            const entryDiv = document.createElement('div');
+            entryDiv.className = 'log-entry';
+            let htmlContent = `<div class="log-meta">Logged: ${log.logged_at}</div>`;
+            if(log.original_note) {
+                htmlContent += `<div class="log-original-note"><strong>Original:</strong> ${escapeHtml(log.original_note)}</div>`;
             }
-        }
+            if (log.mood_label) {
+                htmlContent += `<div class="log-section"><h3>Mood</h3><span class="tag">${escapeHtml(log.mood_label)} (${log.mood_score || 'N/A'})</span></div>`;
+            }
+            if (log.health && log.health.length > 0) {
+                htmlContent += `<div class="log-section"><h3>Health</h3><ul>`;
+                log.health.forEach(h => { htmlContent += `<li>${escapeHtml(h)}</li>`; });
+                htmlContent += `</ul></div>`;
+            }
+            if (log.activity && log.activity.length > 0) {
+                htmlContent += `<div class="log-section"><h3>Activity</h3><ul>`;
+                log.activity.forEach(a => { htmlContent += `<li>${escapeHtml(a)}</li>`; });
+                htmlContent += `</ul></div>`;
+            }
+            if (log.diet && log.diet.length > 0) {
+                htmlContent += `<div class="log-section"><h3>Diet</h3><ul>`;
+                for (const [category, items] of Object.entries(log.diet)) {
+                    if (items && items.length) {
+                        items.forEach(item => {
+                            htmlContent += `<li>${escapeHtml(category)}: ${escapeHtml(item)}</li>`;
+                        });
+                    }
+                }
+                htmlContent += `</ul></div>`;
+            }
+            entryDiv.innerHTML = htmlContent;
+            container.appendChild(entryDiv);
+        });
+    } else {
+        container.innerHTML += '<p style="text-align:center;">No logs found for this period or user.</p>';
+    }
+}
+// ...existing code...
 
         function displayAllLogs() {
     const container = document.getElementById('allLogsContainer');
