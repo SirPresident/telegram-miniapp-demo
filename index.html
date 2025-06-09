@@ -60,44 +60,89 @@
             transition:0.3s;
             padding: .5rem .5rem 80px .5rem;  /* Added bottom padding of 80px */
         }
-.switch { 
-    position: relative;  /* Remove duplicate position declaration */
-    height: 34px;
-    margin-bottom: 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.7em;  /* Reduced from 3.7em for better spacing */
-}
-
-.switch input { 
-    opacity: 0; 
-    width: 0; 
-    height: 0; 
-}
-
-.slider-switch {
-    position: absolute;
-    width: 60px;  /* Move width here from .switch */
-    top: 0; 
-    left: 0; 
-    right: auto;  /* Change from right:0 to right:auto */
-    bottom: 0;
-    background: var(--bg-color);
-    border-radius: 34px;
-    cursor: pointer;
-    transition: 0.3s;
-    border: 2px solid var(--border-color);
-}
-        .slider-switch:before {
-            content:""; position:absolute; width:26px; height:26px;
-            left:2px; bottom:2px; background:var(--bg-gradient-start);
-            /* box-shadow: 2px 2px 6px var(--shadow-dark), -2px -2px 6px var(--shadow-light); */
-            border-radius:50%; transition:0.3s;
+        
+        .switch { 
+            position: relative;
+            width: 80px;
+            height: 40px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1.2em;
         }
-        /* input:checked + .slider-switch { */
-            /* box-shadow: inset 2px 2px 10px var(--shadow-dark), inset -4px -4px 10px var(--shadow-light); */
-        /* } */
-        input:checked + .slider-switch:before { transform:translateX(26px); }
+
+        .switch input { 
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider-switch {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            border-radius: 40px;
+            transition: 0.4s;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+            background-image: url('assets/icons/Moon.svg');
+            background-repeat: no-repeat;
+            background-position: left 10px center;
+            background-size: 20px;
+        }
+
+        .slider-switch:before {
+            position: absolute;
+            content: "";
+            height: 32px;
+            width: 32px;
+            left: 4px;
+            bottom: 4px;
+            background-color: #333;
+            border-radius: 50%;
+            transition: 0.4s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        /* Light mode (not checked) state */
+        input:not(:checked) + .slider-switch:before {
+            transform: translateX(40px);
+        }
+
+        /* Dark mode (checked) state */
+        input:checked + .slider-switch {
+            background-color: #212121;
+            background-image: none;  /* Remove direct background image */
+            background-position: right 10px center;
+        }
+
+        /* Add new pseudo-element for the inverted icon */
+        input:checked + .slider-switch::after {
+            content: "";
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-image: url('assets/icons/Sun.svg');
+            background-size: contain;
+            background-repeat: no-repeat;
+            filter: invert(1);  /* Only inverts the SVG */
+        }
+
+        input:checked + .slider-switch:before {
+            background-color: white;
+            transform: translateX(0);
+        }
+
+        body.dark .slider-switch {
+            background-color: #212121;
+        }
+
         .container { width:100%}
 
         .inner {
@@ -290,6 +335,7 @@
             opacity: 1;
             transform: translateY(0);
         }
+
         @media (max-width: 500px) {
             .capsule-tabs {
                 width: 90%;
@@ -314,6 +360,7 @@
             }
         }
         /* ————————————— Neumorphic noUiSlider Styling ————————————— */
+        
         #slider {
             /* Flex item properties (how it behaves in its parent .inner) */
             /* --- THIS IS THE KEY FOR THE OVERALL WIDTH OF THE SLIDER ELEMENT --- */
@@ -339,12 +386,6 @@
             justify-content: center;
         }
 
-        /* Hide the white capsule outline */
-        /* #slider .noUi-base {
-            background: transparent;
-            box-shadow: none;
-            border: none !important;
-        } */
 
         /* the filled-in “connect” bar between handles */
         #slider .noUi-connect {
@@ -577,7 +618,6 @@
                     }
                 }
 
-                
         /* Add this to your existing <style> section */
         * {
             -webkit-user-select: none;
@@ -596,19 +636,19 @@
             -ms-user-select: text;
             user-select: text;
         }
-
+        
         * {
-        -webkit-tap-highlight-color: transparent;
-         }
+    -webkit-tap-highlight-color: transparent;
+}
 
-        button, 
-        .capsule-tab-btn,
-        .panel-item {
-            -webkit-tap-highlight-color: transparent;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            user-select: none;
-        }
+button, 
+.capsule-tab-btn,
+.panel-item {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
 
 /* Update these CSS styles in your <style> section */
 .log-group {
@@ -675,7 +715,6 @@
     background-color: var(--highlight-above);
 }
 
-/* Hamburger menu styles */
 .hamburger-menu {
     position: absolute;
     top: 0.5rem;   /* Move further up */
@@ -751,6 +790,7 @@ body.dark .side-menu {
     text-align: center;
     position: relative;
 }
+
 /* Make room for hamburger in search tab */
 .search-container {
     display: flex;
@@ -773,6 +813,7 @@ body.dark .side-menu {
         max-width: 100vw;
     }
 }
+
 .hamburger-svg {
     width: 40px;
     height: 40px;
@@ -807,7 +848,7 @@ body.dark .icon-svg {
 <label class="switch" style="margin-bottom:1.5rem; display: flex; align-items: center; gap: 5em;">
                 <input type="checkbox" id="themeToggle">
                 <span class="slider-switch"></span>
-    <span id="themeSwitchLabel" style="font-size:1rem; color:var(--text-color); user-select:none;">Dark theme</span>
+    <!-- <span id="themeSwitchLabel" style="font-size:1rem; color:var(--text-color); user-select:none;">Dark theme</span> -->
             </label>
             <!-- Add more menu items here if needed -->
         </div>
@@ -997,9 +1038,9 @@ body.dark .icon-svg {
 
         const themeSwitchLabel = document.getElementById('themeSwitchLabel');
         // Set initial label based on theme
-        function updateThemeSwitchLabel(isDark) {
-            themeSwitchLabel.textContent = isDark ? 'Light theme' : 'Dark theme';
-        }
+        // function updateThemeSwitchLabel(isDark) {
+        //     themeSwitchLabel.textContent = isDark ? 'Switch to light' : 'Switch to dark';
+        // }
         updateThemeSwitchLabel(document.body.classList.contains('dark'));
 
         // Listen for toggle changes
