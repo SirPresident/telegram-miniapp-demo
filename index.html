@@ -751,7 +751,15 @@ body.dark .side-menu {
         max-width: 100vw;
     }
 }
-body.dark .hamburger-svg {
+.icon-svg {
+    width: 1.2em;
+    height: 1.2em;
+    display: inline-block;
+    vertical-align: middle;
+    filter: invert(0);
+    transition: filter 0.2s;
+}
+body.dark .icon-svg {
     filter: invert(1);
 }
     </style>
@@ -780,24 +788,24 @@ body.dark .hamburger-svg {
         </label>
         <!-- Capsule Tab Navigation -->
         <div class="capsule-tab-group">
-            <button class="capsule-tab-btn active" id="tab-home" type="button">
-                <span class="capsule-icon">
-                    <img src="assets\icons\Home.svg" alt="Home icon" />
-                </span>
-                <span class="capsule-text">Home</span>
-            </button>
-            <button class="capsule-tab-btn" id="tab-logs" type="button">
-                <span class="capsule-icon">
-                    <img src="assets\icons\Search.svg" alt="Search icon" />
-                </span>
-                <span class="capsule-text">Search</span>
-            </button>
-            <button class="capsule-tab-btn" id="tab-levelup" type="button">
-                <span class="capsule-icon">
-                    <img src="assets\icons\Arrow up.svg" alt="Home icon" />
-                </span>
-                <span class="capsule-text">Level up</span>
-            </button>
+        <button class="capsule-tab-btn active" id="tab-home" type="button">
+            <span class="capsule-icon">
+                <img src="assets/icons/Home.svg" alt="Home icon" class="icon-svg" />
+            </span>
+            <span class="capsule-text">Home</span>
+        </button>
+        <button class="capsule-tab-btn" id="tab-logs" type="button">
+            <span class="capsule-icon">
+                <img src="assets/icons/Search.svg" alt="Search icon" class="icon-svg" />
+            </span>
+            <span class="capsule-text">Search</span>
+        </button>
+        <button class="capsule-tab-btn" id="tab-levelup" type="button">
+            <span class="capsule-icon">
+                <img src="assets/icons/Arrow up.svg" alt="Level up icon" class="icon-svg" />
+            </span>
+            <span class="capsule-text">Level up</span>
+        </button>
         </div>
     </div>
 
