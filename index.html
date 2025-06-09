@@ -657,24 +657,25 @@
 /* Hamburger menu styles */
 .hamburger-menu {
     position: fixed;
-    top: 1rem;
-    left: 1rem;
+    top: 0.5rem;   /* Move further up */
+    left: 0.5rem;  /* Move further left */
     z-index: 2001;
 }
 
+/* Remove the button's box and background */
 #hamburgerBtn {
-    background: var(--bg-color);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    width: 44px;
-    height: 44px;
+    background: none;
+    border: none;
+    border-radius: 0;
+    width: auto;
+    height: auto;
     display: flex;
-    flex-direction: column;
-    justify-content: center;
     align-items: center;
+    justify-content: center;
     cursor: pointer;
     padding: 0;
-    transition: background 0.2s;
+    box-shadow: none;
+    transition: none;
 }
 
 .hamburger-bar {
