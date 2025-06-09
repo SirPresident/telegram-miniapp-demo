@@ -653,14 +653,96 @@
 .log-date-header.expanded {
     background-color: var(--highlight-above);
 }
+
+/* Hamburger menu styles */
+.hamburger-menu {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 2001;
+}
+
+#hamburgerBtn {
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    padding: 0;
+    transition: background 0.2s;
+}
+
+.hamburger-bar {
+    width: 26px;
+    height: 3px;
+    background: var(--text-color);
+    margin: 4px 0;
+    border-radius: 2px;
+    transition: background 0.2s;
+}
+
+.side-menu {
+    position: fixed;
+    top: 0;
+    left: -260px;
+    width: 240px;
+    height: 100vh;
+    background: var(--bg-color);
+    border-right: 1px solid var(--border-color);
+    box-shadow: 2px 0 16px rgba(0,0,0,0.08);
+    z-index: 2002;
+    transition: left 0.3s;
+    display: flex;
+    flex-direction: column;
+    padding-top: 2rem;
+}
+
+.side-menu.open {
+    left: 0;
+}
+
+.side-menu-content {
+    padding: 1.5rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Optional: dark mode for menu */
+body.dark .side-menu {
+    background: var(--bg-color);
+    border-right: 1px solid var(--border-color);
+}
     </style>
 </head>
 <body>
+    <div class="hamburger-menu">
+    <button id="hamburgerBtn" aria-label="Open menu">
+        <span class="hamburger-bar"></span>
+        <span class="hamburger-bar"></span>
+        <span class="hamburger-bar"></span>
+    </button>
+    <div class="side-menu" id="sideMenu">
+        <div class="side-menu-content">
+            <label class="switch" style="margin-bottom:1.5rem;">
+                <input type="checkbox" id="themeToggle">
+                <span class="slider-switch"></span>
+            </label>
+            <!-- Add more menu items here if needed -->
+        </div>
+    </div>
+    </div>
+
     <div class="capsule-tabs">
         <!-- Theme Switcher (left) -->
-        <label class="switch" style="margin-bottom:0;">
+        <!-- <label class="switch" style="margin-bottom:0;">
             <input type="checkbox" id="themeToggle">
-            <span class="slider-switch"></span>
+            <span class="slider-switch"></span> -->
         </label>
         <!-- Capsule Tab Navigation -->
         <div class="capsule-tab-group">
@@ -1614,6 +1696,22 @@ function filterLogs(searchTerm) {
                 .replace(/"/g, "&quot;")
                 .replace(/'/g, "&#039;");
         }
+
+        document.addEventListener('DOMContentLoaded', () => {
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    const sideMenu = document.getElementById('sideMenu');
+
+    hamburgerBtn.addEventListener('click', () => {
+        sideMenu.classList.toggle('open');
+    });
+
+    // Optional: close menu when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!sideMenu.contains(e.target) && !hamburgerBtn.contains(e.target)) {
+            sideMenu.classList.remove('open');
+        }
+    });
+});
     </script>
 </body>
 </html>
