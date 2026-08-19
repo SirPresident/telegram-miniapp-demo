@@ -844,7 +844,95 @@ body.dark .hamburger-svg {
 body.dark .icon-svg {
     filter: invert(1);
 }
-    </style>
+    
+/* Final theme toggle polish */
+.side-menu-content .switch {
+    position: relative;
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between !important;
+    width: 100% !important;
+    height: 50px !important;
+    padding: 0 12px 0 14px !important;
+    margin: 0 !important;
+    gap: 12px !important;
+    border-radius: 14px !important;
+    background: var(--surface) !important;
+    border: 1px solid var(--border-color) !important;
+    box-shadow: 0 6px 18px var(--shadow-dark) !important;
+}
+.side-menu-content .switch:before {
+    content: "Dark mode";
+    margin-right: auto;
+    color: var(--text-color);
+    font-size: .9rem;
+    font-weight: 650;
+    letter-spacing: -.01em;
+}
+.side-menu-content .slider-switch {
+    position: relative !important;
+    inset: auto !important;
+    flex: 0 0 auto;
+    width: 48px !important;
+    height: 28px !important;
+    border-radius: 999px !important;
+    background: var(--surface-2) !important;
+    border: 1px solid var(--border-color);
+    box-shadow: inset 0 1px 2px var(--shadow-dark) !important;
+    background-image: none !important;
+    transition: background .22s ease, border-color .22s ease, box-shadow .22s ease !important;
+}
+.side-menu-content .slider-switch:before {
+    content: "";
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    left: 2px;
+    top: 2px;
+    bottom: auto;
+    transform: none !important;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 2px 6px rgba(27,34,52,.18);
+    transition: transform .22s cubic-bezier(.4,0,.2,1), background .22s ease, box-shadow .22s ease !important;
+}
+.side-menu-content .slider-switch:after {
+    content: "";
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    left: 7px;
+    top: 7px;
+    right: auto;
+    opacity: .55;
+    transform: none !important;
+    background: url('assets/icons/Sun.svg') center/contain no-repeat;
+    filter: none;
+    transition: opacity .22s ease, transform .22s ease, background-image .22s ease !important;
+}
+.side-menu-content .switch input:checked + .slider-switch {
+    background: var(--accent) !important;
+    border-color: var(--accent) !important;
+    box-shadow: 0 4px 12px var(--accent-soft) !important;
+}
+.side-menu-content .switch input:checked + .slider-switch:before {
+    transform: translateX(20px) !important;
+    background: #fff;
+}
+.side-menu-content .switch input:checked + .slider-switch:after {
+    left: auto;
+    right: 7px;
+    opacity: .9;
+    background-image: url('assets/icons/Moon.svg');
+}
+.side-menu-content .switch:hover .slider-switch {
+    border-color: rgba(91,109,246,.28);
+}
+.side-menu-content .switch:focus-within .slider-switch {
+    box-shadow: 0 0 0 4px var(--accent-soft) !important;
+}
+
+</style>
 
 <style id="ui-polish">
 :root{--surface:#fff;--surface-2:#f0f2f7;--text-muted:#70778a;--text-soft:#9aa1b2;--accent:#5b6df6;--accent-soft:rgba(91,109,246,.12);--shadow-dark:rgba(27,34,52,.10);--radius-md:16px;--radius-lg:22px;--success:#28a66f;--danger:#e45d69}
