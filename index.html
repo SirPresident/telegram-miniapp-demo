@@ -13,957 +13,347 @@
     <!-- noUiSlider -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css" rel="stylesheet"/>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.js"></script>
-    <style>
-        :root {
-            --bg-color: #ffffff;
-            --bg-gradient-start: #f0f0f0;
-            --bg-gradient-end: #f0f0f0;
-            /* --shadow-dark: rgba(0, 0, 0, 0.08); */
-            /* --shadow-light: #505050; */
-            --text-color: #000000;
-            --chart-line: #36A2EB;
-            --chart-grad-start: rgb(0, 255, 0);
-            --chart-grad-end: rgba(255, 50, 50, .3);
-            --highlight-above: #d1d1d1;
-            --highlight-below: #c5c5c5;
-            --btn-bg: #c5c5c5;
-            --border-color: rgba(0, 0, 0, 0.1);
-            --bg-color-rgb: 255, 255, 255;  /* RGB values for white */
-        }
-
-        .dark {
-            --bg-color: #303030;
-            --bg-gradient-start: #212121;
-            --bg-gradient-end: #212121;
-            /* --shadow-dark: rgba(0, 0, 0, 0.6); */
-            /* --shadow-light: rgba(255, 255, 255, 0.1); */
-            --text-color: #ffffff;
-            --chart-line: #dfe6ef;
-            --chart-grad-start: rgb(0, 255, 0);
-            --chart-grad-end: rgba(255, 50, 50, .3);
-            --highlight-above: #262626;
-            --highlight-below: #1f1f1f;
-            --btn-bg: #1f1f1f;
-            --border-color: rgba(255, 255, 255, 0.1);
-            --bg-color-rgb: 48, 48, 48;  /* RGB values for dark mode background */
-        }
-
-        * { box-sizing:border-box; margin:0; padding:0; }
-        body {
-            background: linear-gradient(145deg,var(--bg-gradient-start),var(--bg-gradient-end));
-            font-family: 'Segoe UI',sans-serif; 
-            color:var(--text-color);
-            display:flex; 
-            flex-direction:column; 
-            align-items:center;
-            min-height:100vh; 
-            transition:0.3s;
-            padding: .5rem .5rem 80px .5rem;  /* Added bottom padding of 80px */
-        }
-        
-        .switch { 
-            position: relative;
-            width: 80px;
-            height: 40px;
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 1.2em;
-        }
-
-        .switch input { 
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .slider-switch {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            border-radius: 40px;
-            transition: 0.4s;
-            box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
-            background-image: url('assets/icons/Moon.svg');
-            background-repeat: no-repeat;
-            background-position: left 10px center;
-            background-size: 20px;
-        }
-
-        .slider-switch:before {
-            position: absolute;
-            content: "";
-            height: 32px;
-            width: 32px;
-            left: 4px;
-            bottom: 4px;
-            background-color: #333;
-            border-radius: 50%;
-            transition: 0.4s;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-        }
-
-        /* Light mode (not checked) state */
-        input:not(:checked) + .slider-switch:before {
-            transform: translateX(40px);
-        }
-
-        /* Dark mode (checked) state */
-        input:checked + .slider-switch {
-            background-color: #212121;
-            background-image: none;  /* Remove direct background image */
-            background-position: right 10px center;
-        }
-
-        /* Define the Sun icon pseudo-element in BOTH states */
-.slider-switch::after {
-    content: "";
-    position: absolute;
-    width: 20px;
-    height: 20px;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%) translateX(-0px); /* Initial position - where it currently appears */
-    background-image: url('assets/icons/Sun.svg');
-    background-size: contain;
-    background-repeat: no-repeat;
-    filter: invert(1);
-    opacity: 0;
-    transition: all 0.4s cubic-bezier(.4,2,.6,1);
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f4f5f8;
+  --surface: rgba(255,255,255,.72);
+  --surface-solid: #ffffff;
+  --surface-2: rgba(238,241,247,.85);
+  --text: #17181c;
+  --muted: #727782;
+  --soft: #9aa0ad;
+  --accent: #6d6cff;
+  --accent-2: #9381ff;
+  --accent-soft: rgba(109,108,255,.11);
+  --line: rgba(20,25,40,.09);
+  --shadow: 0 10px 28px rgba(30,35,55,.09);
+  --danger: #df6370;
+  --success: #2aa673;
+  --radius: 18px;
+  --radius-lg: 22px;
 }
 
-/* Dark mode (checked) state: Move and show the Sun icon */
-input:checked + .slider-switch::after {
-    opacity: 1;
-    transform: translateY(-50%) translateX(0px); /* Final position - moved right */
+body.dark {
+  color-scheme: dark;
+  --bg: #0d0f13;
+  --surface: rgba(28,30,37,.78);
+  --surface-solid: #1b1e25;
+  --surface-2: rgba(35,38,47,.9);
+  --text: #f4f5f7;
+  --muted: #a5a8b2;
+  --soft: #777d89;
+  --accent: #8d95ff;
+  --accent-2: #aa8dff;
+  --accent-soft: rgba(141,149,255,.14);
+  --line: rgba(255,255,255,.11);
+  --shadow: 0 16px 36px rgba(0,0,0,.28);
+  --danger: #f07c87;
+  --success: #4ac08c;
 }
 
-        input:checked + .slider-switch:before {
-            background-color: white;
-            transform: translateX(0);
-        }
-
-        body.dark .slider-switch {
-            background-color: #212121;
-        }
-
-        .container { width:100%}
-
-        .inner {
-            display:flex; align-items:flex-start; overflow-x:auto;
-        }
-        .chart-wrap {
-            flex:1 1 0;
-            min-width: 200px;
-            background: var(--bg-color);
-            border-radius: 7px;
-            padding: 1rem;
-            border: 1px solid var(--border-color);
-        }
-        .chart-wrap canvas {
-            width: 100% !important;
-            height: 300px !important;
-            border-radius: 12px;
-        }
-        .segment-label { text-align:center; margin:1rem 0 0.5rem; font-weight:bold; }
-        .nav-buttons {
-            display:flex; justify-content:space-between; margin-top:0.5rem;
-        }
-        .nav-buttons button {
-            background: var(--btn-bg);
-            color: var(--text-color);
-            border: none;
-            padding: .5rem 1rem;
-            border-radius: 7px;
-            box-shadow: none;
-            border: 1px solid var(--border-color);
-            font-size: 1rem;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-        .nav-buttons button:disabled { opacity:0.4; cursor:default; }
-        .nav-buttons button:active {
-            transform: translateY(2px);
-            box-shadow: none;
-            border: 1px solid var(--border-color);
-        }
-        .panels {
-            display: flex;
-            gap: 1rem;
-            margin-top: 1.5rem;
-            padding: 1rem;
-            height: auto;
-            flex-wrap: wrap; /* allow wrapping on small screens */
-        }
-        .panel {
-            flex: 1;
-            background: var(--bg-color);
-            border-radius: 7px;
-            padding: 1rem;
-            box-shadow: none;
-            border: 1px solid var(--border-color);
-            transition: background 0.3s, box-shadow 0.3s;
-            height: auto;
-            min-width: 220px; /* prevent panels from getting too narrow */
-            box-sizing: border-box;
-        }
-        /* Responsive: stack panels vertically on small screens */
-        @media (max-width: 800px) {
-            .panels {
-                flex-direction: column;
-                gap: 1rem;
-                padding: 0.5rem;
-            }
-            .panel {
-                min-width: 0;
-                width: 100%;
-            }
-        }
-        .panel h3 {
-            margin: 0 0 0.5rem;
-            font-size: 1.1rem;
-            color: var(--text-color);
-            padding: 1rem 0 0.5rem 0;
-            height: auto;
-        }
-        .log-entry { border: 1px solid var(--shadow-dark); border-radius: 8px; padding: 10px; margin-bottom: 15px; box-shadow: none; border: 1px solid var(--border-color); background: var(--bg-color); }
-        .log-meta { font-size: 0.8em; color: var(--text-color); margin-bottom: 8px; border-bottom: 1px dashed var(--shadow-dark); padding-bottom: 5px; }
-        .log-original-note { font-style: italic; color: var(--text-color); margin-bottom: 8px; font-size:0.9em; }
-        .log-section { margin-top: 8px; }
-        .log-section h3 { font-size: 0.95em; margin-top: 0; margin-bottom: 5px; color: var(--chart-line); }
-        .log-section ul { list-style-type: disc; margin: 0 0 5px 20px; padding: 0; }
-        .log-section li { margin-bottom: 3px; }
-        .tag { background-color: var(--highlight-below); color: var(--text-color); padding: 2px 6px; border-radius: 4px; font-size:0.8em; margin-right:5px; display:inline-block; margin-bottom:3px;}
-        #loadingMessage { text-align: center; padding: 20px; }
-        @media(max-width:600px){
-            .inner{flex-wrap:nowrap;}
-        }
-        /* Capsule Tab Styles */
-        .capsule-tabs {
-            position: fixed;
-            bottom: 1rem;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1000;
-            margin-bottom: 0;
-            width: auto;
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-            background: rgba(var(--bg-color-rgb), 0.6);  /* Semi-transparent background */
-            border-radius: 7px;
-            box-shadow: none;
-            border: 1px solid var(--border-color);
-            padding: 3px 16px;
-            backdrop-filter: blur(2px);
-            -webkit-backdrop-filter: blur(2px);
-        }
-
-        .capsule-tab-group {
-            display: flex;
-            gap: 1.2rem;
-            background: transparent; 
-            border-radius: 10px;
-            padding: 8px 12px;
-            /* Use only shadow-outer style */
-            /* box-shadow:
-                4px 4px 30px var(--shadow-dark),
-                -10px -10px 30px var(--shadow-light); */
-        }
-        .capsule-tab-btn {
-            position: relative;
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background: var(--highlight-below);
-            /* Use only shadow-outer style */
-            box-shadow: none;
-            border: 1px solid var(--border-color);
-            border: none;
-            outline: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition:
-                width 0.35s cubic-bezier(.4,2,.6,1),
-                border-radius 0.35s cubic-bezier(.4,2,.6,1),
-                background 0.25s,
-                box-shadow 0.25s;
-            overflow: hidden;
-            padding: 0;
-            margin: 0;
-            min-width: 48px;
-            z-index: 1;
-        }
-        .capsule-icon img {
-            width: 1.2em;
-            height: 1.2em;
-            display: inline-block;
-            vertical-align: middle;
-            }
-        .capsule-tab-btn .capsule-icon,
-        .capsule-tab-btn .capsule-text {
-            position: absolute;
-            left: 0; right: 0; top: 0; bottom: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            height: 100%;
-            font-size: 1.5rem;
-            transition:
-                opacity 0.25s cubic-bezier(.4,2,.6,1),
-                transform 0.35s cubic-bezier(.4,2,.6,1);
-            pointer-events: none;
-            user-select: none;
-        }
-        .capsule-tab-btn .capsule-text {
-            opacity: 0;
-            transform: translateY(10px);
-            font-size: 1.1rem;
-            font-weight: 500;
-            letter-spacing: 0.01em;
-            color: var(--text-color);
-        }
-        .capsule-tab-btn.active {
-            width: 130px; /* Enough for "Level up" or "Home" */
-            border-radius: 24px;
-            background: var(--highlight-above);
-        }
-        .capsule-tab-btn.active .capsule-icon {
-            opacity: 0;
-            transform: translateY(-10px) scale(0.7);
-        }
-        .capsule-tab-btn.active .capsule-text {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        @media (max-width: 500px) {
-            .capsule-tabs {
-                width: 90%;
-                bottom: 0.5rem;
-                justify-content: center; /* Add this line */
-            }
-            .capsule-tab-group {
-                gap: 0.5rem;
-                padding: 6px 4px;
-            }
-            .capsule-tab-btn,
-            .capsule-tab-btn.active {
-                width: 40px;
-                min-width: 40px;
-                height: 40px;
-            }
-            .capsule-tab-btn.active {
-                width: 100px;
-            }
-            .capsule-tab-btn .capsule-text {
-                font-size: 1rem;
-            }
-        }
-        /* ————————————— Neumorphic noUiSlider Styling ————————————— */
-        
-        #slider {
-            /* Flex item properties (how it behaves in its parent .inner) */
-            /* --- THIS IS THE KEY FOR THE OVERALL WIDTH OF THE SLIDER ELEMENT --- */
-            flex-grow: 0;
-            flex-shrink: 0;
-            flex-basis: 10px; /* SET YOUR DESIRED FINAL WIDTH HERE */
-            /* OR shorthand: flex: 0 0 8px; */
-
-            /* Margins - decide which ones you want */
-            margin-left: 5px;   /* From your second attempt, or choose what looks best */
-            margin-right: 15px; /* From your second attempt */
-
-            /* Appearance and flex container properties (how it lays out its own children) */
-            background: var(--bg-color);
-            box-shadow: none;
-            border: 1px solid var(--border-color);
-            border-radius: 4px; /* If width is 8px, radius 4px makes ends perfectly round */
-            width: 8px;         /* Explicitly set width, consistent with flex-basis */
-            min-width: 8px;     /* Consistent with flex-basis */
-
-            display: flex;
-            align-items: stretch;
-            justify-content: center;
-        }
-
-
-        /* the filled-in “connect” bar between handles */
-        #slider .noUi-connect {
-            background: linear-gradient(to top, var(--chart-grad-end), var(--chart-grad-start));
-            box-shadow:
-                inset 0px 0px 12px var(--shadow-dark),
-                inset 0px 0px 12px var(--shadow-light);
-        }
-
-        /* the draggable handles */
-        #slider .noUi-handle {
-            width: 18px;
-            height: 12px;
-            border-radius: 0% 50% 50% 0%;
-            background: var(--text-color);
-            /* Use only shadow-outer style */
-            box-shadow: none;
-            border: 1px solid var(--border-color);
-            /* left: auto;
-            top: auto; */
-            /* right: -10px !important;  */
-            bottom: -8px;
-            /* transform: translateY(0); */
-            transition: box-shadow 0.3s;
-            cursor: grab;
-        }
-
-        /* remove the default handle “bars” */
-        #slider .noUi-handle:before,
-        #slider .noUi-handle:after {
-            display: none;
-        }
-
-        /* handle pressed state */
-        #slider .noUi-handle:active {
-            box-shadow: none;
-            border: 1px solid var(--border-color);
-        }
-
-        /* Optional: style tooltips to match neumorphic look */
-        /* #slider .noUi-tooltip {
-            background: var(--bg-color);
-            color: var(--text-color);
-            border-radius: 10px;
-            box-shadow:
-                2px 2px 6px var(--shadow-dark),
-                -2px -2px 6px var(--shadow-light);
-            border: none;
-            font-size: 0.95em;
-            padding: 4px 8px;
-        } */
-
-        /* Add these styles in the existing <style> section */
-        .panel-item {
-            cursor: pointer;
-            padding: 4px 8px;
-            border-radius: 4px;
-            transition: background-color 0.2s;
-        }
-
-        .panel-item:hover {
-            background-color: var(--shadow-dark);
-        }
-
-        #logsContainer {
-            display: none;
-            margin-top: 2rem;
-        }
-
-        #logsContainer.active {
-            display: block;
-        }
-
-        .search-input {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 7px;
-            background: var(--bg-color);
-            color: var(--text-color);
-            font-size: 1rem;
-            box-shadow: none;
-            border: 1px solid var(--border-color);
-        }
-
-        .search-input:focus {
-            outline: none;
-            box-shadow: none;
-            border: 1px solid var(--border-color);
-        }
-
-        .log-group {
-            margin-bottom: 2rem;
-        }
-
-        .log-date-header {
-            font-size: 1.2rem;
-            color: var(--text-color);
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid var(--shadow-dark);
-        }
-
-        /* New styles for skills grid */
-        .skills-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-            margin-top: 1rem;
-        }
-
-        .skill-item {
-            background: var(--bg-color);
-            border-radius: 6px;
-            padding: 1rem;
-            box-shadow: none;
-            border: 1px solid var(--border-color);
-            transition: background 0.3s, box-shadow 0.3s;
-        }
-
-        .skill-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 0.75rem;
-        }
-
-        .skill-icon {
-            font-size: 1.8rem;
-            margin-right: 0.75rem;
-            width: 30px;
-            text-align: center;
-        }
-
-        .skill-name {
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: var(--text-color);
-            flex-grow: 1;
-        }
-
-        .skill-level {
-            font-size: 0.9rem;
-            color: var(--text-color);
-            background-color: var(--shadow-dark);
-            padding: 2px 8px;
-            border-radius: 10px;
-        }
-
-        .progress-bar-container {
-            width: 100%;
-            background-color: var(--shadow-dark);
-            border-radius: 5px;
-            height: 12px;
-            overflow: hidden;
-            margin-bottom: 0.5rem;
-        }
-
-        .progress-bar {
-            height: 100%;
-            background-color: var(--chart-line);
-            width: 0%;
-            border-radius: 5px;
-            transition: width 0.5s ease-in-out;
-        }
-
-        .skill-xp-info {
-            font-size: 0.8em;
-            color: var(--text-color);
-            text-align: right;
-        }
-
-        .skill-focus-section select {
-            padding: 8px 12px;
-            border-radius: 8px;
-            border: 1px solid var(--shadow-dark);
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-size: 1rem;
-            box-shadow: none;
-            border: 1px solid var(--border-color);
-            margin-top: 0.5rem;
-        }
-
-        #dailyTaskContainer {
-            margin-top: 1rem;
-            padding: 0.75rem;
-            background-color: var(--bg-gradient-end);
-            border-radius: 8px;
-            min-height: 40px;
-            color: var(--text-color);
-        }
-
-        /* Update the body styles to add padding at the bottom */
-        body {
-            background: linear-gradient(145deg,var(--bg-gradient-start),var(--bg-gradient-end));
-            font-family: 'Segoe UI',sans-serif; 
-            color:var(--text-color);
-            display:flex; 
-            flex-direction:column; 
-            align-items:center;
-            min-height:100vh; 
-            transition:0.3s;
-            padding: .5rem .5rem 80px .5rem;  /* Added bottom padding of 80px */
-        }
-
-        /* Update media query for mobile devices */
-        @media (max-width: 500px) {
-            body {
-                padding-bottom: 70px;  /* Slightly less padding for mobile */
-            }
-            .capsule-tabs {
-                width: 90%;
-                bottom: 0.5rem;
-            }
-                    .capsule-tab-group {
-                        gap: 0.5rem;
-                        padding: 6px 4px;
-                    }
-                    .capsule-tab-btn,
-                    .capsule-tab-btn.active {
-                        width: 40px;
-                        min-width: 40px;
-                        height: 40px;
-                    }
-                    .capsule-tab-btn.active {
-                        width: 100px;
-                    }
-                    .capsule-tab-btn .capsule-text {
-                        font-size: 1rem;
-                    }
-                }
-
-        /* Add this to your existing <style> section */
-        * {
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-        }
-
-        /* Allow selection for specific elements */
-        input, 
-        textarea, 
-        [contenteditable="true"],
-        .search-input {
-            -webkit-user-select: text;
-            -moz-user-select: text;
-            -ms-user-select: text;
-            user-select: text;
-        }
-        
-        * {
-    -webkit-tap-highlight-color: transparent;
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  min-height: 100vh;
+  padding: 16px 16px calc(96px + env(safe-area-inset-bottom));
+  background:
+    radial-gradient(circle at 10% 0%, rgba(124,110,255,.14), transparent 30%),
+    radial-gradient(circle at 90% 12%, rgba(77,185,255,.10), transparent 28%),
+    var(--bg);
+  color: var(--text);
+  font: 400 15px/1.5 Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  transition: background-color .2s ease, color .2s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
-button, 
-.capsule-tab-btn,
-.panel-item {
-    -webkit-tap-highlight-color: transparent;
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    user-select: none;
+button, input, select { font: inherit; }
+button { color: inherit; }
+button, .panel-item, .log-date-header { -webkit-user-select: none; user-select: none; }
+input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-select: text; }
+button:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 3px solid var(--accent-soft);
+  outline-offset: 2px;
 }
 
-/* Update these CSS styles in your <style> section */
-.log-group {
-    margin-bottom: 1rem;
-}
+.container, .tab-content { width: min(100%, 920px); margin-inline: auto; }
+.content { animation: pageIn .22s ease both; }
+@keyframes pageIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 
-.log-date-header {
-    background: var(--bg-color);
-    border-radius: 7px;
-    padding: 1rem;
-    box-shadow: none;
-    border: 1px solid var(--border-color);
-    cursor: pointer;
-    transition: background-color 0.2s;
-    user-select: none;
-    display: flex;
-    align-items: center;
-}
-
-.log-date-header:hover {
-    background-color: var(--highlight-below);
-}
-
-.header-content {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    font-size: 1.1rem;
-    color: var(--text-color);
-}
-
-.expand-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    margin-right: 12px;
-    transition: transform 0.2s;
-}
-
-.logs-count {
-    margin-left: auto;
-    font-size: 0.9em;
-    color: var(--text-color);
-    opacity: 0.7;
-}
-
-.log-entries {
-    margin-top: 0.5rem;
-    padding: 0;
-}
-
-.log-entry {
-    margin-top: 0.5rem;
-    background: var(--bg-color);
-    border-radius: 7px;
-    padding: 1rem;
-    box-shadow: none;
-    border: 1px solid var(--border-color);
-}
-
-.log-date-header.expanded {
-    background-color: var(--highlight-above);
-}
-
-.hamburger-menu {
-    position: absolute;
-    top: 0.5rem;   /* Move further up */
-    left: 0.5rem;  /* Move further left */
-    z-index: 2001;
-}
-
-/* Remove the button's box and background */
-#hamburgerBtn {
-    background: none;
-    border: none;
-    border-radius: 0;
-    width: auto;
-    height: auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    padding: 0;
-    box-shadow: none;
-    transition: none;
-}
-
-.hamburger-bar {
-    width: 26px;
-    height: 3px;
-    background: var(--text-color);
-    margin: 4px 0;
-    border-radius: 2px;
-    transition: background 0.2s;
-}
-
-.side-menu {
-    position: fixed;
-    top: 0;
-    left: -260px;
-    width: 240px;
-    height: 100vh;
-    background: var(--bg-color);
-    border-right: 1px solid var(--border-color);
-    box-shadow: 2px 0 16px rgba(0,0,0,0.08);
-    z-index: 2002;
-    transition: left 0.3s;
-    display: flex;
-    flex-direction: column;
-    padding-top: 2rem;
-}
-
-.side-menu.open {
-    left: 0;
-}
-
-.side-menu-content {
-    padding: 1.5rem 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-}
-
-/* Optional: dark mode for menu */
-body.dark .side-menu {
-    background: var(--bg-color);
-    border-right: 1px solid var(--border-color);
-}
-
-/* Center the header and today's date, and add left padding for hamburger */
 #header {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding-left: 60px; /* Leaves space for hamburger */
-    text-align: center;
-    position: relative;
+  margin: 4px 0 16px;
+  padding: 0 52px;
+  text-align: center;
+  position: relative;
 }
+#header h1, #levelup h2 {
+  font-size: clamp(1.3rem, 4vw, 1.6rem);
+  line-height: 1.2;
+  font-weight: 750;
+  letter-spacing: -.025em;
+}
+#todayDate { margin-top: 4px; color: var(--muted); font-size: .86rem; }
 
-/* Make room for hamburger in search tab */
-.search-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding-left: 60px; /* Leaves space for hamburger */
+.inner { display: flex; align-items: stretch; gap: 8px; min-width: 0; }
+.chart-wrap {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 350px;
+  position: relative;
+  overflow: hidden;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,.42);
+  contain: layout paint;
 }
+.chart-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 15% 0%, rgba(120,110,255,.10), transparent 42%);
+}
+.chart-wrap canvas { position: relative; z-index: 1; width: 100% !important; height: 100% !important; }
 
-.search-input {
-    max-width: 400px;
-    width: 100%;
+.segment-label { margin: 12px 0 8px; text-align: center; color: var(--muted); font-size: .82rem; font-weight: 650; }
+.nav-buttons { display: flex; gap: 10px; }
+.nav-buttons button {
+  flex: 1;
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--surface);
+  box-shadow: 0 5px 14px var(--shadow-color, rgba(30,35,55,.07));
+  font-weight: 650;
+  cursor: pointer;
+  transition: transform .16s ease, background .16s ease, opacity .16s ease;
 }
+.nav-buttons button:hover { background: var(--surface-2); transform: translateY(-1px); }
+.nav-buttons button:active { transform: scale(.985); }
+.nav-buttons button:disabled { opacity: .42; cursor: default; transform: none; }
 
-@media (max-width: 600px) {
-    #header,
-    .search-container {
-        padding-left: 48px; /* Slightly less on mobile */
-    }
-    .search-input {
-        max-width: 100vw;
-    }
+.range-row { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin: 14px 0 8px; }
+.range-row label { color: var(--muted); font-size: .8rem; font-weight: 650; }
+select, .search-input {
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 5px 14px rgba(30,35,55,.06);
 }
+select { padding: 8px 12px; }
 
-.hamburger-svg {
-    width: 40px;
-    height: 40px;
-    display: block;
-    margin: auto;
-    filter: invert(0); /* For dark mode, you can use filter: invert(1); if needed */
-    transition: filter 0.2s;
+/* Lightweight native styling around the existing noUiSlider. Only the track/handles are painted. */
+#slider {
+  flex: 0 0 9px;
+  width: 9px;
+  min-width: 9px;
+  margin: 8px 10px 8px 2px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,.08);
 }
-body.dark .hamburger-svg {
-    filter: invert(1);
+#slider .noUi-connect { background: linear-gradient(to top, var(--danger), var(--success)); border-radius: inherit; }
+#slider .noUi-handle {
+  width: 18px; height: 18px; right: -5px !important; bottom: -9px;
+  border: 2px solid var(--surface-solid); border-radius: 50%;
+  background: var(--text); box-shadow: 0 3px 9px rgba(0,0,0,.14); cursor: grab;
 }
-.icon-svg {
-    width: 1.2em;
-    height: 1.2em;
-    display: inline-block;
-    vertical-align: middle;
-    filter: invert(0);
-    transition: filter 0.2s;
+#slider .noUi-handle:before, #slider .noUi-handle:after { display: none; }
+
+.panels { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
+.panel {
+  min-width: 0;
+  min-height: 150px;
+  padding: 15px;
+  position: relative;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  contain: layout paint;
 }
-body.dark .icon-svg {
-    filter: invert(1);
+.panel h3 {
+  margin-bottom: 11px;
+  color: var(--muted);
+  font-size: .73rem;
+  font-weight: 750;
+  letter-spacing: .08em;
+  text-transform: uppercase;
 }
-    
-/* Final theme toggle polish */
+.panel h3::before {
+  content: "";
+  display: inline-block;
+  width: 7px; height: 7px; margin: 0 8px 1px 0;
+  border-radius: 50%; background: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-soft);
+}
+.panel-item {
+  display: flex; justify-content: space-between; gap: 8px;
+  margin: 2px -4px; padding: 7px 8px;
+  border-radius: 9px; cursor: pointer;
+  color: var(--text); font-size: .88rem;
+  transition: background .14s ease, transform .14s ease;
+}
+.panel-item span { color: var(--soft) !important; }
+.panel-item:hover { background: var(--accent-soft); transform: translateX(2px); }
+
+#logsContainer { margin-top: 18px; }
+#loadingMessage { padding: 18px; text-align: center; color: var(--muted); }
+.search-container { margin: 4px auto 18px; text-align: center; }
+.search-input { width: min(100%, 520px); padding: 11px 14px; }
+.search-input::placeholder { color: var(--soft); }
+.search-input:focus { outline: none; border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); box-shadow: 0 0 0 4px var(--accent-soft); }
+
+.log-group { margin-bottom: 10px; content-visibility: auto; contain-intrinsic-size: 0 120px; }
+.log-date-header {
+  width: 100%;
+  padding: 13px 15px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 5px 16px rgba(30,35,55,.06);
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease;
+}
+.log-date-header:hover, .log-date-header.expanded { background: var(--accent-soft); border-color: rgba(109,108,255,.22); }
+.header-content { display: flex; align-items: center; gap: 10px; font-size: .92rem; font-weight: 650; }
+.expand-icon { width: 14px; color: var(--accent); }
+.logs-count { margin-left: auto; color: var(--muted); font-size: .76rem; font-weight: 550; }
+.log-entries { padding-top: 7px; }
+.log-entry {
+  margin-top: 7px;
+  padding: 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 5px 16px rgba(30,35,55,.055);
+}
+.log-meta { padding-bottom: 6px; margin-bottom: 7px; color: var(--soft); font-size: .76rem; border-bottom: 1px solid var(--line); }
+.log-original-note { margin-bottom: 8px; color: var(--muted); line-height: 1.55; font-style: italic; font-size: .9rem; }
+.log-section { margin-top: 9px; }
+.log-section h3 { margin-bottom: 5px; color: var(--muted); font-size: .7rem; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
+.log-section ul { margin: 0 0 4px 18px; padding: 0; }
+.log-section li { margin-bottom: 2px; color: var(--muted); font-size: .87rem; }
+.tag { display: inline-block; padding: 4px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: .78rem; font-weight: 700; }
+
+.skills-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.skill-item {
+  padding: 15px; position: relative; overflow: hidden;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow);
+  transition: transform .18s ease, border-color .18s ease;
+}
+.skill-item:hover { transform: translateY(-2px); border-color: rgba(109,108,255,.24); }
+.skill-header { display: flex; align-items: center; gap: 10px; margin-bottom: 11px; }
+.skill-icon { font-size: 1.6rem; line-height: 1; }
+.skill-name { flex: 1; font-weight: 700; }
+.skill-level { padding: 3px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: .76rem; font-weight: 750; }
+.progress-bar-container { height: 8px; overflow: hidden; border: 1px solid var(--line); border-radius: 999px; background: var(--surface-2); }
+.progress-bar { height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .25s ease; }
+.skill-xp-info { margin-top: 5px; color: var(--soft); text-align: right; font-size: .77rem; }
+.skill-focus-section { margin-top: 16px; padding: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); text-align: center; }
+.skill-focus-section h3 { margin-bottom: 7px; font-size: .9rem; }
+#dailyTaskContainer { margin-top: 12px; padding: 11px; border-radius: 11px; background: var(--surface-2); color: var(--muted); }
+
+.hamburger-menu { position: fixed; top: max(12px, env(safe-area-inset-top)); left: 12px; z-index: 2001; }
+#hamburgerBtn {
+  width: 42px; height: 42px; padding: 8px;
+  display: grid; place-items: center;
+  border: 1px solid var(--line); border-radius: 14px;
+  background: var(--surface); box-shadow: 0 8px 22px rgba(30,35,55,.10);
+  cursor: pointer;
+}
+.hamburger-svg { width: 22px; height: 22px; display: block; filter: invert(0); }
+body.dark .hamburger-svg { filter: invert(1); }
+.side-menu {
+  position: fixed; top: 12px; left: -310px;
+  width: min(290px, 82vw); height: calc(100dvh - 24px);
+  padding: 66px 18px 22px;
+  border: 1px solid var(--line); border-radius: 24px;
+  background: var(--surface); box-shadow: 20px 25px 65px rgba(0,0,0,.18);
+  transition: left .22s cubic-bezier(.22,1,.36,1);
+  overflow: hidden;
+}
+.side-menu.open { left: 12px; }
+.side-menu::before { content: "Settings"; display: block; margin-bottom: 20px; font-size: 1.15rem; font-weight: 750; }
+.side-menu-content { display: flex; flex-direction: column; gap: 12px; }
+.side-menu-content::before { content: "Appearance"; color: var(--muted); font-size: .69rem; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
 .side-menu-content .switch {
-    position: relative;
-    display: flex !important;
-    align-items: center;
-    justify-content: space-between !important;
-    width: 100% !important;
-    height: 50px !important;
-    padding: 0 12px 0 14px !important;
-    margin: 0 !important;
-    gap: 12px !important;
-    border-radius: 14px !important;
-    background: var(--surface) !important;
-    border: 1px solid var(--border-color) !important;
-    box-shadow: 0 6px 18px var(--shadow-dark) !important;
+  width: 100%; height: 52px; position: relative;
+  display: flex; align-items: center; justify-content: flex-end;
+  padding: 0 14px; margin: 0 !important;
+  border: 1px solid var(--line); border-radius: 15px;
+  background: var(--surface-2); box-shadow: 0 6px 16px rgba(30,35,55,.06);
 }
-.side-menu-content .switch:before {
-    content: "Dark mode";
-    margin-right: auto;
-    color: var(--text-color);
-    font-size: .9rem;
-    font-weight: 650;
-    letter-spacing: -.01em;
+.side-menu-content .switch::before { content: "Dark mode"; margin-right: auto; font-size: .88rem; font-weight: 650; }
+.switch input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.slider-switch {
+  position: absolute; right: 14px; top: 9px; width: 58px; height: 34px;
+  border: 1px solid var(--line); border-radius: 999px;
+  background: rgba(0,0,0,.10); cursor: pointer;
 }
-.side-menu-content .slider-switch {
-    position: relative !important;
-    inset: auto !important;
-    flex: 0 0 auto;
-    width: 48px !important;
-    height: 28px !important;
-    border-radius: 999px !important;
-    background: var(--surface-2) !important;
-    border: 1px solid var(--border-color);
-    box-shadow: inset 0 1px 2px var(--shadow-dark) !important;
-    background-image: none !important;
-    transition: background .22s ease, border-color .22s ease, box-shadow .22s ease !important;
+.slider-switch::before {
+  content: ""; position: absolute; left: 2px; top: 2px; width: 28px; height: 28px;
+  border-radius: 50%; background: #fff; box-shadow: 0 3px 9px rgba(0,0,0,.16);
+  transition: transform .24s cubic-bezier(.22,1,.36,1);
 }
-.side-menu-content .slider-switch:before {
-    content: "";
-    position: absolute;
-    width: 22px;
-    height: 22px;
-    left: 2px;
-    top: 2px;
-    bottom: auto;
-    transform: none !important;
-    border-radius: 50%;
-    background: #fff;
-    box-shadow: 0 2px 6px rgba(27,34,52,.18);
-    transition: transform .22s cubic-bezier(.4,0,.2,1), background .22s ease, box-shadow .22s ease !important;
+.slider-switch::after {
+  content: ""; position: absolute; left: 9px; top: 9px; width: 15px; height: 15px;
+  background: url('assets/icons/Moon.svg') center/contain no-repeat; opacity: .72;
+  transition: left .24s cubic-bezier(.22,1,.36,1), opacity .2s;
 }
-.side-menu-content .slider-switch:after {
-    content: "";
-    position: absolute;
-    width: 12px;
-    height: 12px;
-    left: 7px;
-    top: 7px;
-    right: auto;
-    opacity: .55;
-    transform: none !important;
-    background: url('assets/icons/Sun.svg') center/contain no-repeat;
-    filter: none;
-    transition: opacity .22s ease, transform .22s ease, background-image .22s ease !important;
-}
-.side-menu-content .switch input:checked + .slider-switch {
-    background: var(--accent) !important;
-    border-color: var(--accent) !important;
-    box-shadow: 0 4px 12px var(--accent-soft) !important;
-}
-.side-menu-content .switch input:checked + .slider-switch:before {
-    transform: translateX(20px) !important;
-    background: #fff;
-}
-.side-menu-content .switch input:checked + .slider-switch:after {
-    left: auto;
-    right: 7px;
-    opacity: .9;
-    background-image: url('assets/icons/Moon.svg');
-}
-.side-menu-content .switch:hover .slider-switch {
-    border-color: rgba(91,109,246,.28);
-}
-.side-menu-content .switch:focus-within .slider-switch {
-    box-shadow: 0 0 0 4px var(--accent-soft) !important;
-}
+#themeToggle:not(:checked) + .slider-switch::before { transform: translateX(24px); }
+#themeToggle:not(:checked) + .slider-switch::after { left: 33px; background-image: url('assets/icons/Sun.svg'); }
+#themeToggle:checked + .slider-switch { background: #22252c; }
 
+.capsule-tabs {
+  position: fixed; left: 50%; bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 1000;
+  transform: translateX(-50%);
+  display: flex; align-items: center;
+  width: min(92%, 430px); padding: 6px;
+  border: 1px solid var(--line); border-radius: 999px;
+  background: var(--surface); box-shadow: 0 14px 36px rgba(30,35,55,.13);
+}
+.capsule-tab-group { display: flex; width: 100%; gap: 4px; }
+.capsule-tab-btn {
+  flex: 1 1 0; min-width: 0; height: 44px; padding: 0 10px;
+  position: relative; display: flex; align-items: center; justify-content: center;
+  border: 0; border-radius: 999px; background: transparent; cursor: pointer;
+}
+.capsule-tab-btn:hover { background: var(--surface-2); }
+.capsule-icon, .capsule-text { display: flex; align-items: center; justify-content: center; pointer-events: none; }
+.capsule-icon { opacity: .7; transition: opacity .16s ease, transform .16s ease; }
+.capsule-icon img { width: 20px; height: 20px; }
+.capsule-text { color: var(--accent); font-size: .8rem; font-weight: 750; opacity: 0; position: absolute; transform: translateY(4px); transition: opacity .16s ease, transform .16s ease; }
+.capsule-tab-btn.active { background: var(--accent-soft); box-shadow: inset 0 1px 0 rgba(255,255,255,.55); }
+.capsule-tab-btn.active .capsule-icon { opacity: 0; transform: translateY(-4px); }
+.capsule-tab-btn.active .capsule-text { opacity: 1; transform: none; position: relative; }
+
+@media (max-width: 800px) { .panels { grid-template-columns: 1fr; } .panel { min-height: auto; } }
+@media (max-width: 600px) {
+  body { padding: 12px 12px calc(88px + env(safe-area-inset-bottom)); }
+  #header { padding: 0 42px; }
+  .chart-wrap { height: 300px; padding: 12px; border-radius: 19px; }
+  .skills-grid { grid-template-columns: 1fr; }
+  .capsule-tabs { width: calc(100% - 20px); }
+  .capsule-tab-btn { height: 42px; }
+  .side-menu { width: min(285px, 84vw); }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
 </style>
 
-<style id="ui-polish">
-:root{--surface:#fff;--surface-2:#f0f2f7;--text-muted:#70778a;--text-soft:#9aa1b2;--accent:#5b6df6;--accent-soft:rgba(91,109,246,.12);--shadow-dark:rgba(27,34,52,.10);--radius-md:16px;--radius-lg:22px;--success:#28a66f;--danger:#e45d69}
-body.dark{--surface:#191c23;--surface-2:#222630;--text-muted:#a1a7b5;--text-soft:#747b8c;--accent:#8794ff;--accent-soft:rgba(135,148,255,.14);--shadow-dark:rgba(0,0,0,.28)}
-html{scroll-behavior:smooth}
-body{background:radial-gradient(circle at 50% -10%,rgba(91,109,246,.10),transparent 34%),linear-gradient(145deg,var(--bg-gradient-start),var(--bg-gradient-end));padding:18px 18px calc(108px + env(safe-area-inset-bottom)) 18px;font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-.container,.tab-content{width:min(100%,920px);margin-inline:auto}
-.content{animation:pageIn .28s ease both}@keyframes pageIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
-#header{margin:6px 0 18px!important;padding:0 56px;align-items:center;text-align:center}
-#header h1,#levelup h2{font-size:clamp(1.35rem,4vw,1.65rem)!important;font-weight:750;letter-spacing:-.025em}
-#todayDate{margin-top:5px;color:var(--text-muted)!important;font-size:.9rem!important}
-.chart-wrap{height:350px;padding:18px;background:var(--surface);border:1px solid var(--border-color);border-radius:var(--radius-lg);box-shadow:0 12px 35px var(--shadow-dark)}
-.chart-wrap canvas{height:100%!important}
-.segment-label{margin:14px 0 10px;color:var(--text-muted);font-size:.88rem;font-weight:650}
-.nav-buttons{gap:10px;margin-top:10px}.nav-buttons button{flex:1;min-height:44px;border:1px solid var(--border-color);border-radius:12px;background:var(--surface);font-weight:650;box-shadow:0 4px 12px var(--shadow-dark);transition:.16s}.nav-buttons button:hover{background:var(--surface-2)}.nav-buttons button:active{transform:scale(.98)}
-#panelRangeSelect,.skill-focus-section select{border:1px solid var(--border-color)!important;border-radius:11px!important;background:var(--surface)!important;color:var(--text-color)!important;box-shadow:0 4px 12px var(--shadow-dark);padding:9px 12px!important}
-.panels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px;padding:0}.panel{min-width:0;min-height:150px;padding:16px;background:var(--surface);border:1px solid var(--border-color);border-radius:var(--radius-md);box-shadow:0 8px 24px var(--shadow-dark)}
-.panel h3{margin:0 0 12px!important;padding:0!important;font-size:.78rem!important;text-transform:uppercase;letter-spacing:.08em;opacity:.78}.panel h3:before{content:"";display:inline-block;width:7px;height:7px;margin-right:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
-.panel-item{display:flex;justify-content:space-between;gap:8px;padding:8px 9px;margin:2px -4px;border-radius:9px;font-size:.9rem;transition:.16s}.panel-item:hover{background:var(--accent-soft);transform:translateX(2px)}.panel-item span{color:var(--text-soft)!important}
-#slider{margin:8px 8px 8px 0;background:var(--surface-2);border:1px solid var(--border-color);border-radius:999px;box-shadow:inset 0 1px 3px var(--shadow-dark)}#slider .noUi-connect{background:linear-gradient(to top,var(--danger),var(--success));border-radius:inherit}#slider .noUi-handle{width:18px;height:18px;right:-5px!important;bottom:-9px;border:2px solid var(--surface);border-radius:50%;background:var(--text-color);box-shadow:0 3px 10px var(--shadow-dark)}#slider .noUi-handle:before,#slider .noUi-handle:after{display:none}
-.search-container{margin:6px auto 20px!important;padding-left:56px}.search-input{width:min(100%,520px);min-height:48px;padding:12px 16px;border:1px solid var(--border-color);border-radius:14px;background:var(--surface);color:var(--text-color);box-shadow:0 8px 24px var(--shadow-dark)}.search-input:focus{outline:none;border-color:rgba(91,109,246,.45);box-shadow:0 0 0 4px var(--accent-soft),0 8px 24px var(--shadow-dark)}
-.log-group{margin-bottom:12px}.log-date-header{background:var(--surface);border:1px solid var(--border-color);border-radius:14px;padding:14px 16px;box-shadow:0 5px 18px var(--shadow-dark);transition:.18s}.log-date-header:hover,.log-date-header.expanded{background:var(--accent-soft);border-color:rgba(91,109,246,.22)}.header-content{font-size:.95rem;font-weight:650}.logs-count{color:var(--text-muted);font-size:.78rem}.expand-icon{color:var(--accent)}.log-entry{margin-top:8px;padding:16px;background:var(--surface);border:1px solid var(--border-color);border-radius:14px;box-shadow:0 6px 20px var(--shadow-dark)}.log-meta{color:var(--text-soft);border-bottom:1px solid var(--border-color)}.log-original-note{color:var(--text-muted);line-height:1.5}.log-section h3{color:var(--text-muted)!important;font-size:.74rem!important;text-transform:uppercase;letter-spacing:.08em}.log-section li{color:var(--text-muted);font-size:.88rem}.tag{padding:5px 9px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-weight:700}
-.skills-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.skill-item{padding:16px;background:var(--surface);border:1px solid var(--border-color);border-radius:var(--radius-md);box-shadow:0 8px 24px var(--shadow-dark);transition:.18s}.skill-item:hover{transform:translateY(-2px);border-color:rgba(91,109,246,.25)}.skill-name{font-weight:700}.skill-level{background:var(--accent-soft);color:var(--accent);font-weight:750}.progress-bar-container{height:8px;border-radius:999px;background:var(--surface-2)}.progress-bar{border-radius:inherit;background:linear-gradient(90deg,var(--accent),#8a96ff)}.skill-xp-info{color:var(--text-soft)}.skill-focus-section{margin-top:18px!important;padding:18px;background:var(--surface);border:1px solid var(--border-color);border-radius:var(--radius-md);box-shadow:0 8px 24px var(--shadow-dark)}#dailyTaskContainer{background:var(--surface-2)!important;color:var(--text-muted)!important;border-radius:11px}
-.hamburger-menu{position:fixed;top:max(14px,env(safe-area-inset-top));left:14px}.hamburger-svg{width:24px;height:24px}#hamburgerBtn{width:42px;height:42px;padding:8px;border:1px solid var(--border-color);border-radius:13px;background:rgba(var(--bg-color-rgb),.72);backdrop-filter:blur(14px);box-shadow:0 7px 22px var(--shadow-dark)}
-.side-menu{left:-310px;width:min(290px,82vw);height:100dvh;padding:72px 18px 24px;background:rgba(var(--bg-color-rgb),.96);box-shadow:18px 0 50px rgba(0,0,0,.16);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}.side-menu.open{left:0}.side-menu:before{content:"Settings";display:block;margin-bottom:22px;font-size:1.2rem;font-weight:750}.side-menu-content{padding:0!important;gap:14px}.side-menu-content:before{content:"Appearance";color:var(--text-muted);font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em}.side-menu-content .switch{width:100%;height:52px;padding:0 14px;margin:0!important;border-radius:14px;background:var(--surface);border:1px solid var(--border-color);justify-content:flex-end!important;box-shadow:0 6px 18px var(--shadow-dark)}.side-menu-content .switch:before{content:"Dark mode";margin-right:auto;font-size:.9rem;font-weight:600}.side-menu-content .slider-switch{position:relative;inset:auto;width:52px;height:30px}
-.capsule-tabs{bottom:calc(14px + env(safe-area-inset-bottom));padding:6px;background:rgba(var(--bg-color-rgb),.76);border:1px solid var(--border-color);border-radius:999px;box-shadow:0 12px 35px rgba(0,0,0,.14);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}.capsule-tab-group{gap:5px;padding:0}.capsule-tab-btn{width:46px;min-width:46px;height:46px;border:0;border-radius:999px;background:transparent}.capsule-tab-btn:hover{background:var(--surface-2)}.capsule-tab-btn .capsule-icon{opacity:.68}.capsule-tab-btn .capsule-text{color:var(--accent);font-size:.82rem;font-weight:750}.capsule-tab-btn.active{width:108px;background:var(--accent-soft)}
-.range-row{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin:14px 0 8px}.range-row label{color:var(--text-muted)!important;font-size:.82rem;font-weight:600}
-@media(max-width:800px){.panels{grid-template-columns:1fr}.panel{min-height:auto}}
-@media(max-width:600px){body{padding:12px 12px calc(96px + env(safe-area-inset-bottom)) 12px}.chart-wrap{height:300px;padding:12px;border-radius:18px}#header,.search-container{padding-left:42px}.skills-grid{grid-template-columns:1fr}.capsule-tabs{bottom:calc(8px + env(safe-area-inset-bottom));max-width:calc(100vw - 20px)}.capsule-tab-btn{width:42px;min-width:42px;height:42px}.capsule-tab-btn.active{width:94px}}
-@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
-</style>
+
+
+
+
+
 </head>
 <body>
     <div class="hamburger-menu">
@@ -972,37 +362,31 @@ body{background:radial-gradient(circle at 50% -10%,rgba(91,109,246,.10),transpar
     </button>
     <div class="side-menu" id="sideMenu">
         <div class="side-menu-content">
-<label class="switch" style="margin-bottom:1.5rem; display: flex; align-items: center; gap: 5em;">
-    <input type="checkbox" id="themeToggle">
-    <span class="slider-switch"></span>
-    <!-- <span id="themeSwitchLabel" style="font-size:1rem; color:var(--text-color); user-select:none;">Dark theme</span> -->
-</label>
+<label class="switch" aria-label="Toggle dark mode">
+                <input type="checkbox" id="themeToggle">
+                <span class="slider-switch" aria-hidden="true"></span>
+            </label>
             <!-- Add more menu items here if needed -->
         </div>
     </div>
-</div>
+    </div>
 
     <div class="capsule-tabs">
-        <!-- Theme Switcher (left) -->
-        <!-- <label class="switch" style="margin-bottom:0;">
-            <input type="checkbox" id="themeToggle">
-            <span class="slider-switch"></span>
-        </label> -->
         <!-- Capsule Tab Navigation -->
         <div class="capsule-tab-group">
-        <button class="capsule-tab-btn active" id="tab-home" type="button">
+        <button class="capsule-tab-btn active" id="tab-home" type="button" role="tab" aria-selected="true" aria-controls="home">
             <span class="capsule-icon">
                 <img src="assets/icons/Home.svg" alt="Home icon" class="icon-svg" />
             </span>
             <span class="capsule-text">Home</span>
         </button>
-        <button class="capsule-tab-btn" id="tab-logs" type="button">
+        <button class="capsule-tab-btn" id="tab-logs" type="button" role="tab" aria-selected="false" aria-controls="logs">
             <span class="capsule-icon">
                 <img src="assets/icons/Search.svg" alt="Search icon" class="icon-svg" />
             </span>
             <span class="capsule-text">Search</span>
         </button>
-        <button class="capsule-tab-btn" id="tab-levelup" type="button">
+        <button class="capsule-tab-btn" id="tab-levelup" type="button" role="tab" aria-selected="false" aria-controls="levelup">
             <span class="capsule-icon">
                 <img src="assets/icons/Arrow up.svg" alt="Level up icon" class="icon-svg" />
             </span>
@@ -1011,14 +395,14 @@ body{background:radial-gradient(circle at 50% -10%,rgba(91,109,246,.10),transpar
         </div>
     </div>
 
-    <div class="tab-content" style="width:100%;">
+    <main class="tab-content">
         <div id="home" class="content active">
             <div class="container">
                 <!-- Remove the "box" class here -->
                 <div>
-                    <div id="header" style="margin-bottom:1rem;">
-                        <h1>Mood overview</h1>
-                        <div style="font-size:1.1rem; color:var(--text-color);" id="todayDate"></div>
+                    <div id="header">
+                        <h1>Mood chart</h1>
+                        <div id="todayDate"></div>
                     </div>
                     <div class="inner">
                         <!-- Vertical dual-handle slider -->
@@ -1031,12 +415,12 @@ body{background:radial-gradient(circle at 50% -10%,rgba(91,109,246,.10),transpar
                     <!-- Label & nav -->
                     <div class="segment-label" id="segmentLabel"></div>
                     <div class="nav-buttons">
-                        <button id="prevWeekBtn">Previous</button>
-                        <button id="nextWeekBtn">Next</button>
+                        <button id="prevWeekBtn" type="button">Previous</button>
+                        <button id="nextWeekBtn" type="button">Next</button>
                     </div>
                     <div class="range-row">
                         <label for="panelRangeSelect" style="margin-right:0.5rem; color:var(--text-color); font-weight:500;">Show data for:</label>
-                        <select id="panelRangeSelect" style="padding: 6px 12px; border-radius: 8px; border: 1px solid var(--shadow-dark); background: var(--bg-color); color: var(--text-color); font-size: 1rem;">
+                        <select id="panelRangeSelect" >
                             <option value="week">This week</option>
                             <option value="month">This month</option>
                             <option value="all">All logs</option>
@@ -1074,11 +458,11 @@ body{background:radial-gradient(circle at 50% -10%,rgba(91,109,246,.10),transpar
             <div class="container">
                 <!-- Remove the "box" class here -->
                 <div>
-                    <h2>Your skill progression</h2>
+                    <h2>Your Skill Progression</h2>
                     <div id="skillsContainer" class="skills-grid">
                         <!-- Skills will be dynamically added here by JavaScript -->
                     </div>
-                    <div class="skill-focus-section" style="margin-top: 2rem; text-align:center;">
+                    <div class="skill-focus-section">
                         <h3>Focus Skill</h3>
                         <select id="skillFocusSelect">
                             <option value="none">None</option>
@@ -1088,7 +472,7 @@ body{background:radial-gradient(circle at 50% -10%,rgba(91,109,246,.10),transpar
                             <option value="charisma">Charisma</option>
                             <option value="perception">Perception</option>
                         </select>
-                        <div id="dailyTaskContainer" style="margin-top: 1rem;">
+                        <div id="dailyTaskContainer">
                             <!-- Your daily task will appear here. -->
                              Coming soon... 👀
                         </div>
@@ -1096,7 +480,7 @@ body{background:radial-gradient(circle at 50% -10%,rgba(91,109,246,.10),transpar
                 </div>
             </div>
         </div>
-    </div>
+    </main>
 
     <script>
     // Capsule Tab Logic
@@ -1135,108 +519,51 @@ body{background:radial-gradient(circle at 50% -10%,rgba(91,109,246,.10),transpar
 
         // Search functionality
         const searchInput = document.getElementById('logSearch');
+        let searchTimer = 0;
         searchInput.addEventListener('input', (e) => {
-            const searchTerm = e.target.value.toLowerCase();
-            filterLogs(searchTerm);
+            clearTimeout(searchTimer);
+            const searchTerm = e.target.value.trim().toLowerCase();
+            searchTimer = setTimeout(() => filterLogs(searchTerm), 110);
         });
 
         activateTab(0);
     });
     </script>
-
     <script>
-        // Theme toggle logic
-        const toggle = document.getElementById('themeToggle');
-        const saved = localStorage.getItem('theme');
-        if (saved === 'dark') {
-            document.body.classList.add('dark');
-            toggle.checked = true;
-        }
-        toggle.addEventListener('change', e => {
-            const isDark = e.target.checked;
+        const themeToggle = document.getElementById('themeToggle');
+        const savedTheme = localStorage.getItem('theme');
+        const initialDark = savedTheme === 'dark';
+        document.body.classList.toggle('dark', initialDark);
+        themeToggle.checked = initialDark;
+
+        themeToggle.addEventListener('change', (event) => {
+            const isDark = event.target.checked;
             document.body.classList.toggle('dark', isDark);
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            
-            // Update chart tick colors
             if (moodChartInstance) {
-                moodChartInstance.options.scales.x.ticks.color = isDark ? '#ffffff' : '#000000';
-                moodChartInstance.update();
+                moodChartInstance.options.scales.x.ticks.color = getComputedStyle(document.body).color;
+                moodChartInstance.options.scales.y.ticks.color = getComputedStyle(document.body).color;
+                moodChartInstance.update('none');
             }
         });
-        
-function updateThemeUI(isDark) {
-    document.body.classList.toggle('dark', isDark);
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
-    if (typeof moodChartInstance !== 'undefined' && moodChartInstance) {
-        const textColor = getComputedStyle(document.body).getPropertyValue('--text-color').trim();
-        moodChartInstance.options.scales.x.ticks.color = textColor;
-        moodChartInstance.options.scales.y.ticks.color = textColor;
-        moodChartInstance.update('none');
-    }
-}
-updateThemeUI(document.body.classList.contains('dark'));
-toggle.addEventListener('change', e => updateThemeUI(e.target.checked));
-
-</script>
+    </script>
 
     <script>
         const DateTime = luxon.DateTime;
         // Update today's date
         const todayDate = document.getElementById('todayDate');
-        todayDate.textContent = DateTime.now().toFormat('LLL dd, yyyy')+ " - Today";;
+        todayDate.textContent = DateTime.now().toFormat('LLL dd, yyyy')+ " - Today";
     </script>
 
     <script>
         const tg = window.Telegram.WebApp;
-        const BACKEND_URL_BASE = 'https://finarfin-bot-subdomain.loca.lt'; // Replace!
+        const BACKEND_URL_BASE = 'https://mrfinarfin-bot-subdomain.loca.lt'; // Replace!
         let telegramUser = null;
         let allUserLogs = [];
         let moodChartInstance = null;
         let weekSegments = [];
         let idx = 0;
         let slider = null;
-
-        const sampleLogData = {
-        "logs": [
-            {
-                "logged_at": "2025-05-20T10:00:00Z",
-                "mood_score": 4,
-                "mood_label": "Good",
-                "health": ["Slept well", "No pain"],
-                "activity": ["Reading", "Walking"],
-                "diet": {
-                    "Breakfast": ["Oatmeal", "Coffee"],
-                    "Lunch": ["Salad", "Chicken"]
-                },
-                "strength_xp_gained": 10, // Sample XP
-                "wellbeing_xp_gained": 5   // Sample XP
-            },
-            {
-                "logged_at": "2025-05-21T15:30:00Z",
-                "mood_score": 3,
-                "mood_label": "Neutral",
-                "health": ["Mild headache"],
-                "activity": ["Working", "Exercise"],
-                "diet": {
-                    "Dinner": ["Fish", "Rice"],
-                    "Snacks": ["Apple"]
-                },
-                "endurance_xp_gained": 15, // Sample XP
-                "intelligence_xp_gained": 8 // Sample XP
-            },
-            // You can add more log entries here if needed for testing
-            {
-                "logged_at": "2025-05-19T08:00:00Z",
-                "mood_score": 5,
-                "mood_label": "Great",
-                "health": ["Feeling energetic"],
-                "activity": ["Morning Jog"],
-                "diet": {"Breakfast": ["Smoothie", "Toast"]},
-                "endurance_xp_gained": 20
-            }
-        ]
-    };
-    // --- END OF SAMPLE DATA ---
 
         const SKILLS_CONFIG = {
             strength:     { icon: '💪', baseXP: 100, exponent: 1.5, currentXP: 0, currentLevel: 0 },
@@ -1343,38 +670,36 @@ toggle.addEventListener('change', e => updateThemeUI(e.target.checked));
         tg.ready(); tg.expand();
 
         document.addEventListener('DOMContentLoaded', () => {
-    console.log("DOM Content Loaded. Initializing with sample data for chart.");
-    // Directly call the function to use sample data for local testing
-    fetchAllLogsAndSetupChart();
+            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                telegramUser = tg.initDataUnsafe.user;
+                // document.getElementById('userInfo').innerText = `Logs for: ${telegramUser.first_name || ''} (@${telegramUser.username || 'N/A'})`;
+                if (telegramUser.id) {
+                    fetchAllLogsAndSetupChart();
+                } else {
+                    document.getElementById('loadingMessage').innerText = "Cannot load: User ID unavailable.";
+                }
+            } else {
+                document.getElementById('userInfo').innerText = "Could not load Telegram user data.";
+                document.getElementById('loadingMessage').innerText = "Cannot load logs: User data unavailable.";
+            }
 
-    /*
-    // Original Telegram-dependent logic (comment out or remove for local testing with sample data)
-    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        telegramUser = tg.initDataUnsafe.user;
-        if (telegramUser.id) {
-            fetchAllLogsAndSetupChart(); // This would be for live data
-        } else {
-            document.getElementById('loadingMessage').innerText = "Cannot load: User ID unavailable. Using sample data as fallback.";
-            fetchAllLogsAndSetupChart(); // Fallback for testing
-        }
-    } else {
-        // document.getElementById('userInfo').innerText = "Could not load Telegram user data. Using sample data.";
-        document.getElementById('loadingMessage').innerText = "Cannot load logs: User data unavailable. Using sample data as fallback.";
-        fetchAllLogsAndSetupChart(); // Fallback for testing
-    }
-    */
+            document.getElementById('prevWeekBtn').addEventListener('click', () => { if(idx>0) idx--; updateView(); });
+            document.getElementById('nextWeekBtn').addEventListener('click', () => { if(idx<weekSegments.length-1) idx++; updateView(); });
 
-    // Keep other event listeners
-    document.getElementById('prevWeekBtn').addEventListener('click', () => { if(idx>0) idx--; updateView(); });
-    document.getElementById('nextWeekBtn').addEventListener('click', () => { if(idx<weekSegments.length-1) idx++; updateView(); });
+            // Panel range select event
+            const panelRangeSelect = document.getElementById('panelRangeSelect');
+            panelRangeSelect.addEventListener('change', (e) => {
+                panelRange = e.target.value;
+                updatePanels(idx);
+            });
 
-    const panelRangeSelect = document.getElementById('panelRangeSelect');
-    panelRangeSelect.addEventListener('change', (e) => {
-        panelRange = e.target.value;
-        updatePanels(idx);
-    });
-});
-
+            document.querySelector('.panels').addEventListener('click', (e) => {
+                const item = e.target.closest('.panel-item');
+                if (!item) return;
+                const root = e.currentTarget;
+                showRelevantLogs(item.dataset.item, item.dataset.type, root._relevantLogs || []);
+            });
+        });
 
         function setupChartAndSlider() {
             // Prepare data for the current week
@@ -1476,22 +801,20 @@ toggle.addEventListener('change', e => updateThemeUI(e.target.checked));
                 tooltips:[false,false], // shows the value of handle
                 format:{ to:v=>v.toFixed(1), from:v=>+v }
             });
-            slider.noUiSlider.on('update', ([min, max]) => {
-                min = +min;
-                max = +max;
+            let sliderFrame = 0;
+            slider.noUiSlider.on('update', ([minRaw, maxRaw]) => {
+                const min = +minRaw, max = +maxRaw;
                 moodChartInstance.options.thresholds.min = min;
                 moodChartInstance.options.thresholds.max = max;
-                
-                // recolor points
-                const base = getComputedStyle(document.documentElement).getPropertyValue('--chart-line').trim();
-                const weekData = getWeekMoodData(idx);
-                moodChartInstance.data.datasets[0].pointBackgroundColor =
-                    weekData.map(pt => (pt.y >= min && pt.y <= max) ? 'seagreen' : base);
-                
-                // Update panels with filtered data
-                updatePanels(idx);
-                
-                moodChartInstance.update('none');
+                cancelAnimationFrame(sliderFrame);
+                sliderFrame = requestAnimationFrame(() => {
+                    const base = getComputedStyle(document.documentElement).getPropertyValue('--chart-line').trim();
+                    const weekData = getWeekMoodData(idx);
+                    moodChartInstance.data.datasets[0].pointBackgroundColor =
+                        weekData.map(pt => (pt.y != null && pt.y >= min && pt.y <= max) ? 'seagreen' : base);
+                    updatePanels(idx);
+                    moodChartInstance.update('none');
+                });
             });
         }
 
@@ -1505,62 +828,55 @@ toggle.addEventListener('change', e => updateThemeUI(e.target.checked));
         }
 
         async function fetchAllLogsAndSetupChart() {
-    const loadingDiv = document.getElementById('loadingMessage');
-    loadingDiv.innerText = 'Loading logs from sample data...'; // Updated message
-    loadingDiv.style.display = 'block';
+            const loadingDiv = document.getElementById('loadingMessage');
+            loadingDiv.innerText = 'Loading all logs for chart...';
+            loadingDiv.style.display = 'block';
 
-    // Use the sample data directly instead of fetching
-    const data = sampleLogData;
-
-    // Simulate a short delay if you want to see the loading message (optional)
-    // await new Promise(resolve => setTimeout(resolve, 50));
-
-    loadingDiv.style.display = 'none';
-    if (data.logs && data.logs.length > 0) {
-        allUserLogs = data.logs.map(log => ({
-            ...log,
-            // The sample data's "logged_at" is already in "YYYY-MM-DDTHH:mm:ssZ" format.
-            // DateTime.fromISO will correctly parse it as UTC.
-            luxon_logged_at: DateTime.fromISO(log.logged_at).setZone(DateTime.local().zoneName),
-            strength_xp_gained: log.strength_xp_gained || 0,
-            endurance_xp_gained: log.endurance_xp_gained || 0,
-            intelligence_xp_gained: log.intelligence_xp_gained || 0,
-            charisma_xp_gained: log.charisma_xp_gained || 0,
-            perception_xp_gained: log.perception_xp_gained || 0,
-            wellbeing_xp_gained: log.wellbeing_xp_gained || 0
-        }));
-        allUserLogs.sort((a, b) => a.luxon_logged_at - b.luxon_logged_at);
-        
-        weekSegments = splitLogsToWeeks(allUserLogs);
-        idx = weekSegments.length - 1;
-        if (idx < 0) { // Safety check if splitLogsToWeeks returns empty or only one week
-            idx = 0;
+            if (!telegramUser || !telegramUser.id) {
+                loadingDiv.innerText = 'User ID missing for fetching logs.'; return;
+            }
+            const fetchUrl = `${BACKEND_URL_BASE}/api/get_user_logs/?telegram_id=${telegramUser.id}`;
+            try {
+                const response = await fetch(fetchUrl, {
+                    method: 'GET',
+                    headers: {'Content-Type': 'application/json', 'bypass-tunnel-reminder': 'true'}
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    loadingDiv.style.display = 'none';
+                    if (data.logs && data.logs.length > 0) {
+                        allUserLogs = data.logs.map(log => ({
+                            ...log,
+                            // Create a Luxon DateTime object in user's local timezone
+                            luxon_logged_at: DateTime.fromISO(log.logged_at.replace(' ', 'T') + 'Z').setZone(DateTime.local().zoneName),
+                            strength_xp_gained: log.strength_xp_gained || 0,
+                            endurance_xp_gained: log.endurance_xp_gained || 0,
+                            intelligence_xp_gained: log.intelligence_xp_gained || 0,
+                            charisma_xp_gained: log.charisma_xp_gained || 0,
+                            perception_xp_gained: log.perception_xp_gained || 0,
+                            wellbeing_xp_gained: log.wellbeing_xp_gained || 0
+                        }));
+                        allUserLogs.sort((a, b) => a.luxon_logged_at - b.luxon_logged_at);
+                        weekSegments = splitLogsToWeeks(allUserLogs);
+                        idx = weekSegments.length-1;
+                        setupChartAndSlider();
+                        updateView();
+                        
+                        // Calculate and display skills
+                        calculateSkillLevels();
+                        displaySkills();
+                    } else {
+                        document.getElementById('logsContainer').innerHTML = '<p style="text-align:center;">No logs found yet.</p>';
+                    }
+                } else {
+                    let errTxt = response.statusText; try {const eD = await response.json(); errTxt = eD.error || errTxt;} catch(e){}
+                    loadingDiv.innerText = `Error loading logs: ${response.status} ${errTxt}`;
+                }
+            } catch (error) {
+                loadingDiv.innerText = `Network error loading logs: ${error}`;
+                console.error("Fetch logs error:", error);
+            }
         }
-
-        setupChartAndSlider();
-        updateView();
-        
-        // Calculate and display skills
-        calculateSkillLevels();
-        displaySkills();
-    } else {
-        document.getElementById('logsContainer').innerHTML = '<p style="text-align:center;">No logs found in sample data.</p>';
-        if (moodChartInstance) { // Ensure chart is initialized before trying to clear it
-            moodChartInstance.data.datasets[0].data = [];
-            moodChartInstance.update();
-        } else { // If chart isn't even set up, attempt to set it up empty or show message
-             setupChartAndSlider(); // Setup chart structure
-             if(moodChartInstance) {
-                moodChartInstance.data.datasets[0].data = [];
-                moodChartInstance.update();
-             }
-        }
-        document.getElementById('segmentLabel').textContent = 'No data available';
-         // Still display skills, which will show the "Start logging" message
-        calculateSkillLevels(); 
-        displaySkills();
-    }
-}
 
         function splitLogsToWeeks(logs) {
             if (!logs.length) return [];
@@ -1759,104 +1075,83 @@ toggle.addEventListener('change', e => updateThemeUI(e.target.checked));
             const sortedActivityItems = processItems(activityItems);
             activityPanel.innerHTML = createPanelHtml(sortedActivityItems, 'activity');
 
-            // Add click handlers
-            document.querySelectorAll('.panel-item').forEach(item => {
-                item.addEventListener('click', () => {
-                    const itemText = item.dataset.item;
-                    const itemType = item.dataset.type;
-                    showRelevantLogs(itemText, itemType, relevantLogs);
-                });
-            });
+            // Click handling is delegated once from the panels container.
+            const panelsRoot = document.querySelector('.panels');
+            panelsRoot.dataset.relevantLogs = '';
+            panelsRoot._relevantLogs = relevantLogs;
         }
 
-
-    function showRelevantLogs(itemText, itemType, logs) {
-        const relevantLogs = logs.filter(log => {
-            if (itemType === 'diet') {
-                return log.diet && Object.entries(log.diet).some(([cat, arr]) => 
-                    arr && arr.length && arr.some(item => `${cat}: ${item}` === itemText)
-                );
-            } else {
-                return log[itemType] && log[itemType].includes(itemText);
-            }
-        });
-        
-        // Display the filtered logs
-        const container = document.getElementById('logsContainer');
-        container.classList.add('active');
-        // Add the clicked entry as a title above the logs
-        container.innerHTML = `<h2 style="margin-bottom:1rem; color:var(--text-color); font-size:1.2rem;">${escapeHtml(itemText)}</h2>`;
-        displayLogEntries(relevantLogs, container);
-        container.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-
-    // Update displayLogEntries to accept the container as an argument
-    function displayLogEntries(logsToDisplay, container = document.getElementById('logsContainer')) {
-        // If container already has a title, don't overwrite it
-        if (!container.querySelector('h2')) container.innerHTML = '';
-        if (logsToDisplay && logsToDisplay.length > 0) {
-            logsToDisplay.slice().reverse().forEach(log => {
-                const entryDiv = document.createElement('div');
-                entryDiv.className = 'log-entry';
-                let htmlContent = `<div class="log-meta">Logged: ${log.logged_at}</div>`;
-                if(log.original_note) {
-                    htmlContent += `<div class="log-original-note"><strong>Original:</strong> ${escapeHtml(log.original_note)}</div>`;
-                }
-                if (log.mood_label) {
-                    htmlContent += `<div class="log-section"><h3>Mood</h3><span class="tag">${escapeHtml(log.mood_label)} (${log.mood_score || 'N/A'})</span></div>`;
-                }
-                if (log.health && log.health.length > 0) {
-                    htmlContent += `<div class="log-section"><h3>Health</h3><ul>`;
-                    log.health.forEach(h => { htmlContent += `<li>${escapeHtml(h)}</li>`; });
-                    htmlContent += `</ul></div>`;
-                }
-                if (log.activity && log.activity.length > 0) {
-                    htmlContent += `<div class="log-section"><h3>Activity</h3><ul>`;
-                    log.activity.forEach(a => { htmlContent += `<li>${escapeHtml(a)}</li>`; });
-                    htmlContent += `</ul></div>`;
-                }
-                if (log.diet && log.diet.length > 0) {
-                    htmlContent += `<div class="log-section"><h3>Diet</h3><ul>`;
-                    for (const [category, items] of Object.entries(log.diet)) {
-                        if (items && items.length) {
-                            items.forEach(item => {
-                                htmlContent += `<li>${escapeHtml(category)}: ${escapeHtml(item)}</li>`;
-                            });
-                        }
-                    }
-                    htmlContent += `</ul></div>`;
-                }
-                entryDiv.innerHTML = htmlContent;
-                container.appendChild(entryDiv);
-            });
+function showRelevantLogs(itemText, itemType, logs) {
+    const relevantLogs = logs.filter(log => {
+        if (itemType === 'diet') {
+            return log.diet && Object.entries(log.diet).some(([cat, arr]) => 
+                arr && arr.length && arr.some(item => `${cat}: ${item}` === itemText)
+            );
         } else {
-            container.innerHTML += '<p style="text-align:center;">No logs found for this period or user.</p>';
+            return log[itemType] && log[itemType].includes(itemText);
         }
+    });
+    
+    // Display the filtered logs
+    const container = document.getElementById('logsContainer');
+    container.classList.add('active');
+    // Add the clicked entry as a title above the logs
+    container.innerHTML = `<h2 style="margin-bottom:1rem; color:var(--text-color); font-size:1.2rem;">${escapeHtml(itemText)}</h2>`;
+    displayLogEntries(relevantLogs, container);
+    container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// Update displayLogEntries to accept the container as an argument
+function displayLogEntries(logsToDisplay, container = document.getElementById('logsContainer')) {
+    // If container already has a title, don't overwrite it
+    if (!container.querySelector('h2')) container.innerHTML = '';
+    if (logsToDisplay && logsToDisplay.length > 0) {
+        logsToDisplay.slice().reverse().forEach(log => {
+            const entryDiv = document.createElement('div');
+            entryDiv.className = 'log-entry';
+            let htmlContent = `<div class="log-meta">Logged: ${escapeHtml(log.logged_at || "")}</div>`;
+            if(log.original_note) {
+                htmlContent += `<div class="log-original-note"><strong>Original:</strong> ${escapeHtml(log.original_note)}</div>`;
+            }
+            if (log.mood_label) {
+                htmlContent += `<div class="log-section"><h3>Mood</h3><span class="tag">${escapeHtml(log.mood_label)} (${log.mood_score || 'N/A'})</span></div>`;
+            }
+            if (log.health && log.health.length > 0) {
+                htmlContent += `<div class="log-section"><h3>Health</h3><ul>`;
+                log.health.forEach(h => { htmlContent += `<li>${escapeHtml(h)}</li>`; });
+                htmlContent += `</ul></div>`;
+            }
+            if (log.activity && log.activity.length > 0) {
+                htmlContent += `<div class="log-section"><h3>Activity</h3><ul>`;
+                log.activity.forEach(a => { htmlContent += `<li>${escapeHtml(a)}</li>`; });
+                htmlContent += `</ul></div>`;
+            }
+            if (log.diet && log.diet.length > 0) {
+                htmlContent += `<div class="log-section"><h3>Diet</h3><ul>`;
+                for (const [category, items] of Object.entries(log.diet)) {
+                    if (items && items.length) {
+                        items.forEach(item => {
+                            htmlContent += `<li>${escapeHtml(category)}: ${escapeHtml(item)}</li>`;
+                        });
+                    }
+                }
+                htmlContent += `</ul></div>`;
+            }
+            entryDiv.innerHTML = htmlContent;
+            container.appendChild(entryDiv);
+        });
+    } else {
+        container.innerHTML += '<p style="text-align:center;">No logs found for this period or user.</p>';
     }
+}
 
-
-        function displayAllLogs() {
+        let logsRendered = false;
+        function displayAllLogs(force = false) {
     const container = document.getElementById('allLogsContainer');
+    if (logsRendered && !force) return;
     if (!allUserLogs || !allUserLogs.length) {
-        
-    container.innerHTML = sortedDates.map(date => {
-        const logs = groupedLogs.get(date);
-        const logsCount = logs.length;
-        return `
-            <div class="log-group" data-date="${date}">
-                <div class="log-date-header">
-                    <div class="header-content">
-                        <span class="expand-icon">▶</span>
-                        ${DateTime.fromISO(date).toFormat('LLLL d, yyyy')}
-                        <span class="logs-count">${logsCount} log${logsCount !== 1 ? 's' : ''}</span>
-                    </div>
-                </div>
-                <div class="log-entries" style="display: none;">
-                    ${logs.map(log => createLogEntryHtml(log)).join('')}
-                </div>
-            </div>
-        `;
-    }).join('');
+        container.innerHTML = '<p style="text-align:center;color:var(--muted);padding:18px;">No logs found yet.</p>';
+        logsRendered = true;
         return;
     }
 
@@ -1886,31 +1181,20 @@ toggle.addEventListener('change', e => updateThemeUI(e.target.checked));
                         <span class="logs-count">(${logsCount} log${logsCount !== 1 ? 's' : ''})</span>
                     </div>
                 </div>
-                <div class="log-entries" style="display: none;">
+                <div class="log-entries" hidden>
                     ${logs.map(log => createLogEntryHtml(log)).join('')}
                 </div>
             </div>
         `;
     }).join('');
 
-    // Add click handlers for collapsible sections
-    document.querySelectorAll('.log-date-header').forEach(header => {
-        header.addEventListener('click', () => {
-            const entries = header.nextElementSibling;
-            const icon = header.querySelector('.expand-icon');
-            const isExpanded = entries.style.display !== 'none';
-            
-            // Toggle visibility
-            entries.style.display = isExpanded ? 'none' : 'block';
-            icon.textContent = isExpanded ? '▶' : '▼';
-            header.classList.toggle('expanded', !isExpanded);
-        });
-    });
+    logsRendered = true;
 }
 
         function createLogEntryHtml(log) {
-            let htmlContent = `<div class="log-entry" data-log-content="${escapeHtml(JSON.stringify(log))}">
-                <div class="log-meta">Logged: ${log.logged_at}</div>`;
+            const searchable = buildSearchText(log);
+            let htmlContent = `<div class="log-entry" data-search="${escapeHtml(searchable)}">
+                <div class="log-meta">Logged: ${escapeHtml(log.logged_at || '')}</div>`;
             
             if(log.original_note) {
                 htmlContent += `<div class="log-original-note"><strong>Original:</strong> ${escapeHtml(log.original_note)}</div>`;
@@ -1951,8 +1235,7 @@ function filterLogs(searchTerm) {
         let hasVisibleLogs = false;
         
         entries.forEach(entry => {
-            const logData = JSON.parse(entry.dataset.logContent);
-            const shouldShow = searchInLog(logData, searchTerm);
+            const shouldShow = !searchTerm || entry.dataset.search.includes(searchTerm);
             entry.style.display = shouldShow ? '' : 'none';
             if (shouldShow) hasVisibleLogs = true;
         });
@@ -1965,11 +1248,11 @@ function filterLogs(searchTerm) {
         const icon = header.querySelector('.expand-icon');
         
         if (searchTerm && hasVisibleLogs) {
-            entriesContainer.style.display = 'block';
+            entriesContainer.hidden = false;
             icon.textContent = '▼';
             header.classList.add('expanded');
         } else if (!searchTerm) {
-            entriesContainer.style.display = 'none';
+            entriesContainer.hidden = true;
             icon.textContent = '▶';
             header.classList.remove('expanded');
         }
@@ -2027,9 +1310,18 @@ function filterLogs(searchTerm) {
             sideMenu.classList.remove('open');
         }
     });
+
+    document.getElementById('allLogsContainer').addEventListener('click', (e) => {
+        const header = e.target.closest('.log-date-header');
+        if (!header) return;
+        const entries = header.nextElementSibling;
+        const icon = header.querySelector('.expand-icon');
+        const isExpanded = entries.hidden;
+        entries.hidden = !isExpanded;
+        icon.textContent = isExpanded ? '▼' : '▶';
+        header.classList.toggle('expanded', isExpanded);
+    });
 });
-
-
     </script>
 </body>
 </html>
