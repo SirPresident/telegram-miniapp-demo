@@ -1119,6 +1119,40 @@
 
     let activeFolder = 'all';
 
+    // Normalize backend category data so folder filtering never breaks log loading.
+    // Supports arrays, JSON-encoded arrays, comma-separated strings, or a single value.
+    function normalizeCategories(value) {
+        if (Array.isArray(value)) {
+            return value
+                .map(v => String(v).trim().toLowerCase())
+                .filter(Boolean);
+        }
+
+        if (typeof value === 'string') {
+            const trimmed = value.trim();
+            if (!trimmed) return [];
+
+            try {
+                const parsed = JSON.parse(trimmed);
+                if (Array.isArray(parsed)) {
+                    return parsed
+                        .map(v => String(v).trim().toLowerCase())
+                        .filter(Boolean);
+                }
+            } catch (_) {
+                // Not JSON; treat it as a normal comma-separated/single value.
+            }
+
+            return trimmed
+                .split(',')
+                .map(v => v.trim().toLowerCase())
+                .filter(Boolean);
+        }
+
+        if (value != null) return [String(value).trim().toLowerCase()].filter(Boolean);
+        return [];
+    }
+
     const SKILLS_CONFIG = {
         strength:     { icon: '💪', baseXP: 100, exponent: 1.5, currentXP: 0, currentLevel: 0 },
         endurance:    { icon: '🏃', baseXP: 100, exponent: 1.5, currentXP: 0, currentLevel: 0 },
@@ -1441,7 +1475,6 @@
 
             if (response.ok) {
                 const data = await response.json();
-                loadingDiv.style.display = 'none';
 
                 if (data.logs && data.logs.length > 0) {
                     allUserLogs = data.logs.map(log => {
@@ -1450,9 +1483,9 @@
                         const searchPieces = [
                             log.original_note || '',
                             log.mood_label || '',
-                            ...(log.health || []),
-                            ...(log.activity || []),
-                            ...(log.categories || [])
+                            ...(Array.isArray(log.health) ? log.health : []),
+                            ...(Array.isArray(log.activity) ? log.activity : []),
+                            ...normalizeCategories(log.categories)
                         ];
                         if (log.diet) {
                             Object.entries(log.diet).forEach(([cat, items]) => {
@@ -1462,6 +1495,7 @@
 
                         return {
                             ...log,
+                            categories: normalizeCategories(log.categories),
                             luxon_logged_at: luxonDate,
                             _searchText: searchPieces.join(' ').toLowerCase(),
                             strength_xp_gained: log.strength_xp_gained || 0,
@@ -1477,11 +1511,13 @@
                     weekSegments = splitLogsToWeeks(allUserLogs);
                     idx = weekSegments.length - 1;
 
+                    loadingDiv.style.display = 'none';
                     setupChartAndSlider();
                     updateView();
                     calculateSkillLevels();
                     displaySkills();
                 } else {
+                    loadingDiv.style.display = 'none';
                     document.getElementById('logsContainer').innerHTML = `<p class="empty-placeholder">${escapeHtml(t('noActivity'))}</p>`;
                 }
             } else {
@@ -1489,7 +1525,7 @@
             }
         } catch (err) {
             loadingDiv.innerText = t('unableFetch');
-            console.error('Fetch logs error:', err);
+            console.error('Fetch/process logs error:', err);
         }
     }
 
@@ -1679,7 +1715,7 @@
     }
 
     function createLogEntryHtml(log) {
-        const cats = Array.isArray(log.categories) && log.categories.length ? log.categories : ['personal'];
+        const cats = normalizeCategories(log.categories).length ? normalizeCategories(log.categories) : ['personal'];
         const catBadges = cats.map(c => {
             const meta = FOLDER_META[c] || {
                 label: String(c).charAt(0).toUpperCase() + String(c).slice(1),
@@ -1735,7 +1771,7 @@
 
         const counts = { all: allUserLogs.length };
         allUserLogs.forEach(log => {
-            const cats = Array.isArray(log.categories) && log.categories.length ? log.categories : ['personal'];
+            const cats = normalizeCategories(log.categories).length ? normalizeCategories(log.categories) : ['personal'];
             cats.forEach(c => {
                 counts[c] = (counts[c] || 0) + 1;
             });
@@ -1835,9 +1871,8 @@
                 const log = dateLogs[i];
                 if (!log) return;
 
-                const categories = Array.isArray(log.categories) && log.categories.length
-                    ? log.categories
-                    : ['personal'];
+                const normalizedCategories = normalizeCategories(log.categories);
+                const categories = normalizedCategories.length ? normalizedCategories : ['personal'];
                 const matchesFolder = activeFolder === 'all' || categories.includes(activeFolder);
                 const matchesQuery = !term || log._searchText.includes(term);
                 const isVisible = matchesFolder && matchesQuery;
