@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>My AI Processed Logs & Mood Chart</title>
+    <title data-i18n="appTitle">My AI Processed Logs & Mood Chart</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <!-- Chart.js + Luxon + Zoom -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
@@ -98,6 +98,56 @@
 
         input, button, select {
             font: inherit;
+        }
+
+        /* Persian / RTL layout */
+        body.rtl {
+            direction: rtl;
+        }
+
+        body.rtl .side-menu {
+            left: auto;
+            right: 0;
+            transform: translateX(100%);
+            border-right: none;
+            border-left: 1px solid var(--border-color);
+        }
+
+        body.rtl .side-menu.open {
+            transform: translateX(0);
+        }
+
+        body.rtl .log-entries {
+            padding-left: 0;
+            padding-right: 6px;
+            border-left: none;
+            border-right: 2px solid var(--border-color);
+        }
+
+        body.rtl .search-icon-inside {
+            left: auto;
+            right: 14px;
+        }
+
+        body.rtl .search-input {
+            padding: 12px 42px 12px 14px;
+        }
+
+        body.rtl .custom-select {
+            background-position: left 6px center;
+            padding: 6px 12px 6px 28px;
+        }
+
+        body.rtl .log-date-header .expand-icon {
+            transform: rotate(180deg);
+        }
+
+        body.rtl .log-date-header.expanded .expand-icon {
+            transform: rotate(270deg);
+        }
+
+        .language-select {
+            min-width: 112px;
         }
 
         .container {
@@ -831,13 +881,13 @@
 
     <!-- Top Navigation Header -->
     <header class="app-topbar container">
-        <button id="hamburgerBtn" class="icon-btn" aria-label="Open settings menu">
+        <button id="hamburgerBtn" class="icon-btn" aria-label="Open settings menu" data-i18n-aria-label="openSettings">
             <svg class="icon-svg" viewBox="0 0 24 24">
                 <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
             </svg>
         </button>
         <div class="header-title-box">
-            <h1 id="screenTitle">Mood chart</h1>
+            <h1 id="screenTitle" data-i18n="moodChart">Mood chart</h1>
             <div id="todayDate" class="subtitle"></div>
         </div>
         <div style="width:40px;"></div> <!-- visual spacer -->
@@ -845,37 +895,44 @@
 
     <!-- Side Menu & Backdrop -->
     <div id="menuBackdrop" class="menu-backdrop"></div>
-    <aside id="sideMenu" class="side-menu" aria-label="Settings">
-        <h2 class="settings-title">Settings</h2>
+    <aside id="sideMenu" class="side-menu" aria-label="Settings" data-i18n-aria-label="settings">
+        <h2 class="settings-title" data-i18n="settings">Settings</h2>
         <div class="settings-row">
-            <span class="settings-label">Dark Theme</span>
-            <label class="switch" aria-label="Toggle theme">
+            <span class="settings-label" data-i18n="darkTheme">Dark Theme</span>
+            <label class="switch" aria-label="Toggle theme" data-i18n-aria-label="toggleTheme">
                 <input type="checkbox" id="themeToggle">
                 <span class="switch-slider"></span>
             </label>
         </div>
+        <div class="settings-row" style="margin-top: 10px;">
+            <span class="settings-label" data-i18n="language">Language</span>
+            <select id="languageSelect" class="custom-select language-select" aria-label="Language" data-i18n-aria-label="language">
+                <option value="en">English</option>
+                <option value="fa">فارسی</option>
+            </select>
+        </div>
     </aside>
 
     <!-- Capsule Tab Bar -->
-    <nav class="capsule-tabs" aria-label="Main Navigation">
+    <nav class="capsule-tabs" aria-label="Main Navigation" data-i18n-aria-label="mainNavigation">
         <div class="capsule-tab-group">
             <button class="capsule-tab-btn active" id="tab-home" type="button" aria-label="Home">
                 <span class="capsule-icon-wrap">
                     <svg class="icon-svg" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1v-9.5z" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"/></svg>
                 </span>
-                <span class="capsule-text">Home</span>
+                <span class="capsule-text" data-i18n="home">Home</span>
             </button>
             <button class="capsule-tab-btn" id="tab-logs" type="button" aria-label="Search Logs">
                 <span class="capsule-icon-wrap">
                     <svg class="icon-svg" viewBox="0 0 24 24"><path d="M21 21l-4.35-4.35M19 11a8 8 0 1 1-16 0 8 8 0 0 1 16 0z" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
                 </span>
-                <span class="capsule-text">Search</span>
+                <span class="capsule-text" data-i18n="search">Search</span>
             </button>
             <button class="capsule-tab-btn" id="tab-levelup" type="button" aria-label="Level Up">
                 <span class="capsule-icon-wrap">
                     <svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </span>
-                <span class="capsule-text">Level up</span>
+                <span class="capsule-text" data-i18n="levelUp">Level up</span>
             </button>
         </div>
     </nav>
@@ -887,47 +944,47 @@
         <section id="homeView" class="tab-view">
             <div class="chart-card">
                 <div class="chart-inner">
-                    <div id="slider" title="Filter mood range"></div>
+                    <div id="slider" title="Filter mood range" data-i18n-title="filterMoodRange"></div>
                     <div class="chart-wrap">
                         <canvas id="moodScoreChart"></canvas>
                     </div>
                 </div>
 
                 <div class="segment-control">
-                    <div class="segment-label" id="segmentLabel">Loading week...</div>
+                    <div class="segment-label" id="segmentLabel" data-i18n="loadingWeek">Loading week...</div>
                     <div class="nav-btn-group">
-                        <button id="prevWeekBtn" class="nav-btn" aria-label="Previous week">← Prev</button>
-                        <button id="nextWeekBtn" class="nav-btn" aria-label="Next week">Next →</button>
+                        <button id="prevWeekBtn" class="nav-btn" aria-label="Previous week" data-i18n-aria-label="previousWeek"><span data-i18n="prev">← Prev</span></button>
+                        <button id="nextWeekBtn" class="nav-btn" aria-label="Next week" data-i18n-aria-label="nextWeek"><span data-i18n="next">Next →</span></button>
                     </div>
                 </div>
             </div>
 
             <div class="filter-bar">
-                <label for="panelRangeSelect">Summary Range</label>
+                <label for="panelRangeSelect" data-i18n="summaryRange">Summary Range</label>
                 <select id="panelRangeSelect" class="custom-select">
-                    <option value="week">This week</option>
-                    <option value="month">This month</option>
-                    <option value="all">All time</option>
+                    <option value="week" data-i18n="thisWeek">This week</option>
+                    <option value="month" data-i18n="thisMonth">This month</option>
+                    <option value="all" data-i18n="allTime">All time</option>
                 </select>
             </div>
 
             <div class="panels">
                 <div class="panel">
-                    <h3>Dietary</h3>
+                    <h3 data-i18n="dietary">Dietary</h3>
                     <div id="dietPanel" class="panel-list"></div>
                 </div>
                 <div class="panel">
-                    <h3>Health</h3>
+                    <h3 data-i18n="health">Health</h3>
                     <div id="healthPanel" class="panel-list"></div>
                 </div>
                 <div class="panel">
-                    <h3>Activities</h3>
+                    <h3 data-i18n="activities">Activities</h3>
                     <div id="activityPanel" class="panel-list"></div>
                 </div>
             </div>
 
             <div id="logsContainer">
-                <div id="loadingMessage" class="empty-placeholder">Connecting and fetching logs...</div>
+                <div id="loadingMessage" class="empty-placeholder" data-loading-state="initial" data-i18n="connecting">Connecting and fetching logs...</div>
             </div>
         </section>
 
@@ -935,7 +992,7 @@
         <section id="logsView" class="tab-view" style="display: none;">
             <div class="search-wrapper">
                 <svg class="search-icon-inside" viewBox="0 0 24 24"><path d="M21 21l-4.35-4.35M19 11a8 8 0 1 1-16 0 8 8 0 0 1 16 0z" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
-                <input type="text" id="logSearch" placeholder="Search mood, foods, notes, tags..." class="search-input" autocomplete="off" autocorrect="off">
+                <input type="text" id="logSearch" placeholder="Search mood, foods, notes, tags..." data-i18n-placeholder="searchPlaceholder" class="search-input" autocomplete="off" autocorrect="off">
             </div>
             <div id="allLogsContainer"></div>
         </section>
@@ -945,17 +1002,17 @@
             <div id="skillsContainer" class="skills-grid"></div>
 
             <div class="skill-focus-section">
-                <h3>Current Focus Skill</h3>
+                <h3 data-i18n="currentFocusSkill">Current Focus Skill</h3>
                 <select id="skillFocusSelect" class="custom-select">
-                    <option value="none">None</option>
-                    <option value="strength">Strength</option>
-                    <option value="endurance">Endurance</option>
-                    <option value="intelligence">Intelligence</option>
-                    <option value="charisma">Charisma</option>
-                    <option value="perception">Perception</option>
-                    <option value="wellbeing">Wellbeing</option>
+                    <option value="none" data-i18n="none">None</option>
+                    <option value="strength" data-i18n="strength">Strength</option>
+                    <option value="endurance" data-i18n="endurance">Endurance</option>
+                    <option value="intelligence" data-i18n="intelligence">Intelligence</option>
+                    <option value="charisma" data-i18n="charisma">Charisma</option>
+                    <option value="perception" data-i18n="perception">Perception</option>
+                    <option value="wellbeing" data-i18n="wellbeing">Wellbeing</option>
                 </select>
-                <div id="dailyTaskContainer">Daily quests coming soon... 👀</div>
+                <div id="dailyTaskContainer" data-i18n="dailyQuests">Daily quests coming soon... 👀</div>
             </div>
         </section>
 
@@ -996,6 +1053,84 @@
             .replace(/'/g, "&#039;");
     }
 
+    // --- Internationalization ---
+    const TRANSLATIONS = {
+        en: {
+            appTitle: 'My AI Processed Logs & Mood Chart', openSettings: 'Open settings menu', moodChart: 'Mood chart',
+            settings: 'Settings', darkTheme: 'Dark Theme', toggleTheme: 'Toggle theme', language: 'Language', mainNavigation: 'Main Navigation',
+            home: 'Home', search: 'Search', levelUp: 'Level up', filterMoodRange: 'Filter mood range', loadingWeek: 'Loading week...',
+            previousWeek: 'Previous week', nextWeek: 'Next week', prev: '← Prev', next: 'Next →', summaryRange: 'Summary Range',
+            thisWeek: 'This week', thisMonth: 'This month', allTime: 'All time', dietary: 'Dietary', health: 'Health', activities: 'Activities',
+            connecting: 'Connecting and fetching logs...', searchPlaceholder: 'Search mood, foods, notes, tags...', currentFocusSkill: 'Current Focus Skill',
+            none: 'None', strength: 'Strength', endurance: 'Endurance', intelligence: 'Intelligence', charisma: 'Charisma', perception: 'Perception',
+            wellbeing: 'Wellbeing', dailyQuests: 'Daily quests coming soon... 👀', noActivity: 'No activity logged yet.', noneRecorded: 'None recorded',
+            clear: 'Clear', noLogsMatched: 'No logs matched this entry.', noLogsSoFar: 'No logs logged so far.', noData: 'No data', healthSection: 'Health',
+            activitySection: 'Activity', dietSection: 'Diet', logHabits: 'Log habits to start gaining XP!', loadingAllLogs: 'Loading all logs...', userIdMissing: 'User ID missing.',
+            unableFetch: 'Unable to fetch logs. Please try again.', couldNotLoad: 'Could not load logs', level: 'Lvl'
+        },
+        fa: {
+            appTitle: 'گزارش‌های پردازش‌شده با هوش مصنوعی و نمودار حال روحی', openSettings: 'باز کردن منوی تنظیمات', moodChart: 'نمودار حال روحی',
+            settings: 'تنظیمات', darkTheme: 'حالت تاریک', toggleTheme: 'تغییر حالت نمایش', language: 'زبان', mainNavigation: 'ناوبری اصلی',
+            home: 'خانه', search: 'جستجو', levelUp: 'پیشرفت', filterMoodRange: 'فیلتر بازه حال روحی', loadingWeek: 'در حال بارگذاری هفته...',
+            previousWeek: 'هفته قبل', nextWeek: 'هفته بعد', prev: '← قبل', next: 'بعد →', summaryRange: 'بازه خلاصه',
+            thisWeek: 'این هفته', thisMonth: 'این ماه', allTime: 'همه زمان‌ها', dietary: 'تغذیه', health: 'سلامت', activities: 'فعالیت‌ها',
+            connecting: 'در حال اتصال و دریافت گزارش‌ها...', searchPlaceholder: 'جستجوی حال روحی، غذاها، یادداشت‌ها، برچسب‌ها...', currentFocusSkill: 'مهارت مورد تمرکز',
+            none: 'هیچ‌کدام', strength: 'قدرت', endurance: 'استقامت', intelligence: 'هوش', charisma: 'جذابیت اجتماعی', perception: 'ادراک',
+            wellbeing: 'بهزیستی', dailyQuests: 'ماموریت‌های روزانه به‌زودی... 👀', noActivity: 'هنوز فعالیتی ثبت نشده است.', noneRecorded: 'موردی ثبت نشده است',
+            clear: 'پاک کردن', noLogsMatched: 'گزارشی مطابق این مورد پیدا نشد.', noLogsSoFar: 'هنوز گزارشی ثبت نشده است.', noData: 'داده‌ای وجود ندارد', healthSection: 'سلامت',
+            activitySection: 'فعالیت', dietSection: 'تغذیه', logHabits: 'برای شروع دریافت XP عادت‌ها را ثبت کنید!', loadingAllLogs: 'در حال بارگذاری همه گزارش‌ها...', userIdMissing: 'شناسه کاربر وجود ندارد.',
+            unableFetch: 'دریافت گزارش‌ها ناموفق بود. لطفاً دوباره تلاش کنید.', couldNotLoad: 'بارگذاری گزارش‌ها ناموفق بود', level: 'سطح'
+        }
+    };
+
+    let currentLanguage = localStorage.getItem('language') || 'en';
+
+    function t(key) {
+        return TRANSLATIONS[currentLanguage]?.[key] ?? TRANSLATIONS.en[key] ?? key;
+    }
+
+    function applyLanguage(lang) {
+        currentLanguage = lang === 'fa' ? 'fa' : 'en';
+        localStorage.setItem('language', currentLanguage);
+        const isFa = currentLanguage === 'fa';
+        document.documentElement.lang = currentLanguage;
+        document.documentElement.dir = isFa ? 'rtl' : 'ltr';
+        document.body.classList.toggle('rtl', isFa);
+
+        document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = t(el.dataset.i18nPlaceholder); });
+        document.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = t(el.dataset.i18nTitle); });
+        document.querySelectorAll('[data-i18n-aria-label]').forEach(el => { el.setAttribute('aria-label', t(el.dataset.i18nAriaLabel)); });
+        document.title = t('appTitle');
+
+        const languageSelect = document.getElementById('languageSelect');
+        if (languageSelect) languageSelect.value = currentLanguage;
+
+        updateScreenTitle();
+        updateTodayDate();
+        if (moodChartInstance) {
+            moodChartInstance.data.datasets[0].label = t('moodChart');
+            moodChartInstance.options.scales.x.adapters = moodChartInstance.options.scales.x.adapters || {};
+            moodChartInstance.update('none');
+        }
+        if (weekSegments.length) updateView();
+        if (allUserLogs.length) { displayAllLogs(); displaySkills(); }
+        const loadingDiv = document.getElementById('loadingMessage');
+        if (loadingDiv && loadingDiv.dataset.loadingState === 'initial') loadingDiv.textContent = t('connecting');
+    }
+
+    function updateScreenTitle() {
+        const active = document.querySelector('.capsule-tab-btn.active')?.id;
+        const title = active === 'tab-logs' ? 'searchLogs' : active === 'tab-levelup' ? 'progression' : 'moodChart';
+        const titles = { en: { searchLogs: 'Search logs', progression: 'Progression' }, fa: { searchLogs: 'جستجوی گزارش‌ها', progression: 'پیشرفت' } };
+        document.getElementById('screenTitle').textContent = titles[currentLanguage][title] || t(title);
+    }
+
+    function updateTodayDate() {
+        const locale = currentLanguage === 'fa' ? 'fa' : 'en';
+        document.getElementById('todayDate').textContent = DateTime.now().setLocale(locale).toFormat('ccc, LLL d');
+    }
+
     // --- Theme Init ---
     function initTheme() {
         const toggle = document.getElementById('themeToggle');
@@ -1020,9 +1155,9 @@
     // --- Navigation Tabs ---
     function initTabs() {
         const tabs = [
-            { btn: document.getElementById('tab-home'), view: document.getElementById('homeView'), title: 'Mood chart' },
-            { btn: document.getElementById('tab-logs'), view: document.getElementById('logsView'), title: 'Search logs' },
-            { btn: document.getElementById('tab-levelup'), view: document.getElementById('levelupView'), title: 'Progression' }
+            { btn: document.getElementById('tab-home'), view: document.getElementById('homeView'), titleKey: 'moodChart' },
+            { btn: document.getElementById('tab-logs'), view: document.getElementById('logsView'), titleKey: 'searchLogs' },
+            { btn: document.getElementById('tab-levelup'), view: document.getElementById('levelupView'), titleKey: 'progression' }
         ];
 
         tabs.forEach((tab, index) => {
@@ -1033,7 +1168,7 @@
                 });
                 tab.btn.classList.add('active');
                 tab.view.style.display = 'block';
-                document.getElementById('screenTitle').textContent = tab.title;
+                updateScreenTitle();
 
                 if (tab.view.id === 'logsView') {
                     displayAllLogs();
@@ -1203,11 +1338,11 @@
     // --- API Data Fetching & Processing ---
     async function fetchAllLogsAndSetupChart() {
         const loadingDiv = document.getElementById('loadingMessage');
-        loadingDiv.innerText = 'Loading all logs...';
+        loadingDiv.innerText = t('loadingAllLogs');
         loadingDiv.style.display = 'block';
 
         if (!telegramUser || !telegramUser.id) {
-            loadingDiv.innerText = 'User ID missing.';
+            loadingDiv.innerText = t('userIdMissing');
             return;
         }
 
@@ -1260,13 +1395,13 @@
                     calculateSkillLevels();
                     displaySkills();
                 } else {
-                    document.getElementById('logsContainer').innerHTML = '<p class="empty-placeholder">No activity logged yet.</p>';
+                    document.getElementById('logsContainer').innerHTML = `<p class="empty-placeholder">${escapeHtml(t('noActivity'))}</p>`;
                 }
             } else {
-                loadingDiv.innerText = `Could not load logs (${response.status})`;
+                loadingDiv.innerText = `${t('couldNotLoad')} (${response.status})`;
             }
         } catch (err) {
-            loadingDiv.innerText = 'Unable to fetch logs. Please try again.';
+            loadingDiv.innerText = t('unableFetch');
             console.error('Fetch logs error:', err);
         }
     }
@@ -1327,9 +1462,9 @@
 
             moodChartInstance.options.scales.x.min = weekStartDate.toISODate();
             moodChartInstance.options.scales.x.max = weekEndDate.toISODate();
-            document.getElementById('segmentLabel').textContent = weekStartDate.toFormat('LLLL yyyy');
+            document.getElementById('segmentLabel').textContent = weekStartDate.setLocale(currentLanguage === 'fa' ? 'fa' : 'en').toFormat('LLLL yyyy');
         } else {
-            document.getElementById('segmentLabel').textContent = 'No data';
+            document.getElementById('segmentLabel').textContent = t('noData');
         }
 
         document.getElementById('prevWeekBtn').disabled = (idx === 0);
@@ -1389,7 +1524,7 @@
         function renderPanelList(containerId, items, type) {
             const el = document.getElementById(containerId);
             if (!items.length) {
-                el.innerHTML = '<div class="empty-placeholder">None recorded</div>';
+                el.innerHTML = `<div class="empty-placeholder">${escapeHtml(t('noneRecorded'))}</div>`;
                 return;
             }
             el.innerHTML = items.map(([item, count]) => `
@@ -1446,7 +1581,7 @@
         container.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
                 <h3 style="font-size: 1rem; font-weight: 700;">${escapeHtml(itemText)}</h3>
-                <button id="closeDetailLogs" class="nav-btn" style="padding: 3px 8px; font-size:0.75rem;">Clear</button>
+                <button id="closeDetailLogs" class="nav-btn" style="padding: 3px 8px; font-size:0.75rem;">${escapeHtml(t('clear'))}</button>
             </div>
         `;
         document.getElementById('closeDetailLogs').addEventListener('click', () => {
@@ -1467,17 +1602,17 @@
             out += `<div class="log-original-note">${escapeHtml(log.original_note)}</div>`;
         }
         if (log.health && log.health.length) {
-            out += `<div class="log-section"><h4>Health</h4><ul>${log.health.map(h => `<li class="tag">${escapeHtml(h)}</li>`).join('')}</ul></div>`;
+            out += `<div class="log-section"><h4>${escapeHtml(t('healthSection'))}</h4><ul>${log.health.map(h => `<li class="tag">${escapeHtml(h)}</li>`).join('')}</ul></div>`;
         }
         if (log.activity && log.activity.length) {
-            out += `<div class="log-section"><h4>Activity</h4><ul>${log.activity.map(a => `<li class="tag">${escapeHtml(a)}</li>`).join('')}</ul></div>`;
+            out += `<div class="log-section"><h4>${escapeHtml(t('activitySection'))}</h4><ul>${log.activity.map(a => `<li class="tag">${escapeHtml(a)}</li>`).join('')}</ul></div>`;
         }
         if (log.diet) {
             const dietTags = [];
             Object.entries(log.diet).forEach(([cat, items]) => {
                 if (items) items.forEach(i => dietTags.push(`<li class="tag">${escapeHtml(cat)}: ${escapeHtml(i)}</li>`));
             });
-            if (dietTags.length) out += `<div class="log-section"><h4>Diet</h4><ul>${dietTags.join('')}</ul></div>`;
+            if (dietTags.length) out += `<div class="log-section"><h4>${escapeHtml(t('dietSection'))}</h4><ul>${dietTags.join('')}</ul></div>`;
         }
         out += `</div>`;
         return out;
@@ -1485,7 +1620,7 @@
 
     function displayLogEntries(logsToDisplay, container) {
         if (!logsToDisplay || !logsToDisplay.length) {
-            container.innerHTML += '<div class="empty-placeholder">No logs matched this entry.</div>';
+            container.innerHTML += `<div class="empty-placeholder">${escapeHtml(t('noLogsMatched'))}</div>`;
             return;
         }
         const entriesWrap = document.createElement('div');
@@ -1498,7 +1633,7 @@
     function displayAllLogs() {
         const container = document.getElementById('allLogsContainer');
         if (!allUserLogs || !allUserLogs.length) {
-            container.innerHTML = '<div class="empty-placeholder">No logs logged so far.</div>';
+            container.innerHTML = `<div class="empty-placeholder">${escapeHtml(t('noLogsSoFar'))}</div>`;
             return;
         }
 
@@ -1518,7 +1653,7 @@
                     <div class="log-date-header">
                         <div class="header-content">
                             <svg class="expand-icon" viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z" fill="currentColor"/></svg>
-                            <span>${DateTime.fromISO(date).toFormat('LLLL d, yyyy')}</span>
+                            <span>${DateTime.fromISO(date).setLocale(currentLanguage === 'fa' ? 'fa' : 'en').toFormat('LLLL d, yyyy')}</span>
                         </div>
                         <span class="logs-count">${logs.length}</span>
                     </div>
@@ -1633,9 +1768,9 @@
                     <div class="skill-header">
                         <div class="skill-title-group">
                             <span class="skill-icon">${cfg.icon}</span>
-                            <span class="skill-name">${skillName.charAt(0).toUpperCase() + skillName.slice(1)}</span>
+                            <span class="skill-name">${escapeHtml(t(skillName))}</span>
                         </div>
-                        <span class="skill-level">Lvl ${cfg.currentLevel}</span>
+                        <span class="skill-level">${escapeHtml(t('level'))} ${cfg.currentLevel}</span>
                     </div>
                     <div class="progress-bar-container">
                         <div class="progress-bar" style="width: ${progress}%;"></div>
@@ -1647,7 +1782,7 @@
         });
 
         if (!count) {
-            container.innerHTML = '<div class="empty-placeholder" style="grid-column: 1 / -1;">Log habits to start gaining XP!</div>';
+            container.innerHTML = `<div class="empty-placeholder" style="grid-column: 1 / -1;">${escapeHtml(t('logHabits'))}</div>`;
         }
     }
 
@@ -1657,7 +1792,10 @@
         initTabs();
         initDrawer();
 
-        document.getElementById('todayDate').textContent = DateTime.now().toFormat('ccc, LLL d');
+        const languageSelect = document.getElementById('languageSelect');
+        languageSelect?.addEventListener('change', (e) => applyLanguage(e.target.value));
+        applyLanguage(currentLanguage);
+        document.getElementById('todayDate').textContent = DateTime.now().setLocale(currentLanguage === 'fa' ? 'fa' : 'en').toFormat('ccc, LLL d');
 
         document.getElementById('prevWeekBtn').addEventListener('click', () => {
             if (idx > 0) { idx--; updateView(); }
