@@ -436,41 +436,6 @@
             font-style: italic;
         }
 
-        /* Search Screen */
-        .search-wrapper {
-            position: relative;
-            margin-bottom: 1rem;
-        }
-
-        .search-icon-inside {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-soft);
-            pointer-events: none;
-            width: 18px;
-            height: 18px;
-        }
-
-        .search-input {
-            width: 100%;
-            padding: 12px 14px 12px 42px;
-            border-radius: var(--radius-md);
-            border: 1px solid var(--border-color);
-            background: var(--surface);
-            color: var(--text-color);
-            font-size: 0.95rem;
-            box-shadow: var(--shadow-sm);
-            outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-
-        .search-input:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px var(--accent-soft);
-        }
-
         /* Folder Chips Navigation Bar */
         .folders-bar {
             display: flex;
@@ -481,7 +446,6 @@
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
         }
-
         .folders-bar::-webkit-scrollbar {
             display: none;
         }
@@ -521,11 +485,9 @@
             border-radius: 99px;
             background: rgba(0, 0, 0, 0.08);
         }
-
         .dark .folder-chip-count {
             background: rgba(255, 255, 255, 0.14);
         }
-
         .folder-chip.active .folder-chip-count {
             background: rgba(255, 255, 255, 0.25);
             color: #ffffff;
@@ -540,6 +502,41 @@
             border-radius: 4px;
             background: var(--accent-soft);
             color: var(--accent-strong);
+        }
+
+        /* Search Screen */
+        .search-wrapper {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .search-icon-inside {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-soft);
+            pointer-events: none;
+            width: 18px;
+            height: 18px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 14px 12px 42px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            background: var(--surface);
+            color: var(--text-color);
+            font-size: 0.95rem;
+            box-shadow: var(--shadow-sm);
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-soft);
         }
 
         /* Accordion Logs */
@@ -1065,8 +1062,10 @@
                 <svg class="search-icon-inside" viewBox="0 0 24 24"><path d="M21 21l-4.35-4.35M19 11a8 8 0 1 1-16 0 8 8 0 0 1 16 0z" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
                 <input type="text" id="logSearch" placeholder="Search mood, foods, notes, tags..." data-i18n-placeholder="searchPlaceholder" class="search-input" autocomplete="off" autocorrect="off">
             </div>
+
             <!-- Dynamic AI Folders -->
             <div id="foldersBar" class="folders-bar"></div>
+
             <div id="allLogsContainer"></div>
         </section>
 
@@ -1105,18 +1104,20 @@
     let slider = null;
     let panelRange = 'week';
     let sliderUpdateRAF = null;
-    let activeFolder = 'all';
 
+    // --- Search Folder State ---
     const FOLDER_META = {
-        all:           { labelKey: 'folderAll', icon: '📂' },
-        todo:          { labelKey: 'folderTodo', icon: '✅' },
-        work:          { labelKey: 'folderWork', icon: '💼' },
-        family:        { labelKey: 'folderFamily', icon: '👨‍👩‍👧' },
-        health:        { labelKey: 'folderHealth', icon: '❤️' },
-        finance:       { labelKey: 'folderFinance', icon: '💳' },
-        entertainment: { labelKey: 'folderEntertainment', icon: '🎮' },
-        personal:      { labelKey: 'folderPersonal', icon: '📔' }
+        all:           { label: 'All Notes',     icon: '📂' },
+        todo:          { label: 'To-Do',         icon: '✅' },
+        work:          { label: 'Work',          icon: '💼' },
+        family:        { label: 'Family',        icon: '👨‍👩‍👧' },
+        health:        { label: 'Health',        icon: '❤️' },
+        finance:       { label: 'Finance',       icon: '💳' },
+        entertainment: { label: 'Entertainment', icon: '🎮' },
+        personal:      { label: 'Personal',      icon: '📔' }
     };
+
+    let activeFolder = 'all';
 
     const SKILLS_CONFIG = {
         strength:     { icon: '💪', baseXP: 100, exponent: 1.5, currentXP: 0, currentLevel: 0 },
@@ -1151,9 +1152,7 @@
             wellbeing: 'Wellbeing', dailyQuests: 'Daily quests coming soon... 👀', noActivity: 'No activity logged yet.', noneRecorded: 'None recorded',
             clear: 'Clear', noLogsMatched: 'No logs matched this entry.', noLogsSoFar: 'No logs logged so far.', noData: 'No data', healthSection: 'Health',
             activitySection: 'Activity', dietSection: 'Diet', logHabits: 'Log habits to start gaining XP!', loadingAllLogs: 'Loading all logs...', userIdMissing: 'User ID missing.',
-            unableFetch: 'Unable to fetch logs. Please try again.', couldNotLoad: 'Could not load logs', level: 'Lvl',
-            folderAll: 'All Notes', folderTodo: 'To-Do', folderWork: 'Work', folderFamily: 'Family', folderHealth: 'Health',
-            folderFinance: 'Finance', folderEntertainment: 'Entertainment', folderPersonal: 'Personal'
+            unableFetch: 'Unable to fetch logs. Please try again.', couldNotLoad: 'Could not load logs', level: 'Lvl'
         },
         fa: {
             appTitle: 'گزارش‌های پردازش‌شده با هوش مصنوعی و نمودار حال روحی', openSettings: 'باز کردن منوی تنظیمات', moodChart: 'نمودار حال روحی',
@@ -1166,9 +1165,7 @@
             wellbeing: 'بهزیستی', dailyQuests: 'ماموریت‌های روزانه به‌زودی... 👀', noActivity: 'هنوز فعالیتی ثبت نشده است.', noneRecorded: 'موردی ثبت نشده است',
             clear: 'پاک کردن', noLogsMatched: 'گزارشی مطابق این مورد پیدا نشد.', noLogsSoFar: 'هنوز گزارشی ثبت نشده است.', noData: 'داده‌ای وجود ندارد', healthSection: 'سلامت',
             activitySection: 'فعالیت', dietSection: 'تغذیه', logHabits: 'برای شروع دریافت XP عادت‌ها را ثبت کنید!', loadingAllLogs: 'در حال بارگذاری همه گزارش‌ها...', userIdMissing: 'شناسه کاربر وجود ندارد.',
-            unableFetch: 'دریافت گزارش‌ها ناموفق بود. لطفاً دوباره تلاش کنید.', couldNotLoad: 'بارگذاری گزارش‌ها ناموفق بود', level: 'سطح',
-            folderAll: 'همه یادداشت‌ها', folderTodo: 'کارها', folderWork: 'کار', folderFamily: 'خانواده', folderHealth: 'سلامت',
-            folderFinance: 'مالی', folderEntertainment: 'سرگرمی', folderPersonal: 'شخصی'
+            unableFetch: 'دریافت گزارش‌ها ناموفق بود. لطفاً دوباره تلاش کنید.', couldNotLoad: 'بارگذاری گزارش‌ها ناموفق بود', level: 'سطح'
         }
     };
 
@@ -1197,7 +1194,6 @@
 
         updateScreenTitle();
         updateTodayDate();
-        if (allUserLogs.length) renderFolderChips();
         if (moodChartInstance) {
             moodChartInstance.data.datasets[0].label = t('moodChart');
             moodChartInstance.options.scales.x.adapters = moodChartInstance.options.scales.x.adapters || {};
@@ -1454,9 +1450,9 @@
                         const searchPieces = [
                             log.original_note || '',
                             log.mood_label || '',
-                            ...(log.categories || ['personal']),
                             ...(log.health || []),
-                            ...(log.activity || [])
+                            ...(log.activity || []),
+                            ...(log.categories || [])
                         ];
                         if (log.diet) {
                             Object.entries(log.diet).forEach(([cat, items]) => {
@@ -1485,7 +1481,6 @@
                     updateView();
                     calculateSkillLevels();
                     displaySkills();
-                    renderFolderChips();
                 } else {
                     document.getElementById('logsContainer').innerHTML = `<p class="empty-placeholder">${escapeHtml(t('noActivity'))}</p>`;
                 }
@@ -1683,54 +1678,21 @@
         container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
-    function renderFolderChips() {
-        const bar = document.getElementById('foldersBar');
-        if (!bar) return;
-
-        const counts = { all: allUserLogs.length };
-        allUserLogs.forEach(log => {
-            const categories = log.categories || ['personal'];
-            categories.forEach(category => {
-                counts[category] = (counts[category] || 0) + 1;
-            });
-        });
-
-        const availableFolders = ['all', ...Object.keys(counts).filter(key => key !== 'all' && counts[key] > 0)];
-        bar.innerHTML = availableFolders.map(folderKey => {
-            const meta = FOLDER_META[folderKey];
-            const label = meta ? t(meta.labelKey) : folderKey.charAt(0).toUpperCase() + folderKey.slice(1);
-            const isActive = folderKey === activeFolder;
-            return `
-                <button class="folder-chip ${isActive ? 'active' : ''}" data-folder="${escapeHtml(folderKey)}" type="button">
-                    <span>${meta?.icon || '📁'} ${escapeHtml(label)}</span>
-                    <span class="folder-chip-count">${counts[folderKey] || 0}</span>
-                </button>
-            `;
-        }).join('');
-
-        bar.querySelectorAll('.folder-chip').forEach(button => {
-            button.addEventListener('click', () => {
-                activeFolder = button.dataset.folder;
-                bar.querySelectorAll('.folder-chip').forEach(chip => chip.classList.remove('active'));
-                button.classList.add('active');
-                filterLogs(document.getElementById('logSearch')?.value || '');
-            });
-        });
-    }
-
     function createLogEntryHtml(log) {
-        const categories = log.categories || ['personal'];
-        const categoryBadges = categories.map(category => {
-            const meta = FOLDER_META[category];
-            const label = meta ? t(meta.labelKey) : category;
-            return `<span class="category-tag">${meta?.icon || '📁'} ${escapeHtml(label)}</span>`;
+        const cats = Array.isArray(log.categories) && log.categories.length ? log.categories : ['personal'];
+        const catBadges = cats.map(c => {
+            const meta = FOLDER_META[c] || {
+                label: String(c).charAt(0).toUpperCase() + String(c).slice(1),
+                icon: '📁'
+            };
+            return `<span class="category-tag">${meta.icon} ${escapeHtml(meta.label)}</span>`;
         }).join(' ');
 
         let out = `<div class="log-entry" data-log-id="${escapeHtml(log.id)}">
             <div class="log-meta">
                 <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
                     <span>${escapeHtml(log.logged_at)}</span>
-                    ${categoryBadges}
+                    ${catBadges}
                 </div>
                 ${log.mood_label ? `<span class="tag" style="background:var(--accent-soft); color:var(--accent-strong); font-weight:700;">${escapeHtml(log.mood_label)} (${log.mood_score ?? '—'})</span>` : ''}
             </div>`;
@@ -1766,7 +1728,50 @@
         container.appendChild(entriesWrap);
     }
 
-    // --- Search Tab Accordion ---
+    // --- Search Tab Accordion & Folder Filtering ---
+    function renderFolderChips() {
+        const bar = document.getElementById('foldersBar');
+        if (!bar) return;
+
+        const counts = { all: allUserLogs.length };
+        allUserLogs.forEach(log => {
+            const cats = Array.isArray(log.categories) && log.categories.length ? log.categories : ['personal'];
+            cats.forEach(c => {
+                counts[c] = (counts[c] || 0) + 1;
+            });
+        });
+
+        const availableFolders = ['all', ...Object.keys(counts).filter(k => k !== 'all' && counts[k] > 0)];
+
+        // If the currently selected folder disappeared, fall back to All Notes.
+        if (activeFolder !== 'all' && !availableFolders.includes(activeFolder)) {
+            activeFolder = 'all';
+        }
+
+        bar.innerHTML = availableFolders.map(folderKey => {
+            const meta = FOLDER_META[folderKey] || {
+                label: String(folderKey).charAt(0).toUpperCase() + String(folderKey).slice(1),
+                icon: '📁'
+            };
+            const isActive = folderKey === activeFolder;
+            return `
+                <button class="folder-chip ${isActive ? 'active' : ''}" data-folder="${escapeHtml(folderKey)}" type="button">
+                    <span>${meta.icon} ${escapeHtml(meta.label)}</span>
+                    <span class="folder-chip-count">${counts[folderKey] || 0}</span>
+                </button>
+            `;
+        }).join('');
+
+        bar.querySelectorAll('.folder-chip').forEach(btn => {
+            btn.addEventListener('click', () => {
+                activeFolder = btn.dataset.folder;
+                bar.querySelectorAll('.folder-chip').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                filterLogs(document.getElementById('logSearch')?.value || '');
+            });
+        });
+    }
+
     function displayAllLogs() {
         const container = document.getElementById('allLogsContainer');
         if (!allUserLogs || !allUserLogs.length) {
@@ -1811,7 +1816,7 @@
             });
         });
 
-        filterLogs(document.getElementById('logSearch')?.value || '');
+        renderFolderChips();
     }
 
     function filterLogs(query) {
@@ -1830,10 +1835,13 @@
                 const log = dateLogs[i];
                 if (!log) return;
 
-                const matchesFolder = activeFolder === 'all'
-                    || (log.categories || ['personal']).includes(activeFolder);
+                const categories = Array.isArray(log.categories) && log.categories.length
+                    ? log.categories
+                    : ['personal'];
+                const matchesFolder = activeFolder === 'all' || categories.includes(activeFolder);
                 const matchesQuery = !term || log._searchText.includes(term);
                 const isVisible = matchesFolder && matchesQuery;
+
                 entryEl.style.display = isVisible ? 'block' : 'none';
                 if (isVisible) anyMatched = true;
             });
