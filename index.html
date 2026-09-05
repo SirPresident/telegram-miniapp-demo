@@ -1022,7 +1022,7 @@
     // --- Application State ---
     const DateTime = luxon.DateTime;
     const tg = window.Telegram?.WebApp;
-    const BACKEND_URL_BASE = 'https://mrfinarfin-bot-subdomain.loca.lt';
+    const BACKEND_URL_BASE = 'https://aud-notification-mercy-entirely.trycloudflare.com';
 
     let telegramUser = null;
     let allUserLogs = [];
@@ -1350,7 +1350,7 @@
         try {
             const response = await fetch(fetchUrl, {
                 method: 'GET',
-                headers: { 'Content-Type': 'application/json', 'bypass-tunnel-reminder': 'true' }
+                headers: { 'Content-Type': 'application/json'}
             });
 
             if (response.ok) {
