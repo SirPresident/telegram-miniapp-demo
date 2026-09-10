@@ -840,293 +840,6 @@
             transform: translateY(0);
         }
 
-        /* New Home dashboard */
-        .home-dashboard {
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-        }
-
-        .home-hero {
-            position: relative;
-            overflow: hidden;
-            background: linear-gradient(145deg, var(--surface-strong), var(--surface-muted));
-            border: 1px solid var(--border-color);
-            border-radius: 24px;
-            padding: 22px;
-            box-shadow: var(--shadow-md);
-        }
-
-        .home-hero::after {
-            content: "";
-            position: absolute;
-            width: 180px;
-            height: 180px;
-            right: -70px;
-            top: -80px;
-            border-radius: 50%;
-            background: radial-gradient(circle, var(--accent-soft) 0%, transparent 68%);
-            pointer-events: none;
-        }
-
-        body.rtl .home-hero::after {
-            right: auto;
-            left: -70px;
-        }
-
-        .home-kicker {
-            font-size: 0.76rem;
-            line-height: 1;
-            font-weight: 800;
-            letter-spacing: 0.09em;
-            text-transform: uppercase;
-            color: var(--accent-strong);
-            margin-bottom: 9px;
-        }
-
-        .home-hero h2 {
-            position: relative;
-            z-index: 1;
-            font-size: clamp(1.55rem, 5vw, 2.1rem);
-            line-height: 1.12;
-            letter-spacing: -0.035em;
-            margin-bottom: 8px;
-        }
-
-        .home-hero p {
-            position: relative;
-            z-index: 1;
-            max-width: 34rem;
-            color: var(--text-muted);
-            font-size: 0.92rem;
-            line-height: 1.5;
-        }
-
-        .home-primary-action {
-            position: relative;
-            z-index: 1;
-            margin-top: 18px;
-            width: 100%;
-            min-height: 50px;
-            border: 0;
-            border-radius: 15px;
-            background: var(--accent);
-            color: #fff;
-            font-size: 0.97rem;
-            font-weight: 800;
-            cursor: pointer;
-            box-shadow: 0 8px 24px var(--accent-soft);
-            transition: transform .15s ease, box-shadow .15s ease;
-        }
-
-        .home-primary-action:active {
-            transform: scale(.985);
-            box-shadow: 0 5px 16px var(--accent-soft);
-        }
-
-        .home-section-title {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            margin: 6px 2px 0;
-        }
-
-        .home-section-title h3 {
-            font-size: 0.96rem;
-            font-weight: 800;
-            letter-spacing: -0.015em;
-        }
-
-        .home-section-title button {
-            border: 0;
-            background: transparent;
-            color: var(--accent-strong);
-            font-weight: 700;
-            font-size: 0.8rem;
-            cursor: pointer;
-            padding: 4px 0;
-        }
-
-        .home-stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 9px;
-        }
-
-        .home-stat-card {
-            background: var(--surface);
-            border: 1px solid var(--border-color);
-            border-radius: 17px;
-            padding: 14px 11px;
-            box-shadow: var(--shadow-sm);
-            min-height: 92px;
-        }
-
-        .home-stat-icon {
-            font-size: 1.05rem;
-            line-height: 1;
-            margin-bottom: 10px;
-        }
-
-        .home-stat-value {
-            font-size: 1.2rem;
-            line-height: 1.1;
-            font-weight: 850;
-            letter-spacing: -0.025em;
-        }
-
-        .home-stat-label {
-            margin-top: 4px;
-            color: var(--text-muted);
-            font-size: 0.72rem;
-            font-weight: 650;
-            line-height: 1.2;
-        }
-
-        .home-insight-card {
-            background: var(--surface);
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            padding: 16px;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .home-insight-top {
-            display: flex;
-            align-items: center;
-            gap: 9px;
-            margin-bottom: 9px;
-        }
-
-        .home-insight-badge {
-            width: 34px;
-            height: 34px;
-            display: grid;
-            place-items: center;
-            border-radius: 11px;
-            background: var(--accent-soft);
-            font-size: 1.1rem;
-        }
-
-        .home-insight-title {
-            font-size: 0.84rem;
-            font-weight: 800;
-            color: var(--text-muted);
-        }
-
-        .home-insight-text {
-            font-size: 0.95rem;
-            line-height: 1.5;
-            font-weight: 620;
-        }
-
-        .home-recent-card {
-            background: var(--surface);
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            padding: 16px;
-            box-shadow: var(--shadow-sm);
-            cursor: pointer;
-            transition: transform .15s ease, background .15s ease;
-        }
-
-        .home-recent-card:active {
-            transform: scale(.99);
-            background: var(--surface-strong);
-        }
-
-        .home-recent-meta {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-            margin-bottom: 10px;
-            color: var(--text-muted);
-            font-size: 0.74rem;
-            font-weight: 650;
-        }
-
-        .home-recent-note {
-            font-size: 0.94rem;
-            line-height: 1.5;
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .home-recent-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            margin-top: 11px;
-        }
-
-        .home-quick-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 9px;
-        }
-
-        .home-quick-btn {
-            min-height: 74px;
-            padding: 11px 8px;
-            border-radius: 16px;
-            border: 1px solid var(--border-color);
-            background: var(--surface);
-            color: var(--text-color);
-            box-shadow: var(--shadow-sm);
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            font-size: 0.76rem;
-            font-weight: 760;
-            transition: transform .15s ease, background .15s ease;
-        }
-
-        .home-quick-btn:active {
-            transform: scale(.97);
-            background: var(--surface-strong);
-        }
-
-        .home-quick-icon {
-            font-size: 1.18rem;
-            line-height: 1;
-        }
-
-        .home-empty-card {
-            padding: 8px 0 2px;
-            color: var(--text-muted);
-            font-size: 0.88rem;
-            line-height: 1.55;
-        }
-
-        @media (max-width: 390px) {
-            .home-stats-grid,
-            .home-quick-grid {
-                gap: 7px;
-            }
-
-            .home-stat-card {
-                padding-inline: 9px;
-            }
-        }
-
-        @media (min-width: 769px) {
-            .home-stats-grid,
-            .home-quick-grid {
-                max-width: 760px;
-            }
-
-            .home-hero {
-                padding: 28px;
-            }
-        }
-
         /* Side Menu Drawer */
         .menu-backdrop {
             position: fixed;
@@ -1242,7 +955,7 @@
             </svg>
         </button>
         <div class="header-title-box">
-            <h1 id="screenTitle" data-i18n="home">Home</h1>
+            <h1 id="screenTitle" data-i18n="moodChart">Mood chart</h1>
             <div id="todayDate" class="subtitle"></div>
         </div>
         <div style="width:40px;"></div> <!-- visual spacer -->
@@ -1277,12 +990,6 @@
                 </span>
                 <span class="capsule-text" data-i18n="home">Home</span>
             </button>
-            <button class="capsule-tab-btn" id="tab-analytics" type="button" aria-label="Analytics">
-                <span class="capsule-icon-wrap">
-                    <svg class="icon-svg" viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M8 16v-4M12 16V8M16 16V4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
-                </span>
-                <span class="capsule-text" data-i18n="analytics">Analytics</span>
-            </button>
             <button class="capsule-tab-btn" id="tab-logs" type="button" aria-label="Search Logs">
                 <span class="capsule-icon-wrap">
                     <svg class="icon-svg" viewBox="0 0 24 24"><path d="M21 21l-4.35-4.35M19 11a8 8 0 1 1-16 0 8 8 0 0 1 16 0z" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
@@ -1301,13 +1008,8 @@
     <!-- App Views Container -->
     <main class="container" style="width: 100%;">
 
-        <!-- HOME TAB: lightweight daily dashboard -->
+        <!-- HOME TAB -->
         <section id="homeView" class="tab-view">
-            <div id="homeDashboard" class="home-dashboard"></div>
-        </section>
-
-        <!-- ANALYTICS TAB: the original dashboard -->
-        <section id="analyticsView" class="tab-view" style="display: none;">
             <div class="chart-card">
                 <div class="chart-inner">
                     <div id="slider" title="Filter mood range" data-i18n-title="filterMoodRange"></div>
@@ -1447,8 +1149,7 @@
             thisWeek: 'This week', thisMonth: 'This month', allTime: 'All time', dietary: 'Dietary', health: 'Health', activities: 'Activities',
             connecting: 'Connecting and fetching logs...', searchPlaceholder: 'Search mood, foods, notes, tags...', currentFocusSkill: 'Current Focus Skill',
             none: 'None', strength: 'Strength', endurance: 'Endurance', intelligence: 'Intelligence', charisma: 'Charisma', perception: 'Perception',
-            wellbeing: 'Wellbeing', dailyQuests: 'Daily quests coming soon... 👀', analytics: 'Analytics', today: 'Today', welcomeBack: 'Your day, at a glance', homeIntro: 'Send a thought to the bot and your AI organizes it into a useful picture of your day.', writeNote: 'Write a note in Telegram', todaySnapshot: 'Today at a glance', notes: 'Notes', streak: 'Day streak', mood: 'Mood', noMood: 'No mood yet', insight: 'Something to notice', recentNote: 'Latest note', viewAnalytics: 'View analytics', quickAccess: 'Quick access', searchLogs: 'Search', progression: 'Level up', seeAll: 'See all', activeToday: 'active today', avgMood: 'avg mood', noRecentNote: 'Your latest processed note will appear here.', startLogging: 'Start by sending your next thought to the bot.', noDataHome: 'No data yet. Your first note will give this page something to work with.',
-             noActivity: 'No activity logged yet.', noneRecorded: 'None recorded',
+            wellbeing: 'Wellbeing', dailyQuests: 'Daily quests coming soon... 👀', noActivity: 'No activity logged yet.', noneRecorded: 'None recorded',
             clear: 'Clear', noLogsMatched: 'No logs matched this entry.', noLogsSoFar: 'No logs logged so far.', noData: 'No data', healthSection: 'Health',
             activitySection: 'Activity', dietSection: 'Diet', logHabits: 'Log habits to start gaining XP!', loadingAllLogs: 'Loading all logs...', userIdMissing: 'User ID missing.',
             unableFetch: 'Unable to fetch logs. Please try again.', couldNotLoad: 'Could not load logs', level: 'Lvl'
@@ -1461,8 +1162,7 @@
             thisWeek: 'این هفته', thisMonth: 'این ماه', allTime: 'همه زمان‌ها', dietary: 'تغذیه', health: 'سلامت', activities: 'فعالیت‌ها',
             connecting: 'در حال اتصال و دریافت گزارش‌ها...', searchPlaceholder: 'جستجوی حال روحی، غذاها، یادداشت‌ها، برچسب‌ها...', currentFocusSkill: 'مهارت مورد تمرکز',
             none: 'هیچ‌کدام', strength: 'قدرت', endurance: 'استقامت', intelligence: 'هوش', charisma: 'جذابیت اجتماعی', perception: 'ادراک',
-            wellbeing: 'بهزیستی', dailyQuests: 'ماموریت‌های روزانه به‌زودی... 👀', analytics: 'تحلیل‌ها', today: 'امروز', welcomeBack: 'امروزت، در یک نگاه', homeIntro: 'یک فکر یا اتفاق را برای ربات بفرست تا هوش مصنوعی آن را به تصویری کاربردی از روزت تبدیل کند.', writeNote: 'نوشتن یادداشت در تلگرام', todaySnapshot: 'خلاصه امروز', notes: 'یادداشت', streak: 'تداوم روزانه', mood: 'حال روحی', noMood: 'هنوز ثبت نشده', insight: 'یک نکته قابل توجه', recentNote: 'آخرین یادداشت', viewAnalytics: 'مشاهده تحلیل‌ها', quickAccess: 'دسترسی سریع', searchLogs: 'جستجو', progression: 'پیشرفت', seeAll: 'مشاهده همه', activeToday: 'امروز فعال', avgMood: 'میانگین حال', noRecentNote: 'آخرین یادداشت پردازش‌شده اینجا نمایش داده می‌شود.', startLogging: 'با فرستادن یادداشت بعدی خود به ربات شروع کنید.', noDataHome: 'هنوز داده‌ای ندارید. اولین یادداشت شما این صفحه را فعال می‌کند.',
-             noActivity: 'هنوز فعالیتی ثبت نشده است.', noneRecorded: 'موردی ثبت نشده است',
+            wellbeing: 'بهزیستی', dailyQuests: 'ماموریت‌های روزانه به‌زودی... 👀', noActivity: 'هنوز فعالیتی ثبت نشده است.', noneRecorded: 'موردی ثبت نشده است',
             clear: 'پاک کردن', noLogsMatched: 'گزارشی مطابق این مورد پیدا نشد.', noLogsSoFar: 'هنوز گزارشی ثبت نشده است.', noData: 'داده‌ای وجود ندارد', healthSection: 'سلامت',
             activitySection: 'فعالیت', dietSection: 'تغذیه', logHabits: 'برای شروع دریافت XP عادت‌ها را ثبت کنید!', loadingAllLogs: 'در حال بارگذاری همه گزارش‌ها...', userIdMissing: 'شناسه کاربر وجود ندارد.',
             unableFetch: 'دریافت گزارش‌ها ناموفق بود. لطفاً دوباره تلاش کنید.', couldNotLoad: 'بارگذاری گزارش‌ها ناموفق بود', level: 'سطح'
@@ -1500,15 +1200,16 @@
             moodChartInstance.update('none');
         }
         if (weekSegments.length) updateView();
-        if (allUserLogs.length) { displayAllLogs(); displaySkills(); renderHomeDashboard(); }
+        if (allUserLogs.length) { displayAllLogs(); displaySkills(); }
         const loadingDiv = document.getElementById('loadingMessage');
         if (loadingDiv && loadingDiv.dataset.loadingState === 'initial') loadingDiv.textContent = t('connecting');
     }
 
     function updateScreenTitle() {
         const active = document.querySelector('.capsule-tab-btn.active')?.id;
-        const titleKey = active === 'tab-analytics' ? 'analytics' : active === 'tab-logs' ? 'searchLogs' : active === 'tab-levelup' ? 'progression' : 'home';
-        document.getElementById('screenTitle').textContent = t(titleKey);
+        const title = active === 'tab-logs' ? 'searchLogs' : active === 'tab-levelup' ? 'progression' : 'moodChart';
+        const titles = { en: { searchLogs: 'Search logs', progression: 'Progression' }, fa: { searchLogs: 'جستجوی گزارش‌ها', progression: 'پیشرفت' } };
+        document.getElementById('screenTitle').textContent = titles[currentLanguage][title] || t(title);
     }
 
     function updateTodayDate() {
@@ -1540,13 +1241,12 @@
     // --- Navigation Tabs ---
     function initTabs() {
         const tabs = [
-            { btn: document.getElementById('tab-home'), view: document.getElementById('homeView') },
-            { btn: document.getElementById('tab-analytics'), view: document.getElementById('analyticsView') },
-            { btn: document.getElementById('tab-logs'), view: document.getElementById('logsView') },
-            { btn: document.getElementById('tab-levelup'), view: document.getElementById('levelupView') }
+            { btn: document.getElementById('tab-home'), view: document.getElementById('homeView'), titleKey: 'moodChart' },
+            { btn: document.getElementById('tab-logs'), view: document.getElementById('logsView'), titleKey: 'searchLogs' },
+            { btn: document.getElementById('tab-levelup'), view: document.getElementById('levelupView'), titleKey: 'progression' }
         ];
 
-        tabs.forEach((tab) => {
+        tabs.forEach((tab, index) => {
             tab.btn.addEventListener('click', () => {
                 tabs.forEach(t => {
                     t.btn.classList.remove('active');
@@ -1556,9 +1256,7 @@
                 tab.view.style.display = 'block';
                 updateScreenTitle();
 
-                if (tab.view.id === 'homeView') {
-                    renderHomeDashboard();
-                } else if (tab.view.id === 'logsView') {
+                if (tab.view.id === 'logsView') {
                     displayAllLogs();
                 } else if (tab.view.id === 'levelupView') {
                     calculateSkillLevels();
@@ -1782,7 +1480,6 @@
                     setupChartAndSlider();
                     updateView();
                     calculateSkillLevels();
-                    renderHomeDashboard();
                     displaySkills();
                 } else {
                     document.getElementById('logsContainer').innerHTML = `<p class="empty-placeholder">${escapeHtml(t('noActivity'))}</p>`;
@@ -2162,189 +1859,6 @@
         });
     }
 
-    // --- Home Dashboard ---
-    function formatHomeDate(dt) {
-        return dt.setLocale(currentLanguage === 'fa' ? 'fa' : 'en').toFormat('ccc, LLL d · HH:mm');
-    }
-
-    function getHomeMoodAverage(logs) {
-        const moodLogs = logs.filter(l => l.mood_score != null);
-        if (!moodLogs.length) return null;
-        return moodLogs.reduce((sum, l) => sum + Number(l.mood_score), 0) / moodLogs.length;
-    }
-
-    function getActiveDayStreak() {
-        if (!allUserLogs.length) return 0;
-        const dates = [...new Set(allUserLogs.map(l => l.luxon_logged_at.toISODate()))]
-            .sort()
-            .reverse();
-        if (!dates.length) return 0;
-
-        let cursor = DateTime.local().startOf('day');
-        const latest = DateTime.fromISO(dates[0]).startOf('day');
-        if (latest < cursor.minus({ days: 1 })) return 0;
-        if (latest < cursor) cursor = cursor.minus({ days: 1 });
-
-        let streak = 0;
-        for (const date of dates) {
-            const d = DateTime.fromISO(date).startOf('day');
-            if (d.hasSame(cursor, 'day')) {
-                streak++;
-                cursor = cursor.minus({ days: 1 });
-            } else if (d < cursor) {
-                break;
-            }
-        }
-        return streak;
-    }
-
-    function getMostFrequent(items) {
-        const clean = items.filter(Boolean);
-        if (!clean.length) return null;
-        const counts = new Map();
-        clean.forEach(item => counts.set(item, (counts.get(item) || 0) + 1));
-        return [...counts.entries()].sort((a, b) => b[1] - a[1])[0][0];
-    }
-
-    function buildHomeInsight(todayLogs) {
-        const current = getHomeMoodAverage(todayLogs);
-        const pastStart = DateTime.local().minus({ days: 6 }).startOf('day');
-        const recentLogs = allUserLogs.filter(l => l.luxon_logged_at >= pastStart);
-        const recentAvg = getHomeMoodAverage(recentLogs);
-
-        if (current != null && recentAvg != null && current >= recentAvg + 0.35) {
-            return current >= 4.2
-                ? (currentLanguage === 'fa' ? 'امروز حال روحی‌ات خیلی خوب بوده؛ همین روند را حفظ کن.' : 'Your mood is running high today. That is worth noticing.')
-                : (currentLanguage === 'fa' ? 'حال امروزت از میانگین این چند روز بهتر است.' : 'Your mood is above your recent average today.');
-        }
-        if (current != null && recentAvg != null && current <= recentAvg - 0.35) {
-            return current <= 2.2
-                ? (currentLanguage === 'fa' ? 'امروز روز سخت‌تری به نظر می‌رسد. کمی با خودت مهربان‌تر باش.' : 'Today looks heavier than usual. Give yourself a little room.')
-                : (currentLanguage === 'fa' ? 'حال امروزت کمی پایین‌تر از میانگین اخیر است.' : 'Your mood is a little below your recent average today.');
-        }
-
-        const activities = [];
-        todayLogs.forEach(log => (log.activity || []).forEach(a => activities.push(a)));
-        const topActivity = getMostFrequent(activities);
-        if (topActivity) {
-            return currentLanguage === 'fa'
-                ? `امروز «${topActivity}» بیشتر از بقیه دیده شده است.`
-                : `Today, “${topActivity}” is showing up more than anything else.`;
-        }
-
-        return t('noDataHome');
-    }
-
-    function renderHomeDashboard() {
-        const container = document.getElementById('homeDashboard');
-        if (!container) return;
-
-        const now = DateTime.local();
-        const todayKey = now.toISODate();
-        const todayLogs = allUserLogs.filter(l => l.luxon_logged_at.toISODate() === todayKey);
-        const todayMood = getHomeMoodAverage(todayLogs);
-        const recent = allUserLogs.length ? allUserLogs[allUserLogs.length - 1] : null;
-        const streak = getActiveDayStreak();
-        const moodText = todayMood == null ? t('noMood') : todayMood.toFixed(1);
-        const topHealth = getMostFrequent(todayLogs.flatMap(l => l.health || []));
-        const topActivity = getMostFrequent(todayLogs.flatMap(l => l.activity || []));
-        const categories = recent && Array.isArray(recent.categories) ? recent.categories.slice(0, 2) : [];
-        const tags = categories.map(c => {
-            const meta = FOLDER_META[c] || { label: String(c), icon: '📁' };
-            return `<span class="category-tag">${meta.icon} ${escapeHtml(meta.label)}</span>`;
-        }).join('');
-
-        container.innerHTML = `
-            <section class="home-hero">
-                <div class="home-kicker">${escapeHtml(t('today'))}</div>
-                <h2>${escapeHtml(t('welcomeBack'))}</h2>
-                <p>${escapeHtml(t('homeIntro'))}</p>
-                <button id="homePrimaryAction" class="home-primary-action" type="button">✦ ${escapeHtml(t('writeNote'))}</button>
-            </section>
-
-            <div class="home-section-title">
-                <h3>${escapeHtml(t('todaySnapshot'))}</h3>
-                <button id="homeAnalyticsLink" type="button">${escapeHtml(t('viewAnalytics'))} →</button>
-            </div>
-
-            <section class="home-stats-grid">
-                <div class="home-stat-card">
-                    <div class="home-stat-icon">📝</div>
-                    <div class="home-stat-value">${todayLogs.length}</div>
-                    <div class="home-stat-label">${escapeHtml(t('notes'))}</div>
-                </div>
-                <div class="home-stat-card">
-                    <div class="home-stat-icon">🙂</div>
-                    <div class="home-stat-value">${escapeHtml(moodText)}</div>
-                    <div class="home-stat-label">${escapeHtml(t('mood'))}</div>
-                </div>
-                <div class="home-stat-card">
-                    <div class="home-stat-icon">🔥</div>
-                    <div class="home-stat-value">${streak}</div>
-                    <div class="home-stat-label">${escapeHtml(t('streak'))}</div>
-                </div>
-            </section>
-
-            <section class="home-insight-card">
-                <div class="home-insight-top">
-                    <div class="home-insight-badge">✦</div>
-                    <div class="home-insight-title">${escapeHtml(t('insight'))}</div>
-                </div>
-                <div class="home-insight-text">${escapeHtml(buildHomeInsight(todayLogs))}</div>
-                ${(topHealth || topActivity) ? `<div class="home-recent-tags">${topActivity ? `<span class="tag">🏃 ${escapeHtml(topActivity)}</span>` : ''}${topHealth ? `<span class="tag">♥ ${escapeHtml(topHealth)}</span>` : ''}</div>` : ''}
-            </section>
-
-            <div class="home-section-title">
-                <h3>${escapeHtml(t('recentNote'))}</h3>
-                ${recent ? `<button id="homeSearchLink" type="button">${escapeHtml(t('seeAll'))}</button>` : ''}
-            </div>
-
-            ${recent ? `
-                <section class="home-recent-card" id="homeRecentCard" role="button" tabindex="0" aria-label="${escapeHtml(t('searchLogs'))}">
-                    <div class="home-recent-meta">
-                        <span>${escapeHtml(formatHomeDate(recent.luxon_logged_at))}</span>
-                        ${recent.mood_label ? `<span class="tag">${escapeHtml(recent.mood_label)}${recent.mood_score != null ? ` · ${escapeHtml(recent.mood_score)}` : ''}</span>` : ''}
-                    </div>
-                    <div class="home-recent-note">${escapeHtml(recent.original_note || t('noRecentNote'))}</div>
-                    ${tags ? `<div class="home-recent-tags">${tags}</div>` : ''}
-                </section>
-            ` : `<div class="home-empty-card">${escapeHtml(t('startLogging'))}</div>`}
-
-            <div class="home-section-title">
-                <h3>${escapeHtml(t('quickAccess'))}</h3>
-            </div>
-            <section class="home-quick-grid">
-                <button class="home-quick-btn" type="button" data-home-tab="tab-analytics">
-                    <span class="home-quick-icon">📈</span><span>${escapeHtml(t('analytics'))}</span>
-                </button>
-                <button class="home-quick-btn" type="button" data-home-tab="tab-logs">
-                    <span class="home-quick-icon">🔎</span><span>${escapeHtml(t('searchLogs'))}</span>
-                </button>
-                <button class="home-quick-btn" type="button" data-home-tab="tab-levelup">
-                    <span class="home-quick-icon">⚡</span><span>${escapeHtml(t('progression'))}</span>
-                </button>
-            </section>
-        `;
-
-        const goToTab = (id) => document.getElementById(id)?.click();
-        document.getElementById('homeAnalyticsLink')?.addEventListener('click', () => goToTab('tab-analytics'));
-        document.getElementById('homeSearchLink')?.addEventListener('click', () => goToTab('tab-logs'));
-        document.getElementById('homeRecentCard')?.addEventListener('click', () => goToTab('tab-logs'));
-        document.getElementById('homeRecentCard')?.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                goToTab('tab-logs');
-            }
-        });
-        document.getElementById('homePrimaryAction')?.addEventListener('click', () => {
-            if (tg?.close) tg.close();
-            else alert(currentLanguage === 'fa' ? 'این صفحه را در تلگرام ببندید و یادداشت بعدی خود را برای ربات بفرستید.' : 'Close the Mini App and send your next note to the bot in Telegram.');
-        });
-        container.querySelectorAll('[data-home-tab]').forEach(btn => {
-            btn.addEventListener('click', () => goToTab(btn.dataset.homeTab));
-        });
-    }
-
     // --- Skills Computation ---
     function getXPForLevel(level, baseXP, exponent) {
         if (level <= 0) return 0;
@@ -2434,7 +1948,6 @@
         languageSelect?.addEventListener('change', (e) => applyLanguage(e.target.value));
         applyLanguage(currentLanguage);
         document.getElementById('todayDate').textContent = DateTime.now().setLocale(currentLanguage === 'fa' ? 'fa' : 'en').toFormat('ccc, LLL d');
-        renderHomeDashboard();
 
         document.getElementById('prevWeekBtn').addEventListener('click', () => {
             if (idx > 0) { idx--; updateView(); }
