@@ -45,6 +45,8 @@
             --radius-sm: 10px;
             --radius-md: 14px;
             --radius-lg: 20px;
+            --spring: cubic-bezier(0.32, 0.72, 0, 1);
+            --spring-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         .dark {
@@ -172,6 +174,7 @@
             font-size: 1.35rem;
             font-weight: 700;
             letter-spacing: -0.02em;
+            transition: opacity 0.15s ease, transform 0.15s ease;
         }
 
         .header-title-box .subtitle {
@@ -207,6 +210,59 @@
             width: 20px;
             height: 20px;
             fill: currentColor;
+        }
+
+        /* ==========================================================================
+           PAGE VIEWPORT & SMOOTH SLIDING TRACK (TRANSITIONS)
+           ========================================================================== */
+        .pages-viewport {
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+            direction: ltr !important; /* Forces consistent carousel math across LTR & RTL */
+        }
+
+        .pages-track {
+            display: flex;
+            width: 400%; /* 4 tabs */
+            align-items: flex-start;
+            transition: transform 0.46s var(--spring);
+            will-change: transform;
+        }
+
+        .tab-view {
+            width: 25%;
+            flex-shrink: 0;
+            min-width: 0;
+            opacity: 0.2;
+            transform: scale(0.96);
+            transition: opacity 0.35s ease, transform 0.46s var(--spring);
+            pointer-events: none;
+            direction: ltr;
+            overflow-x: hidden;
+        }
+
+        /* Restore proper text direction inside views in Persian/RTL */
+        body.rtl .tab-view {
+            direction: rtl;
+        }
+
+        .tab-view.active {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: auto;
+        }
+
+        /* Prevent inactive pages from stretching document scroll, but keep rendered during animation */
+        .tab-view:not(.active):not(.transitioning) {
+            height: 0;
+            max-height: 0;
+            overflow: hidden;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
+            opacity: 0;
         }
 
         /* Chart & Slider wrapper */
@@ -806,6 +862,10 @@
             overflow: hidden;
         }
 
+        .capsule-tab-btn:active {
+            transform: scale(0.92);
+        }
+
         .capsule-tab-btn.active {
             width: 116px;
             background: var(--accent-soft);
@@ -1298,94 +1358,96 @@
         </div>
     </nav>
 
-    <!-- App Views Container -->
-    <main class="container" style="width: 100%;">
+    <!-- App Views Sliding Container -->
+    <main class="container pages-viewport">
+        <div class="pages-track" id="pagesTrack">
 
-        <!-- HOME TAB: lightweight daily dashboard -->
-        <section id="homeView" class="tab-view">
-            <div id="homeDashboard" class="home-dashboard"></div>
-        </section>
+            <!-- HOME TAB: lightweight daily dashboard -->
+            <section id="homeView" class="tab-view active">
+                <div id="homeDashboard" class="home-dashboard"></div>
+            </section>
 
-        <!-- ANALYTICS TAB: the original dashboard -->
-        <section id="analyticsView" class="tab-view" style="display: none;">
-            <div class="chart-card">
-                <div class="chart-inner">
-                    <div id="slider" title="Filter mood range" data-i18n-title="filterMoodRange"></div>
-                    <div class="chart-wrap">
-                        <canvas id="moodScoreChart"></canvas>
+            <!-- ANALYTICS TAB: chart & summary dashboard -->
+            <section id="analyticsView" class="tab-view">
+                <div class="chart-card">
+                    <div class="chart-inner">
+                        <div id="slider" title="Filter mood range" data-i18n-title="filterMoodRange"></div>
+                        <div class="chart-wrap">
+                            <canvas id="moodScoreChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="segment-control">
+                        <div class="segment-label" id="segmentLabel" data-i18n="loadingWeek">Loading week...</div>
+                        <div class="nav-btn-group">
+                            <button id="prevWeekBtn" class="nav-btn" aria-label="Previous week" data-i18n-aria-label="previousWeek"><span data-i18n="prev">← Prev</span></button>
+                            <button id="nextWeekBtn" class="nav-btn" aria-label="Next week" data-i18n-aria-label="nextWeek"><span data-i18n="next">Next →</span></button>
+                        </div>
                     </div>
                 </div>
 
-                <div class="segment-control">
-                    <div class="segment-label" id="segmentLabel" data-i18n="loadingWeek">Loading week...</div>
-                    <div class="nav-btn-group">
-                        <button id="prevWeekBtn" class="nav-btn" aria-label="Previous week" data-i18n-aria-label="previousWeek"><span data-i18n="prev">← Prev</span></button>
-                        <button id="nextWeekBtn" class="nav-btn" aria-label="Next week" data-i18n-aria-label="nextWeek"><span data-i18n="next">Next →</span></button>
+                <div class="filter-bar">
+                    <label for="panelRangeSelect" data-i18n="summaryRange">Summary Range</label>
+                    <select id="panelRangeSelect" class="custom-select">
+                        <option value="week" data-i18n="thisWeek">This week</option>
+                        <option value="month" data-i18n="thisMonth">This month</option>
+                        <option value="all" data-i18n="allTime">All time</option>
+                    </select>
+                </div>
+
+                <div class="panels">
+                    <div class="panel">
+                        <h3 data-i18n="dietary">Dietary</h3>
+                        <div id="dietPanel" class="panel-list"></div>
+                    </div>
+                    <div class="panel">
+                        <h3 data-i18n="health">Health</h3>
+                        <div id="healthPanel" class="panel-list"></div>
+                    </div>
+                    <div class="panel">
+                        <h3 data-i18n="activities">Activities</h3>
+                        <div id="activityPanel" class="panel-list"></div>
                     </div>
                 </div>
-            </div>
 
-            <div class="filter-bar">
-                <label for="panelRangeSelect" data-i18n="summaryRange">Summary Range</label>
-                <select id="panelRangeSelect" class="custom-select">
-                    <option value="week" data-i18n="thisWeek">This week</option>
-                    <option value="month" data-i18n="thisMonth">This month</option>
-                    <option value="all" data-i18n="allTime">All time</option>
-                </select>
-            </div>
-
-            <div class="panels">
-                <div class="panel">
-                    <h3 data-i18n="dietary">Dietary</h3>
-                    <div id="dietPanel" class="panel-list"></div>
+                <div id="logsContainer">
+                    <div id="loadingMessage" class="empty-placeholder" data-loading-state="initial" data-i18n="connecting">Connecting and fetching logs...</div>
                 </div>
-                <div class="panel">
-                    <h3 data-i18n="health">Health</h3>
-                    <div id="healthPanel" class="panel-list"></div>
+            </section>
+
+            <!-- SEARCH TAB -->
+            <section id="logsView" class="tab-view">
+                <div class="search-wrapper">
+                    <svg class="search-icon-inside" viewBox="0 0 24 24"><path d="M21 21l-4.35-4.35M19 11a8 8 0 1 1-16 0 8 8 0 0 1 16 0z" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+                    <input type="text" id="logSearch" placeholder="Search mood, foods, notes, tags..." data-i18n-placeholder="searchPlaceholder" class="search-input" autocomplete="off" autocorrect="off">
                 </div>
-                <div class="panel">
-                    <h3 data-i18n="activities">Activities</h3>
-                    <div id="activityPanel" class="panel-list"></div>
+
+                <!-- Dynamic AI Folders -->
+                <div id="foldersBar" class="folders-bar"></div>
+
+                <div id="allLogsContainer"></div>
+            </section>
+
+            <!-- LEVEL UP TAB -->
+            <section id="levelupView" class="tab-view">
+                <div id="skillsContainer" class="skills-grid"></div>
+
+                <div class="skill-focus-section">
+                    <h3 data-i18n="currentFocusSkill">Current Focus Skill</h3>
+                    <select id="skillFocusSelect" class="custom-select">
+                        <option value="none" data-i18n="none">None</option>
+                        <option value="strength" data-i18n="strength">Strength</option>
+                        <option value="endurance" data-i18n="endurance">Endurance</option>
+                        <option value="intelligence" data-i18n="intelligence">Intelligence</option>
+                        <option value="charisma" data-i18n="charisma">Charisma</option>
+                        <option value="perception" data-i18n="perception">Perception</option>
+                        <option value="wellbeing" data-i18n="wellbeing">Wellbeing</option>
+                    </select>
+                    <div id="dailyTaskContainer" data-i18n="dailyQuests">Daily quests coming soon... 👀</div>
                 </div>
-            </div>
+            </section>
 
-            <div id="logsContainer">
-                <div id="loadingMessage" class="empty-placeholder" data-loading-state="initial" data-i18n="connecting">Connecting and fetching logs...</div>
-            </div>
-        </section>
-
-        <!-- SEARCH TAB -->
-        <section id="logsView" class="tab-view" style="display: none;">
-            <div class="search-wrapper">
-                <svg class="search-icon-inside" viewBox="0 0 24 24"><path d="M21 21l-4.35-4.35M19 11a8 8 0 1 1-16 0 8 8 0 0 1 16 0z" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
-                <input type="text" id="logSearch" placeholder="Search mood, foods, notes, tags..." data-i18n-placeholder="searchPlaceholder" class="search-input" autocomplete="off" autocorrect="off">
-            </div>
-
-            <!-- Dynamic AI Folders -->
-            <div id="foldersBar" class="folders-bar"></div>
-
-            <div id="allLogsContainer"></div>
-        </section>
-
-        <!-- LEVEL UP TAB -->
-        <section id="levelupView" class="tab-view" style="display: none;">
-            <div id="skillsContainer" class="skills-grid"></div>
-
-            <div class="skill-focus-section">
-                <h3 data-i18n="currentFocusSkill">Current Focus Skill</h3>
-                <select id="skillFocusSelect" class="custom-select">
-                    <option value="none" data-i18n="none">None</option>
-                    <option value="strength" data-i18n="strength">Strength</option>
-                    <option value="endurance" data-i18n="endurance">Endurance</option>
-                    <option value="intelligence" data-i18n="intelligence">Intelligence</option>
-                    <option value="charisma" data-i18n="charisma">Charisma</option>
-                    <option value="perception" data-i18n="perception">Perception</option>
-                    <option value="wellbeing" data-i18n="wellbeing">Wellbeing</option>
-                </select>
-                <div id="dailyTaskContainer" data-i18n="dailyQuests">Daily quests coming soon... 👀</div>
-            </div>
-        </section>
-
+        </div>
     </main>
 
     <script>
@@ -1402,6 +1464,7 @@
     let slider = null;
     let panelRange = 'week';
     let sliderUpdateRAF = null;
+    let currentTabIndex = 0;
 
     // --- Search Folder State ---
     const FOLDER_META = {
@@ -1448,7 +1511,7 @@
             connecting: 'Connecting and fetching logs...', searchPlaceholder: 'Search mood, foods, notes, tags...', currentFocusSkill: 'Current Focus Skill',
             none: 'None', strength: 'Strength', endurance: 'Endurance', intelligence: 'Intelligence', charisma: 'Charisma', perception: 'Perception',
             wellbeing: 'Wellbeing', dailyQuests: 'Daily quests coming soon... 👀', analytics: 'Analytics', today: 'Today', welcomeBack: 'Your day, at a glance', homeIntro: 'Send a thought to the bot and your AI organizes it into a useful picture of your day.', writeNote: 'Write a note in Telegram', todaySnapshot: 'Today at a glance', notes: 'Notes', streak: 'Day streak', mood: 'Mood', noMood: 'No mood yet', insight: 'Something to notice', recentNote: 'Latest note', viewAnalytics: 'View analytics', quickAccess: 'Quick access', searchLogs: 'Search', progression: 'Level up', seeAll: 'See all', activeToday: 'active today', avgMood: 'avg mood', noRecentNote: 'Your latest processed note will appear here.', startLogging: 'Start by sending your next thought to the bot.', noDataHome: 'No data yet. Your first note will give this page something to work with.',
-             noActivity: 'No activity logged yet.', noneRecorded: 'None recorded',
+            noActivity: 'No activity logged yet.', noneRecorded: 'None recorded',
             clear: 'Clear', noLogsMatched: 'No logs matched this entry.', noLogsSoFar: 'No logs logged so far.', noData: 'No data', healthSection: 'Health',
             activitySection: 'Activity', dietSection: 'Diet', logHabits: 'Log habits to start gaining XP!', loadingAllLogs: 'Loading all logs...', userIdMissing: 'User ID missing.',
             unableFetch: 'Unable to fetch logs. Please try again.', couldNotLoad: 'Could not load logs', level: 'Lvl'
@@ -1462,7 +1525,7 @@
             connecting: 'در حال اتصال و دریافت گزارش‌ها...', searchPlaceholder: 'جستجوی حال روحی، غذاها، یادداشت‌ها، برچسب‌ها...', currentFocusSkill: 'مهارت مورد تمرکز',
             none: 'هیچ‌کدام', strength: 'قدرت', endurance: 'استقامت', intelligence: 'هوش', charisma: 'جذابیت اجتماعی', perception: 'ادراک',
             wellbeing: 'بهزیستی', dailyQuests: 'ماموریت‌های روزانه به‌زودی... 👀', analytics: 'تحلیل‌ها', today: 'امروز', welcomeBack: 'امروزت، در یک نگاه', homeIntro: 'یک فکر یا اتفاق را برای ربات بفرست تا هوش مصنوعی آن را به تصویری کاربردی از روزت تبدیل کند.', writeNote: 'نوشتن یادداشت در تلگرام', todaySnapshot: 'خلاصه امروز', notes: 'یادداشت', streak: 'تداوم روزانه', mood: 'حال روحی', noMood: 'هنوز ثبت نشده', insight: 'یک نکته قابل توجه', recentNote: 'آخرین یادداشت', viewAnalytics: 'مشاهده تحلیل‌ها', quickAccess: 'دسترسی سریع', searchLogs: 'جستجو', progression: 'پیشرفت', seeAll: 'مشاهده همه', activeToday: 'امروز فعال', avgMood: 'میانگین حال', noRecentNote: 'آخرین یادداشت پردازش‌شده اینجا نمایش داده می‌شود.', startLogging: 'با فرستادن یادداشت بعدی خود به ربات شروع کنید.', noDataHome: 'هنوز داده‌ای ندارید. اولین یادداشت شما این صفحه را فعال می‌کند.',
-             noActivity: 'هنوز فعالیتی ثبت نشده است.', noneRecorded: 'موردی ثبت نشده است',
+            noActivity: 'هنوز فعالیتی ثبت نشده است.', noneRecorded: 'موردی ثبت نشده است',
             clear: 'پاک کردن', noLogsMatched: 'گزارشی مطابق این مورد پیدا نشد.', noLogsSoFar: 'هنوز گزارشی ثبت نشده است.', noData: 'داده‌ای وجود ندارد', healthSection: 'سلامت',
             activitySection: 'فعالیت', dietSection: 'تغذیه', logHabits: 'برای شروع دریافت XP عادت‌ها را ثبت کنید!', loadingAllLogs: 'در حال بارگذاری همه گزارش‌ها...', userIdMissing: 'شناسه کاربر وجود ندارد.',
             unableFetch: 'دریافت گزارش‌ها ناموفق بود. لطفاً دوباره تلاش کنید.', couldNotLoad: 'بارگذاری گزارش‌ها ناموفق بود', level: 'سطح'
@@ -1506,9 +1569,19 @@
     }
 
     function updateScreenTitle() {
+        const screenTitle = document.getElementById('screenTitle');
         const active = document.querySelector('.capsule-tab-btn.active')?.id;
         const titleKey = active === 'tab-analytics' ? 'analytics' : active === 'tab-logs' ? 'searchLogs' : active === 'tab-levelup' ? 'progression' : 'home';
-        document.getElementById('screenTitle').textContent = t(titleKey);
+        
+        if (screenTitle) {
+            screenTitle.style.opacity = '0';
+            screenTitle.style.transform = 'translateY(-4px)';
+            setTimeout(() => {
+                screenTitle.textContent = t(titleKey);
+                screenTitle.style.opacity = '1';
+                screenTitle.style.transform = 'translateY(0)';
+            }, 140);
+        }
     }
 
     function updateTodayDate() {
@@ -1537,7 +1610,7 @@
         });
     }
 
-    // --- Navigation Tabs ---
+    // --- Navigation Tabs & Carousel Transition Animation ---
     function initTabs() {
         const tabs = [
             { btn: document.getElementById('tab-home'), view: document.getElementById('homeView') },
@@ -1545,27 +1618,78 @@
             { btn: document.getElementById('tab-logs'), view: document.getElementById('logsView') },
             { btn: document.getElementById('tab-levelup'), view: document.getElementById('levelupView') }
         ];
+        const track = document.getElementById('pagesTrack');
+        if (!track) return;
 
-        tabs.forEach((tab) => {
-            tab.btn.addEventListener('click', () => {
-                tabs.forEach(t => {
-                    t.btn.classList.remove('active');
-                    t.view.style.display = 'none';
-                });
-                tab.btn.classList.add('active');
-                tab.view.style.display = 'block';
-                updateScreenTitle();
+        function switchToTab(index) {
+            if (index === currentTabIndex && tabs[index].view.classList.contains('active')) return;
 
-                if (tab.view.id === 'homeView') {
-                    renderHomeDashboard();
-                } else if (tab.view.id === 'logsView') {
-                    displayAllLogs();
-                } else if (tab.view.id === 'levelupView') {
-                    calculateSkillLevels();
-                    displaySkills();
-                }
+            const prevIndex = currentTabIndex;
+            currentTabIndex = index;
+
+            const prevTab = tabs[prevIndex];
+            const nextTab = tabs[index];
+
+            // 1. Update Capsule Tab Buttons
+            tabs.forEach((t, i) => {
+                t.btn.classList.toggle('active', i === index);
             });
+
+            // 2. Animate Header Title
+            updateScreenTitle();
+
+            // 3. Mark both views as transitioning so they maintain natural dimensions
+            prevTab.view.classList.add('transitioning');
+            nextTab.view.classList.add('transitioning');
+
+            // 4. Slide track horizontally
+            track.style.transform = `translateX(-${index * 25}%)`;
+
+            // 5. Smooth scroll up to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // 6. Scale & fade transitions
+            prevTab.view.classList.remove('active');
+            nextTab.view.classList.add('active');
+
+            // 7. Render tab data if needed
+            if (nextTab.view.id === 'homeView') {
+                renderHomeDashboard();
+            } else if (nextTab.view.id === 'logsView') {
+                displayAllLogs();
+            } else if (nextTab.view.id === 'levelupView') {
+                calculateSkillLevels();
+                displaySkills();
+            } else if (nextTab.view.id === 'analyticsView') {
+                if (moodChartInstance) {
+                    requestAnimationFrame(() => {
+                        moodChartInstance.resize();
+                        moodChartInstance.update('none');
+                    });
+                }
+            }
+
+            // 8. Clean up transition classes after animation completes
+            clearTimeout(track._transitionTimer);
+            track._transitionTimer = setTimeout(() => {
+                tabs.forEach((t, i) => {
+                    t.view.classList.remove('transitioning');
+                    if (i !== currentTabIndex) {
+                        t.view.classList.remove('active');
+                    }
+                });
+                if (nextTab.view.id === 'analyticsView' && moodChartInstance) {
+                    moodChartInstance.resize();
+                }
+            }, 460);
+        }
+
+        tabs.forEach((tab, index) => {
+            tab.btn.addEventListener('click', () => switchToTab(index));
         });
+
+        // Initialize track position
+        track.style.transform = `translateX(-${currentTabIndex * 25}%)`;
     }
 
     // --- Drawer Menu ---
@@ -1748,7 +1872,6 @@
                 if (data.logs && data.logs.length > 0) {
                     allUserLogs = data.logs.map(log => {
                         const luxonDate = DateTime.fromISO(log.logged_at.replace(' ', 'T') + 'Z').setZone(DateTime.local().zoneName);
-                        // Pre-calculate search index string for O(1) searches
                         const searchPieces = [
                             log.original_note || '',
                             log.mood_label || '',
@@ -2046,7 +2169,6 @@
 
         const availableFolders = ['all', ...Object.keys(counts).filter(k => k !== 'all' && counts[k] > 0)];
 
-        // If the currently selected folder disappeared, fall back to All Notes.
         if (activeFolder !== 'all' && !availableFolders.includes(activeFolder)) {
             activeFolder = 'all';
         }
@@ -2454,6 +2576,16 @@
         document.getElementById('logSearch').addEventListener('input', (e) => {
             clearTimeout(searchTimer);
             searchTimer = setTimeout(() => filterLogs(e.target.value), 120);
+        });
+
+        window.addEventListener('resize', () => {
+            const track = document.getElementById('pagesTrack');
+            if (track) {
+                track.style.transform = `translateX(-${currentTabIndex * 25}%)`;
+            }
+            if (moodChartInstance) {
+                moodChartInstance.resize();
+            }
         });
 
         if (tg) {
