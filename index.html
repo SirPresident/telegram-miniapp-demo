@@ -176,7 +176,7 @@
         }
 
         /* =========================================
-           TOP DOG & SEARCH
+           TOP DOG & SEARCH HEADER
            ========================================= */
         .assistant-wrapper { position: relative; display: flex; align-items: center; z-index: 10; }
         .dog-avatar { width: 44px; height: 44px; cursor: pointer; transition: var(--transition-bounce); filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); object-fit: contain; }
@@ -187,8 +187,7 @@
         .search-wrapper { 
             display: flex; align-items: center; background: rgba(255, 255, 255, 0.2); border: 1px solid var(--glass-border); 
             border-radius: 30px; padding: 6px; cursor: pointer; transition: var(--transition-smooth); width: 44px; height: 44px; 
-            max-width: 280px; /* Keeps the clamp permanent so it can't balloon on close */
-            overflow: hidden; margin-left: auto; 
+            max-width: 280px; overflow: hidden; margin-left: auto; 
         }
         .search-wrapper:hover { background: rgba(255, 255, 255, 0.3); }
         .search-wrapper.active { 
@@ -200,6 +199,37 @@
         .search-input { background: transparent; border: none; outline: none; color: var(--text-color); font-size: 15px; width: 100%; padding-left: 8px; opacity: 0; transform: translateX(10px); transition: var(--transition-smooth); }
         .search-input::placeholder { color: rgba(51, 51, 51, 0.6); }
         .search-wrapper.active .search-input { opacity: 1; transform: translateX(0); transition-delay: 0.1s; }
+
+        /* =========================================
+           SEARCH TAB / FOLDERS / ACCORDION UI
+           ========================================= */
+        .folders-bar {
+            display: flex; gap: 8px; overflow-x: auto; width: 100%; padding-bottom: 8px;
+            scrollbar-width: none; /* Firefox */
+        }
+        .folders-bar::-webkit-scrollbar { display: none; /* Safari/Chrome */ }
+
+        .folder-chip {
+            background: rgba(255, 255, 255, 0.3); border: 1px solid var(--glass-border);
+            border-radius: 20px; padding: 6px 12px; display: flex; align-items: center; gap: 6px;
+            cursor: pointer; white-space: nowrap; transition: var(--transition-smooth);
+            color: var(--text-color); font-size: 0.85rem; font-family: inherit;
+        }
+        .folder-chip:hover { background: rgba(255, 255, 255, 0.45); }
+        .folder-chip.active { background: var(--accent-soft); font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+
+        .log-group { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+        .log-date-header {
+            background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            border: 1px solid var(--glass-border); border-radius: 12px; padding: 10px 16px;
+            display: flex; justify-content: space-between; align-items: center; cursor: pointer;
+            font-weight: 600; color: var(--text-color); transition: var(--transition-smooth);
+        }
+        .log-date-header:hover { background: rgba(255, 255, 255, 0.35); }
+        .log-date-header::after { content: '▼'; font-size: 0.7rem; transition: transform 0.3s ease; opacity: 0.6; margin-left: 8px; }
+        .log-date-header.expanded::after { transform: rotate(180deg); }
+        .header-content { display: flex; align-items: center; gap: 8px; }
+        .logs-count { background: rgba(0,0,0,0.1); padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: 500; }
 
         /* =========================================
            QUESTS NESTED TABS UI
@@ -297,12 +327,25 @@
                         <img src="assets/Leo/Leo.png" alt="Assistant Dog" class="dog-avatar" onerror="this.src='https://cdn-icons-png.flaticon.com/512/616/616408.png'">
                         <div class="speech-bubble">Coming soon!</div>
                     </div>
+                    <!-- Unified Search Wrapper inside the Header -->
                     <div class="search-wrapper" id="searchWrapper">
-                        <div class="search-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></div>
-                        <input type="text" class="search-input" placeholder="Search keywords..." id="searchInput">
+                        <div class="search-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        </div>
+                        <input type="text" class="search-input" id="logSearch" placeholder="Search mood, foods, notes, tags..." autocomplete="off" autocorrect="off">
                     </div>
                 </header>
-                <main class="page-content"><div class="blank-text">Search results will appear here.</div></main>
+                <main class="page-content">
+                    <section id="logsView" class="tab-view">
+                        <!-- Dynamic Folder Category Chips -->
+                        <div id="foldersBar" class="folders-bar"></div>
+                        
+                        <!-- Grouped Accordion Logs Container -->
+                        <div id="allLogsContainer" class="log-entries" style="gap: 16px;">
+                            <!-- Handled via JS -->
+                        </div>
+                    </section>
+                </main>
             </div>
         </div>
 
@@ -399,15 +442,42 @@
         window.currentTabIndex = 0;
 
         // ==========================================
-        // BACKEND FETCH PIPELINE
+        // BACKEND FETCH PIPELINE & INDEX PREPARATION
         // ==========================================
         const DateTime = luxon.DateTime;
         const BACKEND_URL_BASE = 'https://idol-figured-organ-autos.trycloudflare.com';
         let telegramUser = null;
         let allUserLogs = [];
         let weekSegments = [];
+        let activeFolder = 'all'; // State for active search folder
         let idx = 0;
         let isDataLoaded = false; 
+
+        // Prepares searchable text for every log record
+        function prepareLogSearchIndex(log, luxonDate) {
+            const skillsGained = log.skills_xp_gained || {};
+            const searchPieces = [
+                log.original_note || '',
+                log.mood_label || '',
+                ...(log.health || []),
+                ...(log.activity || []),
+                ...(log.categories || []),
+                ...Object.keys(skillsGained) // Allows querying by skill name
+            ];
+
+            if (log.diet) {
+                Object.entries(log.diet).forEach(([cat, items]) => {
+                    searchPieces.push(cat, ...(items || []));
+                });
+            }
+
+            return {
+                ...log,
+                luxon_logged_at: luxonDate,
+                _searchText: searchPieces.join(' ').toLowerCase(),
+                skills_xp_gained: skillsGained
+            };
+        }
 
         function splitLogsToWeeks(logs) {
             if (!logs.length) return [];
@@ -454,25 +524,7 @@
                         allUserLogs = data.logs.map(log => {
                             const luxonDate = DateTime.fromISO(log.logged_at.replace(' ', 'T') + 'Z')
                                 .setZone(DateTime.local().zoneName);
-                            
-                            const skillsGained = log.skills_xp_gained || {};
-                            const searchPieces = [
-                                log.original_note || '', log.mood_label || '',
-                                ...(log.health || []), ...(log.activity || []),
-                                ...(log.categories || []), ...Object.keys(skillsGained)
-                            ];
-                            if (log.diet) {
-                                Object.entries(log.diet).forEach(([cat, items]) => {
-                                    searchPieces.push(cat, ...(items || []));
-                                });
-                            }
-
-                            return {
-                                ...log,
-                                luxon_logged_at: luxonDate,
-                                _searchText: searchPieces.join(' ').toLowerCase(),
-                                skills_xp_gained: skillsGained
-                            };
+                            return prepareLogSearchIndex(log, luxonDate);
                         });
 
                         allUserLogs.sort((a, b) => a.luxon_logged_at - b.luxon_logged_at);
@@ -481,6 +533,9 @@
                         
                         isDataLoaded = true;
                         
+                        // Populate logs into Search Tab layout
+                        displayAllLogs();
+
                         // Render immediately if user is already sitting on Analytics tab
                         if (window.currentTabIndex === 1) {
                             setupChartAndSlider();
@@ -488,6 +543,7 @@
 
                     } else {
                         document.getElementById('logsContainer').innerHTML = `<p class="empty-placeholder">${escapeHtml(t('noActivity'))}</p>`;
+                        displayAllLogs(); // Renders the empty state in search view
                     }
                 } else {
                     loadingDiv.innerText = `${t('couldNotLoad')} (${response.status})`;
@@ -584,18 +640,18 @@
                         backgroundColor: makeGradient(ctx),
                         borderColor: '#333', 
                         borderWidth: 2.5, 
-                        pointRadius: 5,            // Enlarged so points are easily visible
+                        pointRadius: 5,
                         pointHoverRadius: 7, 
-                        pointBorderColor: '#fff',  // White crisp ring around points
+                        pointBorderColor: '#fff',
                         pointBorderWidth: 1.5,
                         tension: 0.32,
-                        spanGaps: true             // Span over missing/null days cleanly
+                        spanGaps: true
                     }]
                 },
                 options: {
                     responsive: true, 
                     maintainAspectRatio: false,
-                    animation: false, // Prevents points from getting stuck mid-transition
+                    animation: false,
                     scales: {
                         x: { 
                             type: 'time', 
@@ -692,7 +748,7 @@
             document.getElementById('nextWeekBtn').disabled = (idx === weekSegments.length - 1);
             
             updatePanels(idx);
-            moodChartInstance.update('none'); // Instant paint prevents visual drop
+            moodChartInstance.update('none'); 
         }
 
         function updatePanels(weekIdx) {
@@ -747,45 +803,8 @@
         document.getElementById('panelRangeSelect').addEventListener('change', (e) => { panelRange = e.target.value; updatePanels(idx); });
 
         // ==========================================
-        // ORIGINAL NOTE DRILL-DOWN LOGIC
+        // UI ENTRY CREATION LOGIC (Shared)
         // ==========================================
-        function showRelevantLogs(itemText, itemType, logs) {
-            const matched = logs.filter(log => {
-                if (itemType === 'diet') {
-                    return log.diet && Object.entries(log.diet).some(([cat, arr]) =>
-                        arr && arr.some(item => `${cat}: ${item}` === itemText)
-                    );
-                }
-                return log[itemType] && log[itemType].includes(itemText);
-            });
-
-            const container = document.getElementById('logsContainer');
-            container.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; margin-top: 15px;">
-                    <h3 style="font-size: 1rem; font-weight: 700; color: var(--text-color);">${escapeHtml(itemText)}</h3>
-                    <button id="closeDetailLogs" class="nav-btn" style="padding: 3px 8px; font-size:0.75rem;">${escapeHtml(t('clear'))}</button>
-                </div>
-            `;
-
-            document.getElementById('closeDetailLogs').addEventListener('click', () => {
-                container.innerHTML = '';
-            });
-
-            displayLogEntries(matched, container);
-            container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
-
-        function displayLogEntries(logsToDisplay, container) {
-            if (!logsToDisplay || !logsToDisplay.length) {
-                container.innerHTML += `<div class="empty-placeholder">${escapeHtml(t('noLogsMatched'))}</div>`;
-                return;
-            }
-            const entriesWrap = document.createElement('div');
-            entriesWrap.className = 'log-entries';
-            entriesWrap.innerHTML = logsToDisplay.slice().reverse().map(createLogEntryHtml).join('');
-            container.appendChild(entriesWrap);
-        }
-
         function createLogEntryHtml(log) {
             const cats = Array.isArray(log.categories) && log.categories.length ? log.categories : ['personal'];
             const catBadges = cats.map(c => {
@@ -827,17 +846,205 @@
         }
 
         // ==========================================
+        // ANALYTICS DRILL-DOWN MODAL LOGIC
+        // ==========================================
+        function showRelevantLogs(itemText, itemType, logs) {
+            const matched = logs.filter(log => {
+                if (itemType === 'diet') {
+                    return log.diet && Object.entries(log.diet).some(([cat, arr]) =>
+                        arr && arr.some(item => `${cat}: ${item}` === itemText)
+                    );
+                }
+                return log[itemType] && log[itemType].includes(itemText);
+            });
+
+            const container = document.getElementById('logsContainer');
+            container.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; margin-top: 15px;">
+                    <h3 style="font-size: 1rem; font-weight: 700; color: var(--text-color);">${escapeHtml(itemText)}</h3>
+                    <button id="closeDetailLogs" class="nav-btn" style="padding: 3px 8px; font-size:0.75rem;">${escapeHtml(t('clear'))}</button>
+                </div>
+            `;
+
+            document.getElementById('closeDetailLogs').addEventListener('click', () => {
+                container.innerHTML = '';
+            });
+
+            if (!matched || !matched.length) {
+                container.innerHTML += `<div class="empty-placeholder">${escapeHtml(t('noLogsMatched'))}</div>`;
+                return;
+            }
+            const entriesWrap = document.createElement('div');
+            entriesWrap.className = 'log-entries';
+            entriesWrap.innerHTML = matched.slice().reverse().map(createLogEntryHtml).join('');
+            container.appendChild(entriesWrap);
+            container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+
+        // ==========================================
+        // MAIN SEARCH TAB LOGIC (Folders, Accordions, Search)
+        // ==========================================
+        function renderFolderChips() {
+            const bar = document.getElementById('foldersBar');
+            if (!bar) return;
+
+            // Count occurrences per folder category
+            const counts = { all: allUserLogs.length };
+            allUserLogs.forEach(log => {
+                const cats = Array.isArray(log.categories) && log.categories.length ? log.categories : ['personal'];
+                cats.forEach(c => {
+                    counts[c] = (counts[c] || 0) + 1;
+                });
+            });
+
+            const availableFolders = ['all', ...Object.keys(counts).filter(k => k !== 'all' && counts[k] > 0)];
+
+            if (activeFolder !== 'all' && !availableFolders.includes(activeFolder)) {
+                activeFolder = 'all';
+            }
+
+            bar.innerHTML = availableFolders.map(folderKey => {
+                const meta = FOLDER_META[folderKey] || {
+                    label: String(folderKey).charAt(0).toUpperCase() + String(folderKey).slice(1),
+                    icon: '📁'
+                };
+                const isActive = folderKey === activeFolder;
+                return `
+                    <button class="folder-chip ${isActive ? 'active' : ''}" data-folder="${escapeHtml(folderKey)}" type="button">
+                        <span>${meta.icon} ${escapeHtml(meta.label)}</span>
+                        <span class="folder-chip-count">${counts[folderKey] || 0}</span>
+                    </button>
+                `;
+            }).join('');
+
+            // Folder selection triggers search filtering
+            bar.querySelectorAll('.folder-chip').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    activeFolder = btn.dataset.folder;
+                    bar.querySelectorAll('.folder-chip').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    filterLogs(document.getElementById('logSearch')?.value || '');
+                });
+            });
+        }
+
+        function displayAllLogs() {
+            const container = document.getElementById('allLogsContainer');
+            if (!allUserLogs || !allUserLogs.length) {
+                container.innerHTML = `<div class="empty-placeholder">No logs recorded so far.</div>`;
+                renderFolderChips();
+                return;
+            }
+
+            // Group logs by YYYY-MM-DD
+            const grouped = new Map();
+            allUserLogs.forEach(log => {
+                const dateKey = log.luxon_logged_at.toISODate();
+                if (!grouped.has(dateKey)) grouped.set(dateKey, []);
+                grouped.get(dateKey).push(log);
+            });
+
+            // Sort dates in reverse chronological order
+            const sortedDates = Array.from(grouped.keys()).sort().reverse();
+
+            container.innerHTML = sortedDates.map(date => {
+                const logs = grouped.get(date);
+                return `
+                    <div class="log-group" data-date="${date}">
+                        <div class="log-date-header">
+                            <div class="header-content">
+                                <span>${DateTime.fromISO(date).toFormat('LLLL d, yyyy')}</span>
+                            </div>
+                            <span class="logs-count">${logs.length}</span>
+                        </div>
+                        <div class="log-entries" style="display:none; margin-top: 4px;">
+                            ${logs.map(createLogEntryHtml).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Accordion toggle behavior
+            container.querySelectorAll('.log-date-header').forEach(header => {
+                header.addEventListener('click', () => {
+                    const entries = header.nextElementSibling;
+                    const isOpen = entries.style.display !== 'none';
+                    entries.style.display = isOpen ? 'none' : 'flex';
+                    header.classList.toggle('expanded', !isOpen);
+                });
+            });
+
+            renderFolderChips();
+        }
+
+        function filterLogs(query) {
+            const term = (query || '').trim().toLowerCase();
+            const groups = document.querySelectorAll('.log-group');
+
+            groups.forEach(group => {
+                const dateStr = group.dataset.date;
+                const entriesContainer = group.querySelector('.log-entries');
+                const entries = entriesContainer.querySelectorAll('.log-entry');
+                let anyMatched = false;
+
+                const dateLogs = allUserLogs.filter(l => l.luxon_logged_at.toISODate() === dateStr);
+
+                entries.forEach((entryEl, i) => {
+                    const log = dateLogs[i];
+                    if (!log) return;
+
+                    const categories = Array.isArray(log.categories) && log.categories.length
+                        ? log.categories
+                        : ['personal'];
+
+                    const matchesFolder = activeFolder === 'all' || categories.includes(activeFolder);
+                    const matchesQuery = !term || log._searchText.includes(term);
+                    const isVisible = matchesFolder && matchesQuery;
+
+                    entryEl.style.display = isVisible ? 'flex' : 'none';
+                    if (isVisible) anyMatched = true;
+                });
+
+                // Hide or show the whole date group
+                group.style.display = anyMatched ? 'block' : 'none';
+                const header = group.querySelector('.log-date-header');
+
+                // Automatically expand headers if searching or filtering by folder
+                if ((term || activeFolder !== 'all') && anyMatched) {
+                    entriesContainer.style.display = 'flex';
+                    header.classList.add('expanded');
+                } else if (!term && activeFolder === 'all') {
+                    entriesContainer.style.display = 'none';
+                    header.classList.remove('expanded');
+                }
+            });
+        }
+
+
+        // ==========================================
         // UI INTERACTIONS & NAV LOGIC
         // ==========================================
         
-        // Dog & Search (Search Tab Header)
+        // Dog & Main Search Input Listeners (Search Tab Header)
         const dogWrapper = document.getElementById('dogWrapper');
         const searchWrapper = document.getElementById('searchWrapper');
-        const searchInput = document.getElementById('searchInput');
+        const searchInput = document.getElementById('logSearch');
+        let searchTimer = null;
 
+        // Dog / Top Header Animation triggers
         dogWrapper.addEventListener('click', (e) => { e.stopPropagation(); dogWrapper.classList.toggle('active'); searchWrapper.classList.remove('active'); });
         searchWrapper.addEventListener('click', (e) => { e.stopPropagation(); if (!searchWrapper.classList.contains('active')) { searchWrapper.classList.add('active'); searchInput.focus(); } dogWrapper.classList.remove('active'); });
         document.addEventListener('click', (e) => { if (!dogWrapper.contains(e.target)) dogWrapper.classList.remove('active'); if (!searchWrapper.contains(e.target)) { searchWrapper.classList.remove('active'); searchInput.blur(); } });
+
+        // Real-Time Search Debounce Trigger
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(searchTimer);
+            // 120ms debounce to avoid UI lockups while typing
+            searchTimer = setTimeout(() => {
+                filterLogs(e.target.value);
+            }, 120);
+        });
 
         // Quests Segmented Controls
         document.querySelectorAll('#quest-status-tabs .q-tab').forEach(btn => btn.addEventListener('click', (e) => { document.querySelectorAll('#quest-status-tabs .q-tab').forEach(b => b.classList.remove('active')); e.target.classList.add('active'); }));
@@ -847,11 +1054,11 @@
         function initTabs() {
             const tabs = [
                 { btn: document.getElementById('tab-home') },
-                { btn: document.getElementById('tab-analytics') }, // Index 1
+                { btn: document.getElementById('tab-analytics') }, 
                 { btn: document.getElementById('tab-logs') },      // Index 2 (Search)
                 { btn: document.getElementById('tab-quests') },
                 { btn: document.getElementById('tab-levelup') },
-                { btn: document.getElementById('tab-profile') }    // Index 5 (Profile)
+                { btn: document.getElementById('tab-profile') }    
             ];
 
             const slides = document.querySelectorAll('.slide');
@@ -891,7 +1098,6 @@
                     if (progress < 1) {
                         requestAnimationFrame(step);
                     } else {
-                        // Animation complete: return slides to flat standard space
                         oldSlide.style.display = 'none';
                         oldSlide.style.transform = ''; oldSlide.style.filter = '';
                         newSlide.style.transform = `translateZ(0) rotateY(0) translateZ(0)`; newSlide.style.filter = '';
@@ -899,11 +1105,8 @@
                         window.currentTabIndex = newIndex;
                         isAnimating = false;
 
-                        // FIX: Only render/resize the chart AFTER the card is completely flat and static
                         if (newIndex === 1 && isDataLoaded) {
-                            requestAnimationFrame(() => {
-                                setupChartAndSlider();
-                            });
+                            requestAnimationFrame(() => { setupChartAndSlider(); });
                         }
                     }
                 }
