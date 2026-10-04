@@ -69,13 +69,20 @@
            ========================================= */
         .tab-view { width: 100%; display: flex; flex-direction: column; gap: 20px; }
         .chart-card { background: rgba(255, 255, 255, 0.2); border: 1px solid var(--glass-border); border-radius: 20px; padding: 16px; width: 100%; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .chart-inner { display: flex; gap: 16px; height: 220px; align-items: stretch; margin-bottom: 15px; }
-        .chart-wrap { flex: 1; position: relative; min-width: 0; }
         
-        #slider { background: rgba(0,0,0,0.1); border: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); width: 8px; }
+        /* Flex constraints fixed so syncHeight JS plugin can calculate slider height properly */
+        .chart-inner { display: flex; gap: 16px; height: 220px; align-items: flex-start; margin-bottom: 15px; }
+        .chart-wrap { flex: 1; height: 100%; position: relative; min-width: 0; }
+        
+        /* Fixed Slider CSS */
+        #slider { 
+            align-self: flex-start; /* Stop flexbox from stretching the track */
+            background: rgba(0,0,0,0.1); border: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); 
+            width: 8px; touch-action: none; /* Required for dragging on mobile */
+        }
         .noUi-connect { background: #10b981; opacity: 0.8; }
         .noUi-handle { background: rgba(255, 255, 255, 0.9); border: 1px solid #ddd; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.15); cursor: pointer; }
-        .noUi-vertical .noUi-handle { width: 24px; height: 24px; right: -8px; top: -12px; }
+        .noUi-vertical .noUi-handle { width: 24px; height: 24px; right: -8px; }
         .noUi-handle::before, .noUi-handle::after { display: none; }
 
         .segment-control { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 12px; }
@@ -157,6 +164,7 @@
                     <section id="analyticsView" class="tab-view">
                         <div class="chart-card">
                             <div class="chart-inner">
+                                <!-- Vertical Range Slider -->
                                 <div id="slider" title="Filter mood range" data-i18n-title="filterMoodRange"></div>
                                 <div class="chart-wrap"><canvas id="moodScoreChart"></canvas></div>
                             </div>
@@ -254,7 +262,7 @@
 
     <script>
         // ==========================================
-        // STUBS & UTILS (To prevent crashes)
+        // STUBS & UTILS
         // ==========================================
         const currentLanguage = 'en';
         const t = (key) => {
@@ -270,9 +278,7 @@
             return translations[key] || key;
         };
         const escapeHtml = (str) => String(str).replace(/[&<>'"]/g, match => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[match]));
-        const showRelevantLogs = (item, type, logs) => console.log(`Filter applied: ${item}`, logs);
-
-        // Define global state for current active tab (2 = Search initially)
+        
         window.currentTabIndex = 2;
 
         // ==========================================
@@ -286,7 +292,6 @@
         let idx = 0;
         let isDataLoaded = false; 
 
-        // Group logs into distinct Monday-to-Sunday weekly segments
         function splitLogsToWeeks(logs) {
             if (!logs.length) return [];
             const weeks = [];
@@ -306,7 +311,6 @@
             return weeks;
         }
 
-        // Main data fetching function
         async function fetchAllLogsAndSetupChart() {
             const loadingDiv = document.getElementById('loadingMessage');
             loadingDiv.innerText = t('loadingAllLogs');
@@ -336,12 +340,9 @@
                             
                             const skillsGained = log.skills_xp_gained || {};
                             const searchPieces = [
-                                log.original_note || '',
-                                log.mood_label || '',
-                                ...(log.health || []),
-                                ...(log.activity || []),
-                                ...(log.categories || []),
-                                ...Object.keys(skillsGained)
+                                log.original_note || '', log.mood_label || '',
+                                ...(log.health || []), ...(log.activity || []),
+                                ...(log.categories || []), ...Object.keys(skillsGained)
                             ];
                             if (log.diet) {
                                 Object.entries(log.diet).forEach(([cat, items]) => {
@@ -362,8 +363,8 @@
                         idx = weekSegments.length - 1;
                         
                         isDataLoaded = true;
-
-                        // If user is ALREADY looking at Analytics Tab (Tab index 1), render immediately
+                        
+                        // Render immediately if user is already on Analytics tab
                         if (window.currentTabIndex === 1) {
                             setupChartAndSlider();
                         }
@@ -380,13 +381,9 @@
             }
         }
 
-        // Telegram WebApp initialization and trigger
         document.addEventListener('DOMContentLoaded', () => {
             const tg = window.Telegram?.WebApp;
-            if (tg) {
-                tg.ready();
-                tg.expand();
-            }
+            if (tg) { tg.ready(); tg.expand(); }
 
             if (tg?.initDataUnsafe?.user?.id) {
                 telegramUser = tg.initDataUnsafe.user;
@@ -401,7 +398,7 @@
         });
 
         // ==========================================
-        // ANALYTICS CHART & SLIDER RENDER LOGIC
+        // ANALYTICS CHART & SLIDER LOGIC
         // ==========================================
         let moodChartInstance = null;
         let slider = null;
@@ -419,8 +416,8 @@
 
         function setupChartAndSlider() {
             if(chartInitialized) {
-                // If returning to tab, ensure chart fits its container properly
                 if(moodChartInstance) moodChartInstance.resize(); 
+                updateView();
                 return;
             }
             
@@ -446,6 +443,7 @@
                 id: 'syncHeight',
                 afterLayout(c) {
                     const sliderElem = document.getElementById('slider');
+                    if(!sliderElem) return;
                     const y = c.scales.y;
                     const top = y.getPixelForValue(c.options.scales.y.max);
                     const bot = y.getPixelForValue(c.options.scales.y.min);
@@ -458,8 +456,7 @@
                 type: 'line',
                 data: {
                     datasets: [{
-                        label: 'Mood', data: [], fill: true,
-                        backgroundColor: makeGradient(ctx),
+                        label: 'Mood', data: [], fill: true, backgroundColor: makeGradient(ctx),
                         borderColor: '#333', borderWidth: 2.5, pointRadius: 4, pointHoverRadius: 6, tension: 0.32
                     }]
                 },
@@ -475,8 +472,18 @@
                 plugins: [syncHeight, thresholdPlugin]
             });
 
+            // Initialize noUiSlider identical to original configuration
             slider = document.getElementById('slider');
-            noUiSlider.create(slider, { start: [1, 5], connect: true, orientation: 'vertical', direction: 'rtl', range: { min: 1, max: 5 }, step: 0.1 });
+            if (slider.noUiSlider) slider.noUiSlider.destroy();
+            noUiSlider.create(slider, {
+                start: [1, 5],
+                connect: true,
+                orientation: 'vertical',
+                direction: 'rtl',
+                range: { min: 1, max: 5 },
+                step: 0.1,
+                tooltips: [false, false]
+            });
 
             slider.noUiSlider.on('update', ([min, max]) => {
                 min = +min; max = +max;
@@ -484,6 +491,7 @@
                 moodChartInstance.options.thresholds.max = max;
                 
                 const weekData = getWeekMoodData(idx);
+                // Map the point colors dynamically based on drag
                 moodChartInstance.data.datasets[0].pointBackgroundColor = weekData.map(pt => (pt.y >= min && pt.y <= max) ? '#10b981' : '#333');
                 moodChartInstance.update('none');
 
@@ -512,8 +520,15 @@
         function updateView() {
             if(!moodChartInstance) return;
             const weekData = getWeekMoodData(idx);
+            
             moodChartInstance.data.datasets[0].data = weekData;
             moodChartInstance.data.datasets[0].backgroundColor = makeGradient(moodChartInstance.ctx);
+
+            // Fetch current slider state to color the dots correctly upon data refresh
+            if (slider && slider.noUiSlider) {
+                const [min, max] = slider.noUiSlider.get().map(Number);
+                moodChartInstance.data.datasets[0].pointBackgroundColor = weekData.map(pt => (pt.y >= min && pt.y <= max) ? '#10b981' : '#333');
+            }
 
             const currentWeekSegment = weekSegments[idx];
             if (currentWeekSegment && currentWeekSegment.length > 0) {
@@ -528,6 +543,7 @@
 
             document.getElementById('prevWeekBtn').disabled = (idx === 0);
             document.getElementById('nextWeekBtn').disabled = (idx === weekSegments.length - 1);
+            
             updatePanels(idx);
             moodChartInstance.update();
         }
