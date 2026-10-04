@@ -1260,14 +1260,29 @@
 
     let activeFolder = 'all';
 
-    const SKILLS_CONFIG = {
-        strength:     { icon: '💪', baseXP: 100, exponent: 1.5, currentXP: 0, currentLevel: 0 },
-        endurance:    { icon: '🏃', baseXP: 100, exponent: 1.5, currentXP: 0, currentLevel: 0 },
-        intelligence: { icon: '🧠', baseXP: 120, exponent: 1.6, currentXP: 0, currentLevel: 0 },
-        charisma:     { icon: '🗣️', baseXP: 100, exponent: 1.5, currentXP: 0, currentLevel: 0 },
-        perception:   { icon: '👁️', baseXP: 110, exponent: 1.55, currentXP: 0, currentLevel: 0 },
-        wellbeing:    { icon: '🧘', baseXP: 80,  exponent: 1.4, currentXP: 0, currentLevel: 0 }
-    };
+// Known icons; any unknown skill automatically gets '✨'
+const KNOWN_SKILL_ICONS = {
+    strength: '💪',
+    endurance: '🏃',
+    intelligence: '🧠',
+    charisma: '🗣️',
+    perception: '👁️',
+    wellbeing: '🧘',
+    art: '🎨',
+    luck: '🍀',
+    cooking: '🍳',
+    coding: '💻',
+    music: '🎵',
+    gaming: '🎮',
+    reading: '📚'
+};
+
+function getSkillIcon(skillName) {
+    return KNOWN_SKILL_ICONS[skillName.toLowerCase()] || '✨';
+}
+
+// Holds dynamically aggregated skills from logs
+let userSkills = {};
 
     // --- Dynamic Character Avatar (Leo) Configuration ---
     function getCharacterAvatarSrc() {
@@ -1656,29 +1671,29 @@
                 if (data.logs && data.logs.length > 0) {
                     allUserLogs = data.logs.map(log => {
                         const luxonDate = DateTime.fromISO(log.logged_at.replace(' ', 'T') + 'Z').setZone(DateTime.local().zoneName);
+                        
+                        // Dynamic skills dictionary from backend
+                        const skillsGained = log.skills_xp_gained || {};
+                    
                         const searchPieces = [
                             log.original_note || '',
                             log.mood_label || '',
                             ...(log.health || []),
                             ...(log.activity || []),
-                            ...(log.categories || [])
+                            ...(log.categories || []),
+                            ...Object.keys(skillsGained) // Allow searching by skill name!
                         ];
                         if (log.diet) {
                             Object.entries(log.diet).forEach(([cat, items]) => {
                                 searchPieces.push(cat, ...(items || []));
                             });
                         }
-
+                    
                         return {
                             ...log,
                             luxon_logged_at: luxonDate,
                             _searchText: searchPieces.join(' ').toLowerCase(),
-                            strength_xp_gained: log.strength_xp_gained || 0,
-                            endurance_xp_gained: log.endurance_xp_gained || 0,
-                            intelligence_xp_gained: log.intelligence_xp_gained || 0,
-                            charisma_xp_gained: log.charisma_xp_gained || 0,
-                            perception_xp_gained: log.perception_xp_gained || 0,
-                            wellbeing_xp_gained: log.wellbeing_xp_gained || 0
+                            skills_xp_gained: skillsGained
                         };
                     });
 
@@ -2087,83 +2102,109 @@
     }
 
     // --- Skills Computation ---
-    function getXPForLevel(level, baseXP, exponent) {
-        if (level <= 0) return 0;
-        let total = 0;
-        for (let i = 1; i <= level; i++) {
-            total += Math.floor(baseXP * Math.pow(i, exponent - 1));
-        }
-        return total;
+function getSkillProgress(totalXP) {
+    if (totalXP <= 0) {
+        return { level: 0, xpInCurrentLevel: 0, xpNeededForNext: 25, progressPercent: 0 };
     }
 
-    function calculateSkillLevels() {
-        Object.keys(SKILLS_CONFIG).forEach(skill => {
-            SKILLS_CONFIG[skill].currentXP = 0;
-            SKILLS_CONFIG[skill].currentLevel = 0;
-        });
+    let level = 1;
+    let remainingXP = totalXP;
 
-        allUserLogs.forEach(log => {
-            Object.keys(SKILLS_CONFIG).forEach(skill => {
-                const xp = log[`${skill}_xp_gained`];
-                if (xp && typeof xp === 'number') {
-                    SKILLS_CONFIG[skill].currentXP += xp;
-                }
-            });
-        });
-
-        Object.keys(SKILLS_CONFIG).forEach(skill => {
-            const cfg = SKILLS_CONFIG[skill];
-            let level = 0;
-            let remaining = cfg.currentXP;
-            let needed = 0;
-
-            while (true) {
-                needed = getXPForLevel(level + 1, cfg.baseXP, cfg.exponent) - getXPForLevel(level, cfg.baseXP, cfg.exponent);
-                if (remaining >= needed && needed > 0) {
-                    remaining -= needed;
-                    level++;
-                } else {
-                    break;
-                }
-            }
-            cfg.currentLevel = level;
-            cfg.xpTowardsNext = remaining;
-            cfg.xpNeeded = needed;
-        });
-    }
-
-    function displaySkills() {
-        const container = document.getElementById('skillsContainer');
-        container.innerHTML = '';
-        let count = 0;
-
-        Object.entries(SKILLS_CONFIG).forEach(([skillName, cfg]) => {
-            if (cfg.currentXP > 0) {
-                count++;
-                const progress = cfg.xpNeeded > 0 ? Math.min(100, (cfg.xpTowardsNext / cfg.xpNeeded) * 100) : 0;
-                const card = document.createElement('div');
-                card.className = 'skill-item';
-                card.innerHTML = `
-                    <div class="skill-header">
-                        <div class="skill-title-group">
-                            <span class="skill-icon">${cfg.icon}</span>
-                            <span class="skill-name">${escapeHtml(t(skillName))}</span>
-                        </div>
-                        <span class="skill-level">${escapeHtml(t('level'))} ${cfg.currentLevel}</span>
-                    </div>
-                    <div class="progress-bar-container">
-                        <div class="progress-bar" style="width: ${progress}%;"></div>
-                    </div>
-                    <div class="skill-xp-info">${cfg.xpTowardsNext}/${cfg.xpNeeded} XP</div>
-                `;
-                container.appendChild(card);
-            }
-        });
-
-        if (!count) {
-            container.innerHTML = `<div class="empty-placeholder" style="grid-column: 1 / -1;">${escapeHtml(t('logHabits'))}</div>`;
+    while (true) {
+        // Your new formula: 25 * (L - 1) + 25 = 25 * L
+        const costToNext = 25 * level;
+        if (remainingXP >= costToNext) {
+            remainingXP -= costToNext;
+            level++;
+        } else {
+            return {
+                level: level,
+                xpInCurrentLevel: remainingXP,
+                xpNeededForNext: costToNext,
+                progressPercent: Math.min(100, Math.round((remainingXP / costToNext) * 100))
+            };
         }
     }
+}
+
+function calculateSkillLevels() {
+    userSkills = {};
+
+    // 1. Accumulate XP dynamically for ANY skill present in logs
+    allUserLogs.forEach(log => {
+        const skills = log.skills_xp_gained || {};
+        Object.entries(skills).forEach(([skillName, xp]) => {
+            const cleanName = skillName.toLowerCase().trim();
+            if (!userSkills[cleanName]) {
+                userSkills[cleanName] = { totalXP: 0 };
+            }
+            userSkills[cleanName].totalXP += Number(xp) || 0;
+        });
+    });
+
+    // 2. Compute current level and progress bar percentage
+    Object.keys(userSkills).forEach(skillName => {
+        const progress = getSkillProgress(userSkills[skillName].totalXP);
+        userSkills[skillName] = {
+            ...userSkills[skillName],
+            ...progress,
+            icon: getSkillIcon(skillName),
+            displayName: skillName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+        };
+    });
+
+    // Update the Focus Dropdown with unlocked skills
+    updateSkillFocusOptions();
+}
+
+function displaySkills() {
+    const container = document.getElementById('skillsContainer');
+    container.innerHTML = '';
+    const skillEntries = Object.entries(userSkills);
+
+    if (!skillEntries.length) {
+        container.innerHTML = `<div class="empty-placeholder" style="grid-column: 1 / -1;">${escapeHtml(t('logHabits'))}</div>`;
+        return;
+    }
+
+    // Sort by level descending
+    skillEntries.sort((a, b) => b[1].totalXP - a[1].totalXP);
+
+    skillEntries.forEach(([skillName, data]) => {
+        const card = document.createElement('div');
+        card.className = 'skill-item';
+        card.innerHTML = `
+            <div class="skill-header">
+                <div class="skill-title-group">
+                    <span class="skill-icon">${data.icon}</span>
+                    <span class="skill-name">${escapeHtml(data.displayName)}</span>
+                </div>
+                <span class="skill-level">${escapeHtml(t('level'))} ${data.level}</span>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" style="width: ${data.progressPercent}%;"></div>
+            </div>
+            <div class="skill-xp-info">${data.xpInCurrentLevel} / ${data.xpNeededForNext} XP</div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+function updateSkillFocusOptions() {
+    const select = document.getElementById('skillFocusSelect');
+    if (!select) return;
+
+    const currentVal = select.value;
+    select.innerHTML = `<option value="none">${escapeHtml(t('none'))}</option>`;
+
+    Object.entries(userSkills).forEach(([key, data]) => {
+        const opt = document.createElement('option');
+        opt.value = key;
+        opt.textContent = `${data.icon} ${data.displayName}`;
+        if (key === currentVal) opt.selected = true;
+        select.appendChild(opt);
+    });
+}
 
     // --- Lifecycle Initialization ---
     document.addEventListener('DOMContentLoaded', () => {
@@ -2207,17 +2248,22 @@
             }
         });
 
-        if (tg) {
+if (tg) {
             tg.ready();
             tg.expand();
-            if (tg.initDataUnsafe?.user) {
-                telegramUser = tg.initDataUnsafe.user;
-                fetchAllLogsAndSetupChart();
-            } else {
-                fetchAllLogsAndSetupChart();
-            }
-        } else {
+        }
+
+        // Strictly require Telegram user
+        if (tg?.initDataUnsafe?.user?.id) {
+            telegramUser = tg.initDataUnsafe.user;
             fetchAllLogsAndSetupChart();
+        } else {
+            // Blocked if opened in regular browser
+            const loadingDiv = document.getElementById('loadingMessage');
+            if (loadingDiv) {
+                loadingDiv.innerText = "Please open this app inside Telegram.";
+                loadingDiv.style.display = 'block';
+            }
         }
     });
     </script>
