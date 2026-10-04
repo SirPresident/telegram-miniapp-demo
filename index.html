@@ -327,6 +327,14 @@
             <div class="glass-panel"><header class="page-header"><h2>Level Up</h2></header><main class="page-content"><div class="blank-text">Nothing to see here yet.</div></main></div>
         </div>
 
+        <!-- Tab 5: Profile -->
+        <div class="slide" id="page-profile">
+            <div class="glass-panel">
+                <header class="page-header"><h2>Profile</h2></header>
+                <main class="page-content"><div class="blank-text">Nothing to see here yet.</div></main>
+            </div>
+        </div>
+
     </div>
 
     <!-- Bottom Capsule UI -->
@@ -337,6 +345,10 @@
             <button class="capsule-tab-btn" id="tab-logs" type="button"><span class="capsule-icon-wrap"><img src="assets/icons/Search.svg" class="icon-img"></span><span class="capsule-text">Search</span></button>
             <button class="capsule-tab-btn" id="tab-quests" type="button"><span class="capsule-icon-wrap"><img src="assets/icons/Book-open.svg" class="icon-img"></span><span class="capsule-text">Quests</span></button>
             <button class="capsule-tab-btn" id="tab-levelup" type="button"><span class="capsule-icon-wrap"><img src="assets/icons/Arrow up.svg" class="icon-img"></span><span class="capsule-text">Level up</span></button>
+            <button class="capsule-tab-btn" id="tab-profile" type="button">
+                <span class="capsule-icon-wrap"><img src="assets/icons/User.svg" class="icon-img"></span>
+                <span class="capsule-text">Profile</span>
+            </button>
         </div>
     </nav>
 
@@ -838,7 +850,8 @@
                 { btn: document.getElementById('tab-analytics') }, // Index 1
                 { btn: document.getElementById('tab-logs') },      // Index 2 (Search)
                 { btn: document.getElementById('tab-quests') },
-                { btn: document.getElementById('tab-levelup') }
+                { btn: document.getElementById('tab-levelup') },
+                { btn: document.getElementById('tab-profile') }    // Index 5 (Profile)
             ];
 
             const slides = document.querySelectorAll('.slide');
