@@ -354,7 +354,6 @@
             return translations[key] || key;
         };
 
-        // Metadata used for folder badges on the cards
         const FOLDER_META = {
             all:           { label: 'All Notes',     icon: '📂' },
             todo:          { label: 'To-Do',         icon: '✅' },
@@ -366,7 +365,6 @@
             personal:      { label: 'Personal',      icon: '📔' }
         };
 
-        // HTML escape helper to prevent XSS
         function escapeHtml(str) {
             if (!str) return '';
             return String(str)
@@ -462,6 +460,7 @@
                         
                         isDataLoaded = true;
                         
+                        // Render immediately if user is already sitting on Analytics tab
                         if (window.currentTabIndex === 1) {
                             setupChartAndSlider();
                         }
@@ -512,9 +511,11 @@
         }
 
         function setupChartAndSlider() {
-            if(chartInitialized) {
-                if(moodChartInstance) moodChartInstance.resize(); 
-                updateView();
+            if (chartInitialized) {
+                if (moodChartInstance) {
+                    moodChartInstance.resize();
+                    updateView();
+                }
                 return;
             }
             
@@ -540,12 +541,15 @@
                 id: 'syncHeight',
                 afterLayout(c) {
                     const sliderElem = document.getElementById('slider');
-                    if(!sliderElem) return;
+                    if (!sliderElem) return;
                     const y = c.scales.y;
+                    if (!y) return;
                     const top = y.getPixelForValue(c.options.scales.y.max);
                     const bot = y.getPixelForValue(c.options.scales.y.min);
-                    sliderElem.style.marginTop = `${top + 10}px`;
-                    sliderElem.style.height = `${bot - top}px`;
+                    if (!isNaN(top) && !isNaN(bot) && bot > top) {
+                        sliderElem.style.marginTop = `${top + 10}px`;
+                        sliderElem.style.height = `${bot - top}px`;
+                    }
                 }
             };
 
@@ -553,15 +557,37 @@
                 type: 'line',
                 data: {
                     datasets: [{
-                        label: 'Mood', data: [], fill: true, backgroundColor: makeGradient(ctx),
-                        borderColor: '#333', borderWidth: 2.5, pointRadius: 4, pointHoverRadius: 6, tension: 0.32
+                        label: 'Mood', 
+                        data: [], 
+                        fill: true, 
+                        backgroundColor: makeGradient(ctx),
+                        borderColor: '#333', 
+                        borderWidth: 2.5, 
+                        pointRadius: 5,            // Enlarged so points are easily visible
+                        pointHoverRadius: 7, 
+                        pointBorderColor: '#fff',  // White crisp ring around points
+                        pointBorderWidth: 1.5,
+                        tension: 0.32,
+                        spanGaps: true             // Span over missing/null days cleanly
                     }]
                 },
                 options: {
-                    responsive: true, maintainAspectRatio: false,
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    animation: false, // Prevents points from getting stuck mid-transition
                     scales: {
-                        x: { type: 'time', time: { unit: 'day', displayFormats: { day: 'dd' } }, grid: { display: false }, ticks: { color: 'rgba(51, 51, 51, 0.7)' } },
-                        y: { min: 1, max: 5, grid: { color: 'rgba(255,255,255,0.2)' }, ticks: { stepSize: 1, callback: (v) => ({1:"🥵", 2:"🥺", 3:"🙂", 4:"😃", 5:"🤗"}[v] || v) } }
+                        x: { 
+                            type: 'time', 
+                            time: { unit: 'day', displayFormats: { day: 'dd' } }, 
+                            grid: { display: false }, 
+                            ticks: { color: 'rgba(51, 51, 51, 0.7)' } 
+                        },
+                        y: { 
+                            min: 1, 
+                            max: 5, 
+                            grid: { color: 'rgba(255,255,255,0.2)' }, 
+                            ticks: { stepSize: 1, callback: (v) => ({1:"🥵", 2:"🥺", 3:"🙂", 4:"😃", 5:"🤗"}[v] || v) } 
+                        }
                     },
                     plugins: { legend: { display: false } },
                     thresholds: { min: 2, max: 4 }
@@ -587,7 +613,9 @@
                 moodChartInstance.options.thresholds.max = max;
                 
                 const weekData = getWeekMoodData(idx);
-                moodChartInstance.data.datasets[0].pointBackgroundColor = weekData.map(pt => (pt.y >= min && pt.y <= max) ? '#10b981' : '#333');
+                moodChartInstance.data.datasets[0].pointBackgroundColor = weekData.map(pt => 
+                    (pt.y !== null && pt.y >= min && pt.y <= max) ? '#10b981' : '#333'
+                );
                 moodChartInstance.update('none');
 
                 if (sliderUpdateRAF) cancelAnimationFrame(sliderUpdateRAF);
@@ -613,7 +641,7 @@
         }
 
         function updateView() {
-            if(!moodChartInstance) return;
+            if (!moodChartInstance) return;
             const weekData = getWeekMoodData(idx);
             
             moodChartInstance.data.datasets[0].data = weekData;
@@ -621,7 +649,11 @@
 
             if (slider && slider.noUiSlider) {
                 const [min, max] = slider.noUiSlider.get().map(Number);
-                moodChartInstance.data.datasets[0].pointBackgroundColor = weekData.map(pt => (pt.y >= min && pt.y <= max) ? '#10b981' : '#333');
+                moodChartInstance.data.datasets[0].pointBackgroundColor = weekData.map(pt => 
+                    (pt.y !== null && pt.y >= min && pt.y <= max) ? '#10b981' : '#333'
+                );
+            } else {
+                moodChartInstance.data.datasets[0].pointBackgroundColor = weekData.map(() => '#333');
             }
 
             const currentWeekSegment = weekSegments[idx];
@@ -639,7 +671,7 @@
             document.getElementById('nextWeekBtn').disabled = (idx === weekSegments.length - 1);
             
             updatePanels(idx);
-            moodChartInstance.update();
+            moodChartInstance.update('none'); // Instant paint prevents visual drop
         }
 
         function updatePanels(weekIdx) {
@@ -674,7 +706,6 @@
                 if (!items.length) { el.innerHTML = `<div class="empty-placeholder">${escapeHtml(t('noneRecorded'))}</div>`; return; }
                 el.innerHTML = items.map(([item, count]) => `<div class="panel-item" data-item="${escapeHtml(item)}" data-type="${type}"><span>${escapeHtml(item)}</span><span class="count-pill">${count}×</span></div>`).join('');
                 
-                // Attach click listeners to each panel item badge
                 el.querySelectorAll('.panel-item').forEach(btn => {
                     btn.addEventListener('click', () => {
                         showRelevantLogs(btn.dataset.item, btn.dataset.type, relevantLogs);
@@ -753,7 +784,6 @@
                     ${log.mood_label ? `<span class="tag" style="background:var(--accent-soft); color:var(--accent-strong); font-weight:700;">${escapeHtml(log.mood_label)} (${log.mood_score ?? '—'})</span>` : ''}
                 </div>`;
 
-            // HERE IS THE ORIGINAL NOTE DISPLAY:
             if (log.original_note) {
                 out += `<div class="log-original-note">${escapeHtml(log.original_note)}</div>`;
             }
@@ -821,10 +851,6 @@
                 const direction = newIndex > oldIndex ? 1 : -1; 
 
                 newSlide.style.display = 'flex';
-                
-                if(newIndex === 1 && isDataLoaded) {
-                    setTimeout(() => { setupChartAndSlider(); }, 50);
-                }
 
                 let startTimestamp = null;
                 const duration = 650; 
@@ -843,12 +869,20 @@
                     if (progress < 1) {
                         requestAnimationFrame(step);
                     } else {
+                        // Animation complete: return slides to flat standard space
                         oldSlide.style.display = 'none';
                         oldSlide.style.transform = ''; oldSlide.style.filter = '';
                         newSlide.style.transform = `translateZ(0) rotateY(0) translateZ(0)`; newSlide.style.filter = '';
                         
                         window.currentTabIndex = newIndex;
                         isAnimating = false;
+
+                        // FIX: Only render/resize the chart AFTER the card is completely flat and static
+                        if (newIndex === 1 && isDataLoaded) {
+                            requestAnimationFrame(() => {
+                                setupChartAndSlider();
+                            });
+                        }
                     }
                 }
                 requestAnimationFrame(step);
