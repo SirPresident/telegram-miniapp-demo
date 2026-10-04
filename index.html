@@ -1,2271 +1,671 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title data-i18n="appTitle">My AI Processed Logs & Mood Chart</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Liquid Glass Mobile UI & Analytics</title>
+    
+    <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Chart.js + Luxon + Zoom -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.3/build/global/luxon.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1"></script>
-    <!-- noUiSlider -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css" rel="stylesheet"/>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.js"></script>
+
+    <!-- Fonts & External Libraries for Analytics -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/3.3.0/luxon.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.js"></script>
 
     <style>
         :root {
-            --font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            --bg-color: #f6f8fb;
-            --bg-gradient-start: #f8fafc;
-            --bg-gradient-end: #edf2f7;
-            --surface: rgba(255, 255, 255, 0.88);
-            --surface-strong: #ffffff;
-            --surface-muted: #f1f4f9;
-            --text-color: #0f172a;
-            --text-muted: #64748b;
-            --text-soft: #94a3b8;
-            --accent: #3b82f6;
-            --accent-strong: #2563eb;
-            --accent-soft: rgba(59, 130, 246, 0.12);
-            --success: #10b981;
-            --danger: #ef4444;
-            --chart-line: #3b82f6;
-            --chart-grad-start: rgba(59, 130, 246, 0.28);
-            --chart-grad-end: rgba(59, 130, 246, 0.01);
-            --highlight-above: #f1f5f9;
-            --highlight-below: #e2e8f0;
-            --btn-bg: #ffffff;
-            --border-color: rgba(15, 23, 42, 0.08);
-            --bg-color-rgb: 246, 248, 251;
-            --shadow-sm: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02);
-            --shadow-md: 0 6px 18px -2px rgba(15, 23, 42, 0.06);
-            --shadow-lg: 0 18px 36px -4px rgba(15, 23, 42, 0.10);
-            --radius-sm: 10px;
-            --radius-md: 14px;
-            --radius-lg: 20px;
-            --spring: cubic-bezier(0.32, 0.72, 0, 1);
-            --spring-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.3);
+            --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
+            --text-color: #333;
+            --text-muted: rgba(51, 51, 51, 0.7);
+            --border-color: rgba(255, 255, 255, 0.2);
+            
+            --accent-soft: rgba(255, 255, 255, 0.45); 
+            --accent-strong: #111;
+
+            /* Chart Specific Variables */
+            --chart-grad-start: rgba(255, 255, 255, 0.6);
+            --chart-grad-end: rgba(255, 255, 255, 0.01);
+            --chart-line: #333;
+
+            --transition-bounce: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            --transition-smooth: all 0.3s ease;
         }
 
-        .dark {
-            --bg-color: #0b0f19;
-            --bg-gradient-start: #0b0f19;
-            --bg-gradient-end: #111726;
-            --surface: rgba(18, 24, 38, 0.82);
-            --surface-strong: #161e30;
-            --surface-muted: #1e293b;
-            --text-color: #f8fafc;
-            --text-muted: #94a3b8;
-            --text-soft: #64748b;
-            --accent: #60a5fa;
-            --accent-strong: #3b82f6;
-            --accent-soft: rgba(96, 165, 250, 0.15);
-            --success: #34d399;
-            --danger: #f87171;
-            --chart-line: #60a5fa;
-            --chart-grad-start: rgba(96, 165, 250, 0.28);
-            --chart-grad-end: rgba(96, 165, 250, 0.01);
-            --highlight-above: #1e293b;
-            --highlight-below: #172033;
-            --btn-bg: #161e30;
-            --border-color: rgba(255, 255, 255, 0.08);
-            --bg-color-rgb: 11, 15, 25;
-            --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
-            --shadow-md: 0 8px 24px -2px rgba(0,0,0,0.45);
-            --shadow-lg: 0 20px 40px -4px rgba(0,0,0,0.6);
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            -webkit-tap-highlight-color: transparent;
-            -webkit-font-smoothing: antialiased;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
 
         body {
-            font-family: var(--font-family);
-            background: linear-gradient(180deg, var(--bg-gradient-start), var(--bg-gradient-end));
-            color: var(--text-color);
-            min-height: 100vh;
-            padding: calc(env(safe-area-inset-top) + 12px) 16px calc(env(safe-area-inset-bottom) + 90px);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            overflow-x: hidden;
-            transition: background 0.3s ease, color 0.3s ease;
-        }
-
-        input, button, select {
-            font: inherit;
-        }
-
-        /* Persian / RTL layout */
-        body.rtl {
-            direction: rtl;
-        }
-
-        body.rtl .side-menu {
-            left: auto;
-            right: 0;
-            transform: translateX(100%);
-            border-right: none;
-            border-left: 1px solid var(--border-color);
-        }
-
-        body.rtl .side-menu.open {
-            transform: translateX(0);
-        }
-
-        body.rtl .log-entries {
-            padding-left: 0;
-            padding-right: 6px;
-            border-left: none;
-            border-right: 2px solid var(--border-color);
-        }
-
-        body.rtl .search-icon-inside {
-            left: auto;
-            right: 14px;
-        }
-
-        body.rtl .search-input {
-            padding: 12px 42px 12px 14px;
-        }
-
-        body.rtl .custom-select {
-            background-position: left 6px center;
-            padding: 6px 12px 6px 28px;
-        }
-
-        body.rtl .log-date-header .expand-icon {
-            transform: rotate(180deg);
-        }
-
-        body.rtl .log-date-header.expanded .expand-icon {
-            transform: rotate(270deg);
-        }
-
-        .language-select {
-            min-width: 112px;
-        }
-
-        .container {
-            width: min(960px, 100%);
-            margin: 0 auto;
-        }
-
-        /* Top Bar Header */
-        .app-topbar {
-            display: grid;
-            grid-template-columns: 44px 1fr 44px;
-            align-items: center;
-            margin-bottom: 1.25rem;
-            width: 100%;
-        }
-
-        .header-title-box {
-            text-align: center;
-        }
-
-        .header-title-box h1 {
-            font-size: 1.35rem;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-            transition: opacity 0.15s ease, transform 0.15s ease;
-        }
-
-        .header-title-box .subtitle {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            margin-top: 2px;
-            font-weight: 500;
-        }
-
-        /* Hamburger button */
-        .icon-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: var(--radius-sm);
-            background: var(--surface);
-            border: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            color: var(--text-color);
-            box-shadow: var(--shadow-sm);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            transition: transform 0.15s ease, background 0.15s ease;
-        }
-
-        .icon-btn:active {
-            transform: scale(0.94);
-        }
-
-        .icon-svg {
-            width: 20px;
-            height: 20px;
-            display: block;
-        }
-
-        .icon-btn .icon-svg {
-            fill: none;
-            stroke: currentColor;
-        }
-
-        /* Side Menu Drawer */
-        .menu-backdrop {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
-            z-index: 2000;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.25s ease;
-        }
-
-        .menu-backdrop.open {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .side-menu {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: min(300px, 80vw);
-            height: 100vh;
-            background: var(--surface-strong);
-            border-right: 1px solid var(--border-color);
-            box-shadow: var(--shadow-lg);
-            z-index: 2001;
-            transform: translateX(-100%);
-            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            display: flex;
-            flex-direction: column;
-            padding: calc(env(safe-area-inset-top) + 24px) 20px 24px;
-        }
-
-        .side-menu.open {
-            transform: translateX(0);
-        }
-
-        .settings-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            margin-bottom: 24px;
-        }
-
-        .settings-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 14px;
-            background: var(--surface-muted);
-            border-radius: var(--radius-md);
-            border: 1px solid var(--border-color);
-        }
-
-        .settings-label {
-            font-size: 0.92rem;
-            font-weight: 600;
-        }
-
-        /* Toggle Switch */
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 48px;
-            height: 28px;
-        }
-
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .switch-slider {
-            position: absolute;
-            cursor: pointer;
-            inset: 0;
-            background-color: var(--highlight-below);
-            border-radius: 99px;
-            transition: background-color 0.2s;
-        }
-
-        .switch-slider:before {
-            position: absolute;
-            content: "";
-            height: 22px;
-            width: 22px;
-            left: 3px;
-            bottom: 3px;
-            background-color: white;
-            border-radius: 50%;
-            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-        }
-
-        input:checked + .switch-slider {
-            background-color: var(--accent);
-        }
-
-        input:checked + .switch-slider:before {
-            transform: translateX(20px);
-        }
-
-        /* ==========================================================================
-           PAGE VIEWPORT & SMOOTH SLIDING TRACK (TRANSITIONS)
-           ========================================================================== */
-        .pages-viewport {
-            width: 100%;
-            overflow: hidden;
-            position: relative;
-            direction: ltr !important;
-        }
-
-        .pages-track {
-            display: flex;
-            width: 400%; /* 4 tabs */
-            align-items: flex-start;
-            transition: transform 0.46s var(--spring);
-            will-change: transform;
-        }
-
-        .tab-view {
-            width: 25%;
-            flex-shrink: 0;
-            min-width: 0;
-            opacity: 0.2;
-            transform: scale(0.96);
-            transition: opacity 0.35s ease, transform 0.46s var(--spring);
-            pointer-events: none;
-            direction: ltr;
-            overflow-x: hidden;
-        }
-
-        body.rtl .tab-view {
-            direction: rtl;
-        }
-
-        .tab-view.active {
-            opacity: 1;
-            transform: scale(1);
-            pointer-events: auto;
-        }
-
-        .tab-view:not(.active):not(.transitioning) {
-            height: 0;
-            max-height: 0;
-            overflow: hidden;
-            padding-top: 0 !important;
-            padding-bottom: 0 !important;
-            margin-top: 0 !important;
-            margin-bottom: 0 !important;
-            opacity: 0;
-        }
-
-        /* ==========================================================================
-           HOME HERO CHARACTER STAGE (LEO DISPLAY)
-           ========================================================================== */
-        .home-dashboard {
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-        }
-
-        .home-hero {
-            position: relative;
-            overflow: hidden;
-            background: linear-gradient(150deg, var(--surface-strong), var(--surface-muted));
-            border: 1px solid var(--border-color);
-            border-radius: 28px;
-            padding: 16px;
-            box-shadow: var(--shadow-md);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: clamp(380px, calc(100vh - 240px), 640px);
-            width: 100%;
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
-        }
-
-        .home-hero::after {
-            content: "";
-            position: absolute;
-            width: min(440px, 85vw);
-            height: min(440px, 85vw);
-            border-radius: 50%;
-            background: radial-gradient(circle, var(--accent-soft) 0%, transparent 68%);
-            pointer-events: none;
-            z-index: 0;
-            animation: pulseHeroAura 4s ease-in-out infinite alternate;
-        }
-
-        @keyframes pulseHeroAura {
-            0% { transform: scale(0.94); opacity: 0.65; }
-            100% { transform: scale(1.12); opacity: 1; }
-        }
-
-        .home-hero-character-img {
-            position: relative;
-            z-index: 1;
-            width: 100%;
-            height: 100%;
-            max-height: clamp(340px, calc(100vh - 270px), 580px);
-            object-fit: contain;
-            filter: drop-shadow(0 14px 28px rgba(15, 23, 42, 0.18));
-            user-select: none;
-            -webkit-user-drag: none;
-            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        .dark .home-hero-character-img {
-            filter: drop-shadow(0 16px 36px rgba(0, 0, 0, 0.75));
-        }
-
-        .home-hero:hover .home-hero-character-img {
-            transform: scale(1.03);
-        }
-
-        /* Chart & Slider wrapper */
-        .chart-card {
-            background: var(--surface);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-lg);
-            padding: 14px;
-            box-shadow: var(--shadow-md);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-        }
-
-        .chart-inner {
-            display: flex;
-            align-items: stretch;
-            gap: 10px;
-            width: 100%;
-        }
-
-        .chart-wrap {
-            flex: 1 1 0;
-            min-width: 0;
-            position: relative;
-        }
-
-        .chart-wrap canvas {
-            width: 100% !important;
-            height: 280px !important;
-        }
-
-        /* Vertical noUiSlider rail */
-        #slider {
-            flex: 0 0 10px;
-            width: 10px;
-            background: var(--surface-muted);
-            border-radius: 99px;
-            border: 1px solid var(--border-color);
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        #slider .noUi-connect {
-            background: linear-gradient(to top, var(--danger), var(--accent), var(--success));
-            border-radius: 99px;
-        }
-
-        #slider .noUi-handle {
-            width: 18px;
-            height: 18px;
-            right: -5px;
-            bottom: -9px;
-            border-radius: 50%;
-            background: var(--surface-strong);
-            border: 2px solid var(--accent);
-            box-shadow: var(--shadow-md);
-            cursor: grab;
-            transition: transform 0.15s ease, border-color 0.15s ease;
-        }
-
-        #slider .noUi-handle:before, #slider .noUi-handle:after {
-            display: none;
-        }
-
-        #slider .noUi-handle:active {
-            cursor: grabbing;
-            transform: scale(1.2);
-            border-color: var(--accent-strong);
-        }
-
-        /* Segment Label & Navigation */
-        .segment-control {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-top: 14px;
-            padding-top: 10px;
-            border-top: 1px solid var(--border-color);
-        }
-
-        .segment-label {
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: var(--text-color);
-            letter-spacing: -0.01em;
-        }
-
-        .nav-btn-group {
-            display: flex;
-            gap: 6px;
-        }
-
-        .nav-btn {
-            background: var(--btn-bg);
-            color: var(--text-color);
-            border: 1px solid var(--border-color);
-            padding: 6px 12px;
-            border-radius: var(--radius-sm);
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: var(--shadow-sm);
-            transition: background 0.15s, transform 0.1s, opacity 0.2s;
-        }
-
-        .nav-btn:active:not(:disabled) {
-            transform: scale(0.96);
-        }
-
-        .nav-btn:disabled {
-            opacity: 0.35;
-            cursor: default;
-        }
-
-        /* Filter Selector Bar */
-        .filter-bar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin: 1.25rem 0 0.75rem;
-        }
-
-        .filter-bar label {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .custom-select {
-            appearance: none;
-            background: var(--surface);
-            border: 1px solid var(--border-color);
-            color: var(--text-color);
-            padding: 6px 28px 6px 12px;
-            border-radius: var(--radius-sm);
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: var(--shadow-sm);
-            background-image: url('data:image/svg+xml;utf8,<svg fill="%2364748b" height="18" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
-            background-repeat: no-repeat;
-            background-position: right 6px center;
-        }
-
-        .custom-select:focus {
-            outline: 2px solid var(--accent);
-        }
-
-        /* Panels Grid */
-        .panels {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-        }
-
-        @media (max-width: 768px) {
-            .panels {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .panel {
-            background: var(--surface);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            padding: 14px;
-            box-shadow: var(--shadow-sm);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-        }
-
-        .panel h3 {
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            color: var(--text-muted);
-            margin-bottom: 10px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .panel-list {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            max-height: 240px;
-            overflow-y: auto;
-        }
-
-        .panel-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 7px 10px;
-            border-radius: var(--radius-sm);
-            font-size: 0.88rem;
-            color: var(--text-color);
-            cursor: pointer;
-            transition: background 0.15s, transform 0.1s;
-        }
-
-        .panel-item:hover {
-            background: var(--accent-soft);
-        }
-
-        .panel-item:active {
-            transform: scale(0.98);
-        }
-
-        .count-pill {
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: var(--accent-strong);
-            background: var(--accent-soft);
-            padding: 2px 7px;
-            border-radius: 99px;
-        }
-
-        .empty-placeholder {
-            font-size: 0.82rem;
-            color: var(--text-soft);
-            text-align: center;
-            padding: 18px 8px;
-            font-style: italic;
-        }
-
-        /* Folder Chips Navigation Bar */
-        .folders-bar {
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            padding: 2px 2px 10px;
-            margin-bottom: 12px;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
-        }
-        .folders-bar::-webkit-scrollbar {
-            display: none;
-        }
-
-        .folder-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 7px 12px;
-            border-radius: 99px;
-            background: var(--surface);
-            border: 1px solid var(--border-color);
-            color: var(--text-muted);
-            font-size: 0.82rem;
-            font-weight: 600;
-            white-space: nowrap;
-            cursor: pointer;
-            box-shadow: var(--shadow-sm);
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .folder-chip:hover {
-            background: var(--surface-strong);
-            color: var(--text-color);
-        }
-
-        .folder-chip.active {
-            background: var(--accent);
-            color: #ffffff;
-            border-color: var(--accent);
-            box-shadow: 0 4px 12px var(--accent-soft);
-        }
-
-        .folder-chip-count {
-            font-size: 0.72rem;
-            padding: 1px 6px;
-            border-radius: 99px;
-            background: rgba(0, 0, 0, 0.08);
-        }
-        .dark .folder-chip-count {
-            background: rgba(255, 255, 255, 0.14);
-        }
-        .folder-chip.active .folder-chip-count {
-            background: rgba(255, 255, 255, 0.25);
-            color: #ffffff;
-        }
-
-        .category-tag {
-            font-size: 0.72rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-            padding: 2px 6px;
-            border-radius: 4px;
-            background: var(--accent-soft);
-            color: var(--accent-strong);
-        }
-
-        /* Search Screen */
-        .search-wrapper {
-            position: relative;
-            margin-bottom: 1rem;
-        }
-
-        .search-icon-inside {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-soft);
-            pointer-events: none;
-            width: 18px;
-            height: 18px;
-        }
-
-        .search-input {
-            width: 100%;
-            padding: 12px 14px 12px 42px;
-            border-radius: var(--radius-md);
-            border: 1px solid var(--border-color);
-            background: var(--surface);
-            color: var(--text-color);
-            font-size: 0.95rem;
-            box-shadow: var(--shadow-sm);
-            outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-
-        .search-input:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px var(--accent-soft);
-        }
-
-        /* Accordion Logs */
-        .log-group {
-            margin-bottom: 8px;
-        }
-
-        .log-date-header {
-            background: var(--surface);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            padding: 12px 14px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            cursor: pointer;
-            user-select: none;
-            box-shadow: var(--shadow-sm);
-            transition: background 0.15s, border-color 0.15s;
-        }
-
-        .log-date-header:hover {
-            background: var(--surface-strong);
-        }
-
-        .log-date-header.expanded {
-            border-bottom-left-radius: 4px;
-            border-bottom-right-radius: 4px;
-            border-color: var(--accent);
-        }
-
-        .header-content {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 0.95rem;
-            font-weight: 600;
-        }
-
-        .expand-icon {
-            width: 16px;
-            height: 16px;
-            transition: transform 0.2s ease;
-            color: var(--accent);
-        }
-
-        .log-date-header.expanded .expand-icon {
-            transform: rotate(90deg);
-        }
-
-        .logs-count {
-            font-size: 0.78rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            background: var(--surface-muted);
-            padding: 2px 8px;
-            border-radius: 99px;
-        }
-
-        .log-entries {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-top: 6px;
-            padding-left: 6px;
-            border-left: 2px solid var(--border-color);
-        }
-
-        .log-entry {
-            background: var(--surface);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            padding: 12px;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .log-meta {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .log-original-note {
-            font-size: 0.88rem;
-            line-height: 1.45;
-            color: var(--text-color);
-            margin-bottom: 8px;
-        }
-
-        .log-section {
-            margin-top: 8px;
-            padding-top: 6px;
-            border-top: 1px dashed var(--border-color);
-        }
-
-        .log-section h4 {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--accent);
-            margin-bottom: 4px;
-        }
-
-        .log-section ul {
-            list-style: none;
-            padding-left: 0;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-        }
-
-        .tag {
-            background: var(--surface-muted);
-            color: var(--text-color);
-            border: 1px solid var(--border-color);
-            padding: 3px 8px;
-            border-radius: 6px;
-            font-size: 0.78rem;
-            font-weight: 500;
-        }
-
-        /* Filtered Logs Container area */
-        #logsContainer {
-            margin-top: 1.5rem;
-            padding-top: 1rem;
-            border-top: 1px solid var(--border-color);
-        }
-
-        /* Skills Grid */
-        .skills-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 12px;
-            margin-top: 1rem;
-        }
-
-        .skill-item {
-            background: var(--surface);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            padding: 14px;
-            box-shadow: var(--shadow-sm);
-            transition: transform 0.15s, box-shadow 0.15s;
-        }
-
-        .skill-item:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
-        }
-
-        .skill-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 10px;
-        }
-
-        .skill-title-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .skill-icon {
-            font-size: 1.4rem;
-        }
-
-        .skill-name {
-            font-size: 0.95rem;
-            font-weight: 700;
-        }
-
-        .skill-level {
-            font-size: 0.75rem;
-            font-weight: 800;
-            color: var(--accent-strong);
-            background: var(--accent-soft);
-            padding: 3px 8px;
-            border-radius: 99px;
-        }
-
-        .progress-bar-container {
-            width: 100%;
-            height: 7px;
-            background: var(--surface-muted);
-            border-radius: 99px;
-            overflow: hidden;
-            margin-bottom: 6px;
-        }
-
-        .progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, var(--accent), var(--accent-strong));
-            border-radius: 99px;
-            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .skill-xp-info {
-            font-size: 0.75rem;
-            color: var(--text-soft);
-            text-align: right;
-            font-weight: 600;
-        }
-
-        .skill-focus-section {
-            margin-top: 1.5rem;
-            background: var(--surface);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-lg);
-            padding: 16px;
-            text-align: center;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .skill-focus-section h3 {
-            font-size: 0.95rem;
-            margin-bottom: 8px;
-        }
-
-        #dailyTaskContainer {
-            margin-top: 10px;
-            padding: 10px;
-            border-radius: var(--radius-sm);
-            background: var(--surface-muted);
-            font-size: 0.85rem;
-            color: var(--text-muted);
-        }
-
-        /* Floating Capsule Navigation Bar */
-        .capsule-tabs {
-            position: fixed;
-            bottom: calc(env(safe-area-inset-bottom) + 12px);
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            background: var(--surface);
-            border: 1px solid var(--border-color);
-            border-radius: 99px;
-            padding: 5px;
-            box-shadow: var(--shadow-lg);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-        }
-
-        .capsule-tab-group {
-            display: flex;
-            gap: 4px;
-        }
-
-        .capsule-tab-btn {
-            position: relative;
-            height: 44px;
-            width: 50px;
-            border-radius: 99px;
-            border: none;
-            background: transparent;
-            color: var(--text-muted);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            overflow: hidden;
-        }
-
-        .capsule-tab-btn:active {
-            transform: scale(0.92);
-        }
-
-        .capsule-tab-btn.active {
-            width: 116px;
-            background: var(--accent-soft);
-            color: var(--accent-strong);
-        }
-
-        .capsule-icon-wrap {
-            position: absolute;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.25s ease, opacity 0.2s ease;
-        }
-
-        .capsule-tab-btn.active .capsule-icon-wrap {
-            opacity: 0;
-            transform: scale(0.6);
-        }
-
-        .capsule-text {
-            opacity: 0;
-            font-size: 0.88rem;
-            font-weight: 700;
-            letter-spacing: -0.01em;
-            transform: translateY(6px);
-            transition: opacity 0.25s ease, transform 0.25s ease;
-            white-space: nowrap;
-        }
-
-        .capsule-tab-btn.active .capsule-text {
-            opacity: 1;
-            transform: translateY(0);
-        }
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            height: 100vh; width: 100vw; overflow: hidden; position: relative;
+        }
+
+        @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+        /* Stage & Slides */
+        #stage { position: absolute; inset: 0; perspective: 2400px; transform-style: preserve-3d; z-index: 1; }
+        .slide { position: absolute; inset: 0; display: none; flex-direction: column; backface-visibility: hidden; will-change: transform, filter; width: 100%; height: 100%; }
+
+        /* Glass Panel Frame */
+        .glass-panel {
+            background: var(--glass-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border-top: 1px solid var(--glass-border); border-left: 1px solid rgba(255, 255, 255, 0.1); 
+            width: 100%; height: 100%; display: flex; flex-direction: column;
+        }
+
+        .page-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; padding-top: max(16px, env(safe-area-inset-top)); width: 100%; z-index: 10; }
+        .page-header h2 { font-size: 1.5rem; color: var(--text-color); font-weight: 600; }
+        .page-content { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 120px; display: flex; flex-direction: column; align-items: center; }
+        .blank-text { color: var(--text-muted); font-size: 1.1rem; font-weight: 500; margin-top: 10vh; text-align: center; }
+
+        /* =========================================
+           ANALYTICS TAB STYLING
+           ========================================= */
+        .tab-view { width: 100%; display: flex; flex-direction: column; gap: 20px; }
+        .chart-card { background: rgba(255, 255, 255, 0.2); border: 1px solid var(--glass-border); border-radius: 20px; padding: 16px; width: 100%; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .chart-inner { display: flex; gap: 16px; height: 220px; align-items: stretch; margin-bottom: 15px; }
+        .chart-wrap { flex: 1; position: relative; min-width: 0; }
+        
+        #slider { background: rgba(0,0,0,0.1); border: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); width: 8px; }
+        .noUi-connect { background: #10b981; opacity: 0.8; }
+        .noUi-handle { background: rgba(255, 255, 255, 0.9); border: 1px solid #ddd; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.15); cursor: pointer; }
+        .noUi-vertical .noUi-handle { width: 24px; height: 24px; right: -8px; top: -12px; }
+        .noUi-handle::before, .noUi-handle::after { display: none; }
+
+        .segment-control { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 12px; }
+        .segment-label { font-weight: 600; font-size: 0.9rem; color: var(--text-color); }
+        .nav-btn-group { display: flex; gap: 8px; }
+        .nav-btn { background: rgba(255, 255, 255, 0.3); border: 1px solid var(--glass-border); padding: 6px 12px; border-radius: 12px; font-size: 0.8rem; font-weight: 500; cursor: pointer; color: var(--text-color); transition: var(--transition-smooth); }
+        .nav-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .nav-btn:not(:disabled):hover { background: rgba(255, 255, 255, 0.5); }
+
+        .filter-bar { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 0 5px; }
+        .filter-bar label { font-size: 0.9rem; font-weight: 600; color: var(--text-color); }
+        .custom-select { background: rgba(255, 255, 255, 0.3); border: 1px solid var(--glass-border); color: var(--text-color); padding: 8px 12px; border-radius: 12px; font-family: inherit; font-size: 0.9rem; outline: none; cursor: pointer; }
+
+        .panels { display: flex; flex-direction: column; gap: 16px; width: 100%; }
+        .panel { background: rgba(255, 255, 255, 0.2); border: 1px solid var(--glass-border); border-radius: 16px; padding: 16px; }
+        .panel h3 { font-size: 1rem; margin-bottom: 12px; color: var(--text-color); }
+        .panel-list { display: flex; flex-wrap: wrap; gap: 8px; }
+        .panel-item { background: rgba(255, 255, 255, 0.4); border: 1px solid rgba(255, 255, 255, 0.5); padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+        .count-pill { background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 10px; font-weight: 600; font-size: 0.75rem; }
+        .empty-placeholder { font-size: 0.9rem; color: var(--text-muted); font-style: italic; }
+
+        /* =========================================
+           TOP DOG & SEARCH
+           ========================================= */
+        .assistant-wrapper { position: relative; display: flex; align-items: center; z-index: 10; }
+        .dog-avatar { width: 44px; height: 44px; cursor: pointer; transition: var(--transition-bounce); filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); object-fit: contain; }
+        .assistant-wrapper.active .dog-avatar { transform: scale(1.4) translateY(5px); }
+        .speech-bubble { position: absolute; left: 60px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(8px); padding: 10px 16px; border-radius: 16px; font-size: 14px; font-weight: 500; color: var(--text-color); box-shadow: 0 4px 15px rgba(0,0,0,0.1); white-space: nowrap; opacity: 0; transform: scale(0.8) translateX(-10px); pointer-events: none; transition: var(--transition-bounce); }
+        .speech-bubble::before { content: ''; position: absolute; left: -8px; top: 50%; transform: translateY(-50%); border-top: 8px solid transparent; border-bottom: 8px solid transparent; border-right: 8px solid rgba(255, 255, 255, 0.85); }
+        .assistant-wrapper.active .speech-bubble { opacity: 1; transform: scale(1) translateX(0); }
+        .search-wrapper { display: flex; align-items: center; background: rgba(255, 255, 255, 0.2); border: 1px solid var(--glass-border); border-radius: 30px; padding: 6px; cursor: pointer; transition: var(--transition-smooth); width: 44px; height: 44px; overflow: hidden; margin-left: auto; }
+        .search-wrapper:hover { background: rgba(255, 255, 255, 0.3); }
+        .search-wrapper.active { width: calc(100vw - 120px); max-width: 250px; cursor: text; background: rgba(255, 255, 255, 0.4); box-shadow: inset 0 2px 5px rgba(0,0,0,0.05); }
+        .search-icon { min-width: 30px; height: 30px; display: flex; justify-content: center; align-items: center; color: #333; }
+        .search-input { background: transparent; border: none; outline: none; color: var(--text-color); font-size: 15px; width: 100%; padding-left: 8px; opacity: 0; transform: translateX(10px); transition: var(--transition-smooth); }
+        .search-input::placeholder { color: rgba(51, 51, 51, 0.6); }
+        .search-wrapper.active .search-input { opacity: 1; transform: translateX(0); transition-delay: 0.1s; }
+
+        /* =========================================
+           QUESTS NESTED TABS UI
+           ========================================= */
+        .quest-tabs-container { width: 100%; padding: 0 20px 10px 20px; display: flex; flex-direction: column; gap: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.2); }
+        .quest-tab-row { display: flex; background: rgba(0, 0, 0, 0.08); border-radius: 12px; padding: 4px; position: relative; }
+        .q-tab { flex: 1; background: transparent; border: none; padding: 8px 4px; border-radius: 8px; color: var(--text-color); font-weight: 500; font-size: 0.85rem; cursor: pointer; transition: var(--transition-smooth); opacity: 0.6; outline: none; }
+        .q-tab.active { background: rgba(255, 255, 255, 0.6); box-shadow: 0 2px 8px rgba(0,0,0,0.05); opacity: 1; font-weight: 600; }
+        .quest-list { width: 100%; display: flex; flex-direction: column; gap: 12px; padding-top: 10px; }
+        .quest-skeleton { width: 100%; height: 80px; background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 16px; animation: pulse 1.5s infinite ease-in-out; }
+        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 0.8; } 100% { opacity: 0.5; } }
+
+        /* =========================================
+           BOTTOM CAPSULE NAVIGATION
+           ========================================= */
+        .capsule-tabs { position: fixed; bottom: calc(env(safe-area-inset-bottom) + 20px); left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; align-items: center; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 99px; padding: 6px; box-shadow: var(--glass-shadow); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+        .capsule-tab-group { display: flex; align-items: center; gap: 4px; }
+        .capsule-tab-btn { position: relative; background: transparent; border: none; cursor: pointer; height: 44px; width: 50px; border-radius: 99px; display: flex; align-items: center; justify-content: center; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden; outline: none; color: var(--text-color); }
+        .capsule-tab-btn:hover:not(.active) { background: rgba(255, 255, 255, 0.2); }
+        .capsule-tab-btn.active { width: 116px; background: var(--accent-soft); color: var(--accent-strong); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .capsule-icon-wrap { position: absolute; display: flex; align-items: center; justify-content: center; transition: transform 0.25s ease, opacity 0.2s ease; }
+        .icon-img { width: 22px; height: 22px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
+        .capsule-tab-btn.active .capsule-icon-wrap { opacity: 0; transform: scale(0.6); }
+        .capsule-text { position: absolute; font-size: 14px; font-weight: 500; opacity: 0; transform: translateY(6px); transition: opacity 0.25s ease, transform 0.25s ease; white-space: nowrap; }
+        .capsule-tab-btn.active .capsule-text { opacity: 1; transform: translateY(0); }
     </style>
 </head>
 <body>
 
-    <!-- Top Navigation Header -->
-    <header class="app-topbar container">
-        <button id="hamburgerBtn" class="icon-btn" aria-label="Open settings menu" data-i18n-aria-label="openSettings">
-            <svg class="icon-svg" viewBox="0 0 24 24" fill="none">
-                <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-        </button>
-        <div class="header-title-box">
-            <h1 id="screenTitle" data-i18n="home">Home</h1>
-            <div id="todayDate" class="subtitle"></div>
+    <div id="stage">
+        
+        <!-- Tab 0: Home -->
+        <div class="slide" id="page-home">
+            <div class="glass-panel"><header class="page-header"><h2>Home</h2></header><main class="page-content"><div class="blank-text">Nothing to see here yet.</div></main></div>
         </div>
-        <div style="width:40px;"></div> <!-- visual spacer -->
-    </header>
 
-    <!-- Side Menu & Backdrop -->
-    <div id="menuBackdrop" class="menu-backdrop"></div>
-    <aside id="sideMenu" class="side-menu" aria-label="Settings" data-i18n-aria-label="settings">
-        <h2 class="settings-title" data-i18n="settings">Settings</h2>
-        <div class="settings-row">
-            <span class="settings-label" data-i18n="darkTheme">Dark Theme</span>
-            <label class="switch" aria-label="Toggle theme" data-i18n-aria-label="toggleTheme">
-                <input type="checkbox" id="themeToggle">
-                <span class="switch-slider"></span>
-            </label>
-        </div>
-        <div class="settings-row" style="margin-top: 10px;">
-            <span class="settings-label" data-i18n="language">Language</span>
-            <select id="languageSelect" class="custom-select language-select" aria-label="Language" data-i18n-aria-label="language">
-                <option value="en">English</option>
-                <option value="fa">فارسی</option>
-            </select>
-        </div>
-    </aside>
+        <!-- Tab 1: Analytics -->
+        <div class="slide" id="page-analytics">
+            <div class="glass-panel">
+                <header class="page-header"><h2>Analytics</h2></header>
+                <main class="page-content">
+                    <section id="analyticsView" class="tab-view">
+                        <div class="chart-card">
+                            <div class="chart-inner">
+                                <div id="slider" title="Filter mood range" data-i18n-title="filterMoodRange"></div>
+                                <div class="chart-wrap"><canvas id="moodScoreChart"></canvas></div>
+                            </div>
+                            <div class="segment-control">
+                                <div class="segment-label" id="segmentLabel" data-i18n="loadingWeek">Loading week...</div>
+                                <div class="nav-btn-group">
+                                    <button id="prevWeekBtn" class="nav-btn" aria-label="Previous week" data-i18n-aria-label="previousWeek"><span data-i18n="prev">← Prev</span></button>
+                                    <button id="nextWeekBtn" class="nav-btn" aria-label="Next week" data-i18n-aria-label="nextWeek"><span data-i18n="next">Next →</span></button>
+                                </div>
+                            </div>
+                        </div>
 
-    <!-- Capsule Tab Bar -->
-    <nav class="capsule-tabs" aria-label="Main Navigation" data-i18n-aria-label="mainNavigation">
+                        <div class="filter-bar">
+                            <label for="panelRangeSelect" data-i18n="summaryRange">Summary Range</label>
+                            <select id="panelRangeSelect" class="custom-select">
+                                <option value="week" data-i18n="thisWeek">This week</option>
+                                <option value="month" data-i18n="thisMonth">This month</option>
+                                <option value="all" data-i18n="allTime">All time</option>
+                            </select>
+                        </div>
+
+                        <div class="panels">
+                            <div class="panel">
+                                <h3 data-i18n="dietary">Dietary</h3>
+                                <div id="dietPanel" class="panel-list"></div>
+                            </div>
+                            <div class="panel">
+                                <h3 data-i18n="health">Health</h3>
+                                <div id="healthPanel" class="panel-list"></div>
+                            </div>
+                            <div class="panel">
+                                <h3 data-i18n="activities">Activities</h3>
+                                <div id="activityPanel" class="panel-list"></div>
+                            </div>
+                        </div>
+
+                        <div id="logsContainer">
+                            <div id="loadingMessage" class="empty-placeholder" data-loading-state="initial" data-i18n="connecting">Connecting and fetching logs...</div>
+                        </div>
+                    </section>
+                </main>
+            </div>
+        </div>
+
+        <!-- Tab 2: Search (Active by default) -->
+        <div class="slide" id="page-search">
+            <div class="glass-panel">
+                <header class="page-header">
+                    <div class="assistant-wrapper" id="dogWrapper">
+                        <img src="assets/dog.png" alt="Assistant Dog" class="dog-avatar" onerror="this.src='https://cdn-icons-png.flaticon.com/512/616/616408.png'">
+                        <div class="speech-bubble">Ask me anything</div>
+                    </div>
+                    <div class="search-wrapper" id="searchWrapper">
+                        <div class="search-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></div>
+                        <input type="text" class="search-input" placeholder="Search keywords..." id="searchInput">
+                    </div>
+                </header>
+                <main class="page-content"><div class="blank-text">Search results will appear here.</div></main>
+            </div>
+        </div>
+
+        <!-- Tab 3: Quests -->
+        <div class="slide" id="page-quests">
+            <div class="glass-panel">
+                <header class="page-header"><h2>Quests</h2></header>
+                <div class="quest-tabs-container">
+                    <div class="quest-tab-row" id="quest-status-tabs"><button class="q-tab active" data-value="active">Active</button><button class="q-tab" data-value="completed">Completed</button><button class="q-tab" data-value="abandoned">Abandoned</button></div>
+                    <div class="quest-tab-row" id="quest-type-tabs"><button class="q-tab active" data-value="lines">Quest lines</button><button class="q-tab" data-value="single">Single quests</button></div>
+                </div>
+                <main class="page-content" style="padding-top: 10px;">
+                    <div class="quest-list" id="quest-list-container">
+                        <div class="quest-skeleton"></div><div class="quest-skeleton"></div><div class="quest-skeleton" style="opacity: 0.3;"></div>
+                    </div>
+                </main>
+            </div>
+        </div>
+
+        <!-- Tab 4: Level Up -->
+        <div class="slide" id="page-levelup">
+            <div class="glass-panel"><header class="page-header"><h2>Level Up</h2></header><main class="page-content"><div class="blank-text">Nothing to see here yet.</div></main></div>
+        </div>
+
+    </div>
+
+    <!-- Bottom Capsule UI -->
+    <nav class="capsule-tabs" aria-label="Main Navigation">
         <div class="capsule-tab-group">
-            <button class="capsule-tab-btn active" id="tab-home" type="button" aria-label="Home">
-                <span class="capsule-icon-wrap">
-                    <svg class="icon-svg" viewBox="0 0 24 24" fill="none"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1v-9.5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
-                </span>
-                <span class="capsule-text" data-i18n="home">Home</span>
-            </button>
-            <button class="capsule-tab-btn" id="tab-analytics" type="button" aria-label="Analytics">
-                <span class="capsule-icon-wrap">
-                    <svg class="icon-svg" viewBox="0 0 24 24" fill="none"><path d="M4 19V5M4 19h16M8 16v-4M12 16V8M16 16V4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                </span>
-                <span class="capsule-text" data-i18n="analytics">Analytics</span>
-            </button>
-            <button class="capsule-tab-btn" id="tab-logs" type="button" aria-label="Search Logs">
-                <span class="capsule-icon-wrap">
-                    <svg class="icon-svg" viewBox="0 0 24 24" fill="none"><path d="M21 21l-4.35-4.35M19 11a8 8 0 1 1-16 0 8 8 0 0 1 16 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                </span>
-                <span class="capsule-text" data-i18n="search">Search</span>
-            </button>
-            <button class="capsule-tab-btn" id="tab-levelup" type="button" aria-label="Level Up">
-                <span class="capsule-icon-wrap">
-                    <svg class="icon-svg" viewBox="0 0 24 24" fill="none"><path d="M12 19V5M5 12l7-7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                </span>
-                <span class="capsule-text" data-i18n="levelUp">Level up</span>
-            </button>
+            <button class="capsule-tab-btn" id="tab-home" type="button"><span class="capsule-icon-wrap"><img src="assets/icons/Home.svg" class="icon-img" onerror="this.src='https://cdn-icons-png.flaticon.com/128/1946/1946436.png'"></span><span class="capsule-text">Home</span></button>
+            <button class="capsule-tab-btn" id="tab-analytics" type="button"><span class="capsule-icon-wrap"><img src="assets/icons/Eye.svg" class="icon-img" onerror="this.src='https://cdn-icons-png.flaticon.com/128/1164/1164382.png'"></span><span class="capsule-text">Analytics</span></button>
+            <button class="capsule-tab-btn" id="tab-logs" type="button"><span class="capsule-icon-wrap"><img src="assets/icons/Search.svg" class="icon-img" onerror="this.src='https://cdn-icons-png.flaticon.com/128/54/54481.png'"></span><span class="capsule-text">Search</span></button>
+            <button class="capsule-tab-btn" id="tab-quests" type="button"><span class="capsule-icon-wrap"><img src="assets/icons/Book-open.svg" class="icon-img" onerror="this.src='https://cdn-icons-png.flaticon.com/128/1475/1475095.png'"></span><span class="capsule-text">Quests</span></button>
+            <button class="capsule-tab-btn" id="tab-levelup" type="button"><span class="capsule-icon-wrap"><img src="assets/icons/Arrow up.svg" class="icon-img" onerror="this.src='https://cdn-icons-png.flaticon.com/128/3373/3373268.png'"></span><span class="capsule-text">Level up</span></button>
         </div>
     </nav>
 
-    <!-- App Views Sliding Container -->
-    <main class="container pages-viewport">
-        <div class="pages-track" id="pagesTrack">
-
-            <!-- HOME TAB: Leo Character Hero Card Only -->
-            <section id="homeView" class="tab-view active">
-                <div id="homeDashboard" class="home-dashboard"></div>
-            </section>
-
-            <!-- ANALYTICS TAB: chart & summary dashboard -->
-            <section id="analyticsView" class="tab-view">
-                <div class="chart-card">
-                    <div class="chart-inner">
-                        <div id="slider" title="Filter mood range" data-i18n-title="filterMoodRange"></div>
-                        <div class="chart-wrap">
-                            <canvas id="moodScoreChart"></canvas>
-                        </div>
-                    </div>
-
-                    <div class="segment-control">
-                        <div class="segment-label" id="segmentLabel" data-i18n="loadingWeek">Loading week...</div>
-                        <div class="nav-btn-group">
-                            <button id="prevWeekBtn" class="nav-btn" aria-label="Previous week" data-i18n-aria-label="previousWeek"><span data-i18n="prev">← Prev</span></button>
-                            <button id="nextWeekBtn" class="nav-btn" aria-label="Next week" data-i18n-aria-label="nextWeek"><span data-i18n="next">Next →</span></button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="filter-bar">
-                    <label for="panelRangeSelect" data-i18n="summaryRange">Summary Range</label>
-                    <select id="panelRangeSelect" class="custom-select">
-                        <option value="week" data-i18n="thisWeek">This week</option>
-                        <option value="month" data-i18n="thisMonth">This month</option>
-                        <option value="all" data-i18n="allTime">All time</option>
-                    </select>
-                </div>
-
-                <div class="panels">
-                    <div class="panel">
-                        <h3 data-i18n="dietary">Dietary</h3>
-                        <div id="dietPanel" class="panel-list"></div>
-                    </div>
-                    <div class="panel">
-                        <h3 data-i18n="health">Health</h3>
-                        <div id="healthPanel" class="panel-list"></div>
-                    </div>
-                    <div class="panel">
-                        <h3 data-i18n="activities">Activities</h3>
-                        <div id="activityPanel" class="panel-list"></div>
-                    </div>
-                </div>
-
-                <div id="logsContainer">
-                    <div id="loadingMessage" class="empty-placeholder" data-loading-state="initial" data-i18n="connecting">Connecting and fetching logs...</div>
-                </div>
-            </section>
-
-            <!-- SEARCH TAB -->
-            <section id="logsView" class="tab-view">
-                <div class="search-wrapper">
-                    <svg class="search-icon-inside" viewBox="0 0 24 24"><path d="M21 21l-4.35-4.35M19 11a8 8 0 1 1-16 0 8 8 0 0 1 16 0z" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
-                    <input type="text" id="logSearch" placeholder="Search mood, foods, notes, tags..." data-i18n-placeholder="searchPlaceholder" class="search-input" autocomplete="off" autocorrect="off">
-                </div>
-
-                <!-- Dynamic AI Folders -->
-                <div id="foldersBar" class="folders-bar"></div>
-
-                <div id="allLogsContainer"></div>
-            </section>
-
-            <!-- LEVEL UP TAB -->
-            <section id="levelupView" class="tab-view">
-                <div id="skillsContainer" class="skills-grid"></div>
-
-                <div class="skill-focus-section">
-                    <h3 data-i18n="currentFocusSkill">Current Focus Skill</h3>
-                    <select id="skillFocusSelect" class="custom-select">
-                        <option value="none" data-i18n="none">None</option>
-                        <option value="strength" data-i18n="strength">Strength</option>
-                        <option value="endurance" data-i18n="endurance">Endurance</option>
-                        <option value="intelligence" data-i18n="intelligence">Intelligence</option>
-                        <option value="charisma" data-i18n="charisma">Charisma</option>
-                        <option value="perception" data-i18n="perception">Perception</option>
-                        <option value="wellbeing" data-i18n="wellbeing">Wellbeing</option>
-                    </select>
-                    <div id="dailyTaskContainer" data-i18n="dailyQuests">Daily quests coming soon... 👀</div>
-                </div>
-            </section>
-
-        </div>
-    </main>
-
     <script>
-    // --- Application State ---
-    const DateTime = luxon.DateTime;
-    const tg = window.Telegram?.WebApp;
-    const BACKEND_URL_BASE = 'https://idol-figured-organ-autos.trycloudflare.com';
-
-    let telegramUser = null;
-    let allUserLogs = [];
-    let moodChartInstance = null;
-    let weekSegments = [];
-    let idx = 0;
-    let slider = null;
-    let panelRange = 'week';
-    let sliderUpdateRAF = null;
-    let currentTabIndex = 0;
-
-    // --- Search Folder State ---
-    const FOLDER_META = {
-        all:           { label: 'All Notes',     icon: '📂' },
-        todo:          { label: 'To-Do',         icon: '✅' },
-        work:          { label: 'Work',          icon: '💼' },
-        family:        { label: 'Family',        icon: '👨‍👩‍👧' },
-        health:        { label: 'Health',        icon: '❤️' },
-        finance:       { label: 'Finance',       icon: '💳' },
-        entertainment: { label: 'Entertainment', icon: '🎮' },
-        personal:      { label: 'Personal',      icon: '📔' }
-    };
-
-    let activeFolder = 'all';
-
-// Known icons; any unknown skill automatically gets '✨'
-const KNOWN_SKILL_ICONS = {
-    strength: '💪',
-    endurance: '🏃',
-    intelligence: '🧠',
-    charisma: '🗣️',
-    perception: '👁️',
-    wellbeing: '🧘',
-    art: '🎨',
-    luck: '🍀',
-    cooking: '🍳',
-    coding: '💻',
-    music: '🎵',
-    gaming: '🎮',
-    reading: '📚'
-};
-
-function getSkillIcon(skillName) {
-    return KNOWN_SKILL_ICONS[skillName.toLowerCase()] || '✨';
-}
-
-// Holds dynamically aggregated skills from logs
-let userSkills = {};
-
-    // --- Dynamic Character Avatar (Leo) Configuration ---
-    function getCharacterAvatarSrc() {
-        return './assets/Leo/Leo.png';
-    }
-
-    // --- Safe HTML String Escape ---
-    function escapeHtml(str) {
-        if (!str) return '';
-        return String(str)
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
-    }
-
-    // --- Internationalization ---
-    const TRANSLATIONS = {
-        en: {
-            appTitle: 'My AI Processed Logs & Mood Chart', openSettings: 'Open settings menu', moodChart: 'Mood chart',
-            settings: 'Settings', darkTheme: 'Dark/Light Theme', toggleTheme: 'Toggle theme', language: 'Language', mainNavigation: 'Main Navigation',
-            home: 'Home', search: 'Search', levelUp: 'Level up', filterMoodRange: 'Filter mood range', loadingWeek: 'Loading week...',
-            previousWeek: 'Previous week', nextWeek: 'Next week', prev: '← Prev', next: 'Next →', summaryRange: 'Summary Range',
-            thisWeek: 'This week', thisMonth: 'This month', allTime: 'All time', dietary: 'Dietary', health: 'Health', activities: 'Activities',
-            connecting: 'Connecting and fetching logs...', searchPlaceholder: 'Search mood, foods, notes, tags...', currentFocusSkill: 'Current Focus Skill',
-            none: 'None', strength: 'Strength', endurance: 'Endurance', intelligence: 'Intelligence', charisma: 'Charisma', perception: 'Perception',
-            wellbeing: 'Wellbeing', dailyQuests: 'Daily quests coming soon... 👀', analytics: 'Analytics', today: 'Today', searchLogs: 'Search', progression: 'Level up',
-            noActivity: 'No activity logged yet.', noneRecorded: 'None recorded',
-            clear: 'Clear', noLogsMatched: 'No logs matched this entry.', noLogsSoFar: 'No logs logged so far.', noData: 'No data', healthSection: 'Health',
-            activitySection: 'Activity', dietSection: 'Diet', logHabits: 'Log habits to start gaining XP!', loadingAllLogs: 'Loading all logs...', userIdMissing: 'User ID missing.',
-            unableFetch: 'Unable to fetch logs. Please try again.', couldNotLoad: 'Could not load logs', level: 'Lvl'
-        },
-        fa: {
-            appTitle: 'گزارش‌های پردازش‌شده با هوش مصنوعی و نمودار حال روحی', openSettings: 'باز کردن منوی تنظیمات', moodChart: 'نمودار حال روحی',
-            settings: 'تنظیمات', darkTheme: 'حالت تاریک/روشن', toggleTheme: 'تغییر حالت نمایش', language: 'زبان', mainNavigation: 'ناوبری اصلی',
-            home: 'خانه', search: 'جستجو', levelUp: 'پیشرفت', filterMoodRange: 'فیلتر بازه حال روحی', loadingWeek: 'در حال بارگذاری هفته...',
-            previousWeek: 'هفته قبل', nextWeek: 'هفته بعد', prev: '← قبل', next: 'بعد →', summaryRange: 'بازه خلاصه',
-            thisWeek: 'این هفته', thisMonth: 'این ماه', allTime: 'همه زمان‌ها', dietary: 'تغذیه', health: 'سلامت', activities: 'فعالیت‌ها',
-            connecting: 'در حال اتصال و دریافت گزارش‌ها...', searchPlaceholder: 'جستجوی حال روحی، غذاها، یادداشت‌ها، برچسب‌ها...', currentFocusSkill: 'مهارت مورد تمرکز',
-            none: 'هیچ‌کدام', strength: 'قدرت', endurance: 'استقامت', intelligence: 'هوش', charisma: 'جذابیت اجتماعی', perception: 'ادراک',
-            wellbeing: 'بهزیستی', dailyQuests: 'ماموریت‌های روزانه به‌زودی... 👀', analytics: 'تحلیل‌ها', today: 'امروز', searchLogs: 'جستجو', progression: 'پیشرفت',
-            noActivity: 'هنوز فعالیتی ثبت نشده است.', noneRecorded: 'موردی ثبت نشده است',
-            clear: 'پاک کردن', noLogsMatched: 'گزارشی مطابق این مورد پیدا نشد.', noLogsSoFar: 'هنوز گزارشی ثبت نشده است.', noData: 'داده‌ای وجود ندارد', healthSection: 'سلامت',
-            activitySection: 'فعالیت', dietSection: 'تغذیه', logHabits: 'برای شروع دریافت XP عادت‌ها را ثبت کنید!', loadingAllLogs: 'در حال بارگذاری همه گزارش‌ها...', userIdMissing: 'شناسه کاربر وجود ندارد.',
-            unableFetch: 'دریافت گزارش‌ها ناموفق بود. لطفاً دوباره تلاش کنید.', couldNotLoad: 'بارگذاری گزارش‌ها ناموفق بود', level: 'سطح'
-        }
-    };
-
-    let currentLanguage = localStorage.getItem('language') || 'en';
-
-    function t(key) {
-        return TRANSLATIONS[currentLanguage]?.[key] ?? TRANSLATIONS.en[key] ?? key;
-    }
-
-    function applyLanguage(lang) {
-        currentLanguage = lang === 'fa' ? 'fa' : 'en';
-        localStorage.setItem('language', currentLanguage);
-        const isFa = currentLanguage === 'fa';
-        document.documentElement.lang = currentLanguage;
-        document.documentElement.dir = isFa ? 'rtl' : 'ltr';
-        document.body.classList.toggle('rtl', isFa);
-
-        document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
-        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = t(el.dataset.i18nPlaceholder); });
-        document.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = t(el.dataset.i18nTitle); });
-        document.querySelectorAll('[data-i18n-aria-label]').forEach(el => { el.setAttribute('aria-label', t(el.dataset.i18nAriaLabel)); });
-        document.title = t('appTitle');
-
-        const languageSelect = document.getElementById('languageSelect');
-        if (languageSelect) languageSelect.value = currentLanguage;
-
-        updateScreenTitle();
-        updateTodayDate();
-        if (moodChartInstance) {
-            moodChartInstance.data.datasets[0].label = t('moodChart');
-            moodChartInstance.options.scales.x.adapters = moodChartInstance.options.scales.x.adapters || {};
-            moodChartInstance.update('none');
-        }
-        if (weekSegments.length) updateView();
-        if (allUserLogs.length) { displayAllLogs(); displaySkills(); renderHomeDashboard(); }
-        const loadingDiv = document.getElementById('loadingMessage');
-        if (loadingDiv && loadingDiv.dataset.loadingState === 'initial') loadingDiv.textContent = t('connecting');
-    }
-
-    function updateScreenTitle() {
-        const screenTitle = document.getElementById('screenTitle');
-        const active = document.querySelector('.capsule-tab-btn.active')?.id;
-        const titleKey = active === 'tab-analytics' ? 'analytics' : active === 'tab-logs' ? 'searchLogs' : active === 'tab-levelup' ? 'progression' : 'home';
-        
-        if (screenTitle) {
-            screenTitle.style.opacity = '0';
-            screenTitle.style.transform = 'translateY(-4px)';
-            setTimeout(() => {
-                screenTitle.textContent = t(titleKey);
-                screenTitle.style.opacity = '1';
-                screenTitle.style.transform = 'translateY(0)';
-            }, 140);
-        }
-    }
-
-    function updateTodayDate() {
-        const locale = currentLanguage === 'fa' ? 'fa' : 'en';
-        document.getElementById('todayDate').textContent = DateTime.now().setLocale(locale).toFormat('ccc, LLL d');
-    }
-
-    // --- Theme Init ---
-    function initTheme() {
-        const toggle = document.getElementById('themeToggle');
-        const savedTheme = localStorage.getItem('theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-        const isDark = savedTheme === 'dark';
-        document.body.classList.toggle('dark', isDark);
-        if (toggle) toggle.checked = isDark;
-
-        toggle?.addEventListener('change', (e) => {
-            const dark = e.target.checked;
-            document.body.classList.toggle('dark', dark);
-            localStorage.setItem('theme', dark ? 'dark' : 'light');
-            if (moodChartInstance) {
-                const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim();
-                moodChartInstance.options.scales.x.ticks.color = textColor;
-                moodChartInstance.options.scales.y.ticks.color = textColor;
-                moodChartInstance.update();
-            }
-        });
-    }
-
-    // --- Navigation Tabs & Carousel Transition Animation ---
-    function initTabs() {
-        const tabs = [
-            { btn: document.getElementById('tab-home'), view: document.getElementById('homeView') },
-            { btn: document.getElementById('tab-analytics'), view: document.getElementById('analyticsView') },
-            { btn: document.getElementById('tab-logs'), view: document.getElementById('logsView') },
-            { btn: document.getElementById('tab-levelup'), view: document.getElementById('levelupView') }
-        ];
-        const track = document.getElementById('pagesTrack');
-        if (!track) return;
-
-        function switchToTab(index) {
-            if (index === currentTabIndex && tabs[index].view.classList.contains('active')) return;
-
-            const prevIndex = currentTabIndex;
-            currentTabIndex = index;
-
-            const prevTab = tabs[prevIndex];
-            const nextTab = tabs[index];
-
-            // 1. Update Capsule Tab Buttons
-            tabs.forEach((t, i) => {
-                t.btn.classList.toggle('active', i === index);
-            });
-
-            // 2. Animate Header Title
-            updateScreenTitle();
-
-            // 3. Mark views as transitioning for smooth height & scale
-            prevTab.view.classList.add('transitioning');
-            nextTab.view.classList.add('transitioning');
-
-            // 4. Slide track horizontally
-            track.style.transform = `translateX(-${index * 25}%)`;
-
-            // 5. Smooth scroll up to top
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-
-            // 6. Scale & fade transitions
-            prevTab.view.classList.remove('active');
-            nextTab.view.classList.add('active');
-
-            // 7. Render tab data if needed
-            if (nextTab.view.id === 'homeView') {
-                renderHomeDashboard();
-            } else if (nextTab.view.id === 'logsView') {
-                displayAllLogs();
-            } else if (nextTab.view.id === 'levelupView') {
-                calculateSkillLevels();
-                displaySkills();
-            } else if (nextTab.view.id === 'analyticsView') {
-                if (moodChartInstance) {
-                    requestAnimationFrame(() => {
-                        moodChartInstance.resize();
-                        moodChartInstance.update('none');
-                    });
-                }
-            }
-
-            // 8. Clean up transition classes after animation completes
-            clearTimeout(track._transitionTimer);
-            track._transitionTimer = setTimeout(() => {
-                tabs.forEach((t, i) => {
-                    t.view.classList.remove('transitioning');
-                    if (i !== currentTabIndex) {
-                        t.view.classList.remove('active');
-                    }
-                });
-                if (nextTab.view.id === 'analyticsView' && moodChartInstance) {
-                    moodChartInstance.resize();
-                }
-            }, 460);
-        }
-
-        tabs.forEach((tab, index) => {
-            tab.btn.addEventListener('click', () => switchToTab(index));
-        });
-
-        // Initialize track position
-        track.style.transform = `translateX(-${currentTabIndex * 25}%)`;
-    }
-
-    // --- Drawer Menu ---
-    function initDrawer() {
-        const hamburger = document.getElementById('hamburgerBtn');
-        const sideMenu = document.getElementById('sideMenu');
-        const backdrop = document.getElementById('menuBackdrop');
-
-        const toggleMenu = (open) => {
-            sideMenu.classList.toggle('open', open);
-            backdrop.classList.toggle('open', open);
+        // ==========================================
+        // STUBS & UTILS (To prevent crashes)
+        // ==========================================
+        const currentLanguage = 'en';
+        const t = (key) => {
+            const translations = {
+                'loadingAllLogs': 'Loading your data...',
+                'userIdMissing': 'User ID missing. Open in Telegram.',
+                'noActivity': 'No activity found.',
+                'couldNotLoad': 'Could not load data',
+                'unableFetch': 'Unable to fetch data. Check connection.',
+                'noData': 'No data for this week',
+                'noneRecorded': 'None recorded'
+            };
+            return translations[key] || key;
         };
+        const escapeHtml = (str) => String(str).replace(/[&<>'"]/g, match => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[match]));
+        const showRelevantLogs = (item, type, logs) => console.log(`Filter applied: ${item}`, logs);
 
-        hamburger.addEventListener('click', () => toggleMenu(!sideMenu.classList.contains('open')));
-        backdrop.addEventListener('click', () => toggleMenu(false));
-    }
+        // Define global state for current active tab (2 = Search initially)
+        window.currentTabIndex = 2;
 
-    // --- Chart & Slider Setup ---
-    function makeGradient(ctx) {
-        const h = 280;
-        const g = ctx.createLinearGradient(0, 0, 0, h);
-        const root = getComputedStyle(document.documentElement);
-        const s = root.getPropertyValue('--chart-grad-start').trim() || 'rgba(59,130,246,0.3)';
-        const e = root.getPropertyValue('--chart-grad-end').trim() || 'rgba(59,130,246,0.01)';
-        g.addColorStop(0, s);
-        g.addColorStop(1, e);
-        return g;
-    }
+        // ==========================================
+        // BACKEND FETCH PIPELINE
+        // ==========================================
+        const DateTime = luxon.DateTime;
+        const BACKEND_URL_BASE = 'https://idol-figured-organ-autos.trycloudflare.com';
+        let telegramUser = null;
+        let allUserLogs = [];
+        let weekSegments = [];
+        let idx = 0;
+        let isDataLoaded = false; 
 
-    function setupChartAndSlider() {
-        const canvas = document.getElementById('moodScoreChart');
-        const ctx = canvas.getContext('2d');
+        // Group logs into distinct Monday-to-Sunday weekly segments
+        function splitLogsToWeeks(logs) {
+            if (!logs.length) return [];
+            const weeks = [];
+            let currentWeekData = [];
+            let currentWeekStart = logs[0].luxon_logged_at.startOf('week');
 
-        const thresholdPlugin = {
-            id: 'thresholdPlugin',
-            beforeDraw(c) {
-                const { ctx, chartArea: { left, right }, scales: { y } } = c;
-                const { min, max } = c.config.options.thresholds;
-                ctx.save();
-                ctx.setLineDash([4, 4]);
-
-                ctx.strokeStyle = 'rgba(239, 68, 68, 0.65)';
-                ctx.beginPath();
-                ctx.moveTo(left, y.getPixelForValue(min));
-                ctx.lineTo(right, y.getPixelForValue(min));
-                ctx.stroke();
-
-                ctx.strokeStyle = 'rgba(16, 185, 129, 0.65)';
-                ctx.beginPath();
-                ctx.moveTo(left, y.getPixelForValue(max));
-                ctx.lineTo(right, y.getPixelForValue(max));
-                ctx.stroke();
-                ctx.restore();
-            }
-        };
-
-        const syncHeight = {
-            id: 'syncHeight',
-            afterLayout(c) {
-                const sliderElem = document.getElementById('slider');
-                const y = c.scales.y;
-                const top = y.getPixelForValue(c.options.scales.y.max);
-                const bot = y.getPixelForValue(c.options.scales.y.min);
-                sliderElem.style.marginTop = `${top + 10}px`;
-                sliderElem.style.height = `${bot - top}px`;
-            }
-        };
-
-        moodChartInstance = new Chart(ctx, {
-            type: 'line',
-            data: {
-                datasets: [{
-                    label: 'Mood',
-                    data: [],
-                    fill: true,
-                    backgroundColor: makeGradient(ctx),
-                    borderColor: getComputedStyle(document.documentElement).getPropertyValue('--chart-line').trim(),
-                    borderWidth: 2.5,
-                    pointRadius: 4,
-                    pointHoverRadius: 6,
-                    tension: 0.32
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    x: {
-                        type: 'time',
-                        time: {
-                            unit: 'day',
-                            tooltipFormat: 'MMM dd yyyy HH:mm',
-                            displayFormats: { day: 'dd' }
-                        },
-                        grid: { display: false },
-                        ticks: {
-                            color: getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim(),
-                            font: { family: '-apple-system, system-ui' }
-                        }
-                    },
-                    y: {
-                        min: 1,
-                        max: 5,
-                        grid: {
-                            color: getComputedStyle(document.documentElement).getPropertyValue('--border-color').trim()
-                        },
-                        ticks: {
-                            stepSize: 1,
-                            callback(v) {
-                                const moodEmojis = { 1: "🥵", 2: "🥺", 3: "🙂", 4: "😃", 5: "🤗" };
-                                return moodEmojis[v] || v;
-                            }
-                        }
-                    }
-                },
-                plugins: {
-                    legend: { display: false },
-                    zoom: { pan: { enabled: true, mode: 'x' }, zoom: { wheel: { enabled: false }, pinch: { enabled: false } } }
-                },
-                thresholds: { min: 2, max: 4 }
-            },
-            plugins: [syncHeight, thresholdPlugin]
-        });
-
-        slider = document.getElementById('slider');
-        if (slider.noUiSlider) slider.noUiSlider.destroy();
-        noUiSlider.create(slider, {
-            start: [1, 5],
-            connect: true,
-            orientation: 'vertical',
-            direction: 'rtl',
-            range: { min: 1, max: 5 },
-            step: 0.1,
-            tooltips: [false, false]
-        });
-
-        slider.noUiSlider.on('update', ([min, max]) => {
-            min = +min;
-            max = +max;
-            moodChartInstance.options.thresholds.min = min;
-            moodChartInstance.options.thresholds.max = max;
-
-            const base = getComputedStyle(document.documentElement).getPropertyValue('--chart-line').trim();
-            const weekData = getWeekMoodData(idx);
-            moodChartInstance.data.datasets[0].pointBackgroundColor =
-                weekData.map(pt => (pt.y >= min && pt.y <= max) ? '#10b981' : base);
-
-            moodChartInstance.update('none');
-
-            if (sliderUpdateRAF) cancelAnimationFrame(sliderUpdateRAF);
-            sliderUpdateRAF = requestAnimationFrame(() => {
-                updatePanels(idx);
-            });
-        });
-    }
-
-    // --- API Data Fetching & Processing ---
-    async function fetchAllLogsAndSetupChart() {
-        const loadingDiv = document.getElementById('loadingMessage');
-        loadingDiv.innerText = t('loadingAllLogs');
-        loadingDiv.style.display = 'block';
-
-        if (!telegramUser || !telegramUser.id) {
-            loadingDiv.innerText = t('userIdMissing');
-            return;
-        }
-
-        const fetchUrl = `${BACKEND_URL_BASE}/api/get_user_logs/?telegram_id=${telegramUser.id}`;
-        try {
-            const response = await fetch(fetchUrl, {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json'}
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                loadingDiv.style.display = 'none';
-
-                if (data.logs && data.logs.length > 0) {
-                    allUserLogs = data.logs.map(log => {
-                        const luxonDate = DateTime.fromISO(log.logged_at.replace(' ', 'T') + 'Z').setZone(DateTime.local().zoneName);
-                        
-                        // Dynamic skills dictionary from backend
-                        const skillsGained = log.skills_xp_gained || {};
-                    
-                        const searchPieces = [
-                            log.original_note || '',
-                            log.mood_label || '',
-                            ...(log.health || []),
-                            ...(log.activity || []),
-                            ...(log.categories || []),
-                            ...Object.keys(skillsGained) // Allow searching by skill name!
-                        ];
-                        if (log.diet) {
-                            Object.entries(log.diet).forEach(([cat, items]) => {
-                                searchPieces.push(cat, ...(items || []));
-                            });
-                        }
-                    
-                        return {
-                            ...log,
-                            luxon_logged_at: luxonDate,
-                            _searchText: searchPieces.join(' ').toLowerCase(),
-                            skills_xp_gained: skillsGained
-                        };
-                    });
-
-                    allUserLogs.sort((a, b) => a.luxon_logged_at - b.luxon_logged_at);
-                    weekSegments = splitLogsToWeeks(allUserLogs);
-                    idx = weekSegments.length - 1;
-
-                    setupChartAndSlider();
-                    updateView();
-                    calculateSkillLevels();
-                    renderHomeDashboard();
-                    displaySkills();
+            logs.forEach(log => {
+                if (log.luxon_logged_at >= currentWeekStart && log.luxon_logged_at < currentWeekStart.plus({ weeks: 1 })) {
+                    currentWeekData.push(log);
                 } else {
-                    document.getElementById('logsContainer').innerHTML = `<p class="empty-placeholder">${escapeHtml(t('noActivity'))}</p>`;
+                    if (currentWeekData.length > 0) weeks.push(currentWeekData);
+                    currentWeekData = [log];
+                    currentWeekStart = log.luxon_logged_at.startOf('week');
                 }
-            } else {
-                loadingDiv.innerText = `${t('couldNotLoad')} (${response.status})`;
-            }
-        } catch (err) {
-            loadingDiv.innerText = t('unableFetch');
-            console.error('Fetch logs error:', err);
-        }
-    }
-
-    function splitLogsToWeeks(logs) {
-        if (!logs.length) return [];
-        const weeks = [];
-        let currentWeekData = [];
-        let currentWeekStart = logs[0].luxon_logged_at.startOf('week');
-
-        logs.forEach(log => {
-            if (log.luxon_logged_at >= currentWeekStart && log.luxon_logged_at < currentWeekStart.plus({ weeks: 1 })) {
-                currentWeekData.push(log);
-            } else {
-                if (currentWeekData.length > 0) weeks.push(currentWeekData);
-                currentWeekData = [log];
-                currentWeekStart = log.luxon_logged_at.startOf('week');
-            }
-        });
-        if (currentWeekData.length > 0) weeks.push(currentWeekData);
-        return weeks;
-    }
-
-    function getWeekMoodData(weekIdx) {
-        if (!weekSegments[weekIdx] || !weekSegments[weekIdx].length) return [];
-        const weekLogs = weekSegments[weekIdx];
-        const weekActualStartLuxon = weekLogs[0].luxon_logged_at.startOf('week');
-
-        const daysData = [];
-        for (let i = 0; i < 7; i++) {
-            const currentDayLuxon = weekActualStartLuxon.plus({ days: i });
-            const dayLogs = weekLogs.filter(l =>
-                l.luxon_logged_at.toISODate() === currentDayLuxon.toISODate() &&
-                l.mood_score != null
-            );
-
-            const avg = dayLogs.length
-                ? dayLogs.reduce((s, l) => s + l.mood_score, 0) / dayLogs.length
-                : null;
-
-            daysData.push({
-                x: currentDayLuxon.toISODate(),
-                y: avg
             });
-        }
-        return daysData;
-    }
-
-    function updateView() {
-        const weekData = getWeekMoodData(idx);
-        moodChartInstance.data.datasets[0].data = weekData;
-        moodChartInstance.data.datasets[0].backgroundColor = makeGradient(moodChartInstance.ctx);
-
-        const currentWeekSegment = weekSegments[idx];
-        if (currentWeekSegment && currentWeekSegment.length > 0) {
-            const weekStartDate = currentWeekSegment[0].luxon_logged_at.startOf('week');
-            const weekEndDate = weekStartDate.plus({ days: 6 });
-
-            moodChartInstance.options.scales.x.min = weekStartDate.toISODate();
-            moodChartInstance.options.scales.x.max = weekEndDate.toISODate();
-            document.getElementById('segmentLabel').textContent = weekStartDate.setLocale(currentLanguage === 'fa' ? 'fa' : 'en').toFormat('LLLL yyyy');
-        } else {
-            document.getElementById('segmentLabel').textContent = t('noData');
+            if (currentWeekData.length > 0) weeks.push(currentWeekData);
+            return weeks;
         }
 
-        document.getElementById('prevWeekBtn').disabled = (idx === 0);
-        document.getElementById('nextWeekBtn').disabled = (idx === weekSegments.length - 1);
+        // Main data fetching function
+        async function fetchAllLogsAndSetupChart() {
+            const loadingDiv = document.getElementById('loadingMessage');
+            loadingDiv.innerText = t('loadingAllLogs');
+            loadingDiv.style.display = 'block';
 
-        updatePanels(idx);
-        moodChartInstance.update();
-    }
-
-    // --- Panel Aggregations ---
-    function updatePanels(weekIdx) {
-        if (!slider || !slider.noUiSlider) return;
-        const [minMood, maxMood] = slider.noUiSlider.get().map(Number);
-
-        let logsToUse = [];
-        if (panelRange === 'week') {
-            logsToUse = weekSegments[weekIdx] || [];
-        } else if (panelRange === 'month') {
-            const currentWeek = weekSegments[weekIdx] || [];
-            if (currentWeek.length > 0) {
-                const targetMonth = currentWeek[0].luxon_logged_at.month;
-                const targetYear = currentWeek[0].luxon_logged_at.year;
-                logsToUse = allUserLogs.filter(l => l.luxon_logged_at.month === targetMonth && l.luxon_logged_at.year === targetYear);
-            }
-        } else {
-            logsToUse = allUserLogs;
-        }
-
-        const dailyGroups = new Map();
-        logsToUse.forEach(log => {
-            const dateKey = log.luxon_logged_at.toISODate();
-            if (!dailyGroups.has(dateKey)) {
-                dailyGroups.set(dateKey, { logs: [], totalScore: 0, count: 0 });
-            }
-            const group = dailyGroups.get(dateKey);
-            group.logs.push(log);
-            if (log.mood_score != null) {
-                group.totalScore += log.mood_score;
-                group.count++;
-            }
-        });
-
-        const relevantLogs = [];
-        dailyGroups.forEach(group => {
-            if (group.count > 0) {
-                const avg = group.totalScore / group.count;
-                if (avg >= minMood && avg <= maxMood) relevantLogs.push(...group.logs);
-            }
-        });
-
-        function countAndSort(items) {
-            const map = new Map();
-            items.forEach(i => map.set(i, (map.get(i) || 0) + 1));
-            return Array.from(map.entries()).sort((a, b) => b[1] - a[1]);
-        }
-
-        function renderPanelList(containerId, items, type) {
-            const el = document.getElementById(containerId);
-            if (!items.length) {
-                el.innerHTML = `<div class="empty-placeholder">${escapeHtml(t('noneRecorded'))}</div>`;
+            if (!telegramUser || !telegramUser.id) {
+                loadingDiv.innerText = t('userIdMissing');
                 return;
             }
-            el.innerHTML = items.map(([item, count]) => `
-                <div class="panel-item" data-item="${escapeHtml(item)}" data-type="${type}">
-                    <span>${escapeHtml(item)}</span>
-                    <span class="count-pill">${count}×</span>
-                </div>
-            `).join('');
 
-            el.querySelectorAll('.panel-item').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    showRelevantLogs(btn.dataset.item, btn.dataset.type, relevantLogs);
+            const fetchUrl = `${BACKEND_URL_BASE}/api/get_user_logs/?telegram_id=${telegramUser.id}`;
+            
+            try {
+                const response = await fetch(fetchUrl, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
                 });
-            });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    loadingDiv.style.display = 'none';
+
+                    if (data.logs && data.logs.length > 0) {
+                        allUserLogs = data.logs.map(log => {
+                            const luxonDate = DateTime.fromISO(log.logged_at.replace(' ', 'T') + 'Z')
+                                .setZone(DateTime.local().zoneName);
+                            
+                            const skillsGained = log.skills_xp_gained || {};
+                            const searchPieces = [
+                                log.original_note || '',
+                                log.mood_label || '',
+                                ...(log.health || []),
+                                ...(log.activity || []),
+                                ...(log.categories || []),
+                                ...Object.keys(skillsGained)
+                            ];
+                            if (log.diet) {
+                                Object.entries(log.diet).forEach(([cat, items]) => {
+                                    searchPieces.push(cat, ...(items || []));
+                                });
+                            }
+
+                            return {
+                                ...log,
+                                luxon_logged_at: luxonDate,
+                                _searchText: searchPieces.join(' ').toLowerCase(),
+                                skills_xp_gained: skillsGained
+                            };
+                        });
+
+                        allUserLogs.sort((a, b) => a.luxon_logged_at - b.luxon_logged_at);
+                        weekSegments = splitLogsToWeeks(allUserLogs);
+                        idx = weekSegments.length - 1;
+                        
+                        isDataLoaded = true;
+
+                        // If user is ALREADY looking at Analytics Tab (Tab index 1), render immediately
+                        if (window.currentTabIndex === 1) {
+                            setupChartAndSlider();
+                        }
+
+                    } else {
+                        document.getElementById('logsContainer').innerHTML = `<p class="empty-placeholder">${escapeHtml(t('noActivity'))}</p>`;
+                    }
+                } else {
+                    loadingDiv.innerText = `${t('couldNotLoad')} (${response.status})`;
+                }
+            } catch (err) {
+                loadingDiv.innerText = t('unableFetch');
+                console.error('Fetch logs error:', err);
+            }
         }
 
-        // Diet
-        const dietItems = [];
-        relevantLogs.forEach(l => {
-            if (l.diet) {
-                Object.entries(l.diet).forEach(([cat, arr]) => {
-                    if (arr) arr.forEach(item => dietItems.push(`${cat}: ${item}`));
-                });
+        // Telegram WebApp initialization and trigger
+        document.addEventListener('DOMContentLoaded', () => {
+            const tg = window.Telegram?.WebApp;
+            if (tg) {
+                tg.ready();
+                tg.expand();
+            }
+
+            if (tg?.initDataUnsafe?.user?.id) {
+                telegramUser = tg.initDataUnsafe.user;
+                fetchAllLogsAndSetupChart();
+            } else {
+                const loadingDiv = document.getElementById('loadingMessage');
+                if (loadingDiv) {
+                    loadingDiv.innerText = "Please open this app inside Telegram.";
+                    loadingDiv.style.display = 'block';
+                }
             }
         });
-        renderPanelList('dietPanel', countAndSort(dietItems), 'diet');
 
-        // Health
-        const healthItems = [];
-        relevantLogs.forEach(l => {
-            if (l.health) l.health.forEach(item => healthItems.push(item));
-        });
-        renderPanelList('healthPanel', countAndSort(healthItems), 'health');
+        // ==========================================
+        // ANALYTICS CHART & SLIDER RENDER LOGIC
+        // ==========================================
+        let moodChartInstance = null;
+        let slider = null;
+        let panelRange = 'week';
+        let sliderUpdateRAF = null;
+        let chartInitialized = false;
 
-        // Activities
-        const activityItems = [];
-        relevantLogs.forEach(l => {
-            if (l.activity) l.activity.forEach(item => activityItems.push(item));
-        });
-        renderPanelList('activityPanel', countAndSort(activityItems), 'activity');
-    }
+        function makeGradient(ctx) {
+            const h = 280;
+            const g = ctx.createLinearGradient(0, 0, 0, h);
+            g.addColorStop(0, 'rgba(255, 255, 255, 0.6)');
+            g.addColorStop(1, 'rgba(255, 255, 255, 0.01)');
+            return g;
+        }
 
-    function showRelevantLogs(itemText, itemType, logs) {
-        const matched = logs.filter(log => {
-            if (itemType === 'diet') {
-                return log.diet && Object.entries(log.diet).some(([cat, arr]) =>
-                    arr && arr.some(item => `${cat}: ${item}` === itemText)
-                );
+        function setupChartAndSlider() {
+            if(chartInitialized) {
+                // If returning to tab, ensure chart fits its container properly
+                if(moodChartInstance) moodChartInstance.resize(); 
+                return;
             }
-            return log[itemType] && log[itemType].includes(itemText);
-        });
+            
+            const canvas = document.getElementById('moodScoreChart');
+            const ctx = canvas.getContext('2d');
 
-        const container = document.getElementById('logsContainer');
-        container.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
-                <h3 style="font-size: 1rem; font-weight: 700;">${escapeHtml(itemText)}</h3>
-                <button id="closeDetailLogs" class="nav-btn" style="padding: 3px 8px; font-size:0.75rem;">${escapeHtml(t('clear'))}</button>
-            </div>
-        `;
-        document.getElementById('closeDetailLogs').addEventListener('click', () => {
-            container.innerHTML = '';
-        });
-        displayLogEntries(matched, container);
-        container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-
-    function createLogEntryHtml(log) {
-        const cats = Array.isArray(log.categories) && log.categories.length ? log.categories : ['personal'];
-        const catBadges = cats.map(c => {
-            const meta = FOLDER_META[c] || {
-                label: String(c).charAt(0).toUpperCase() + String(c).slice(1),
-                icon: '📁'
+            const thresholdPlugin = {
+                id: 'thresholdPlugin',
+                beforeDraw(c) {
+                    const { ctx, chartArea: { left, right }, scales: { y } } = c;
+                    const { min, max } = c.config.options.thresholds;
+                    ctx.save();
+                    ctx.setLineDash([4, 4]);
+                    ctx.strokeStyle = 'rgba(239, 68, 68, 0.65)';
+                    ctx.beginPath(); ctx.moveTo(left, y.getPixelForValue(min)); ctx.lineTo(right, y.getPixelForValue(min)); ctx.stroke();
+                    ctx.strokeStyle = 'rgba(16, 185, 129, 0.65)';
+                    ctx.beginPath(); ctx.moveTo(left, y.getPixelForValue(max)); ctx.lineTo(right, y.getPixelForValue(max)); ctx.stroke();
+                    ctx.restore();
+                }
             };
-            return `<span class="category-tag">${meta.icon} ${escapeHtml(meta.label)}</span>`;
-        }).join(' ');
 
-        let out = `<div class="log-entry" data-log-id="${escapeHtml(log.id)}">
-            <div class="log-meta">
-                <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
-                    <span>${escapeHtml(log.logged_at)}</span>
-                    ${catBadges}
-                </div>
-                ${log.mood_label ? `<span class="tag" style="background:var(--accent-soft); color:var(--accent-strong); font-weight:700;">${escapeHtml(log.mood_label)} (${log.mood_score ?? '—'})</span>` : ''}
-            </div>`;
-
-        if (log.original_note) {
-            out += `<div class="log-original-note">${escapeHtml(log.original_note)}</div>`;
-        }
-        if (log.health && log.health.length) {
-            out += `<div class="log-section"><h4>${escapeHtml(t('healthSection'))}</h4><ul>${log.health.map(h => `<li class="tag">${escapeHtml(h)}</li>`).join('')}</ul></div>`;
-        }
-        if (log.activity && log.activity.length) {
-            out += `<div class="log-section"><h4>${escapeHtml(t('activitySection'))}</h4><ul>${log.activity.map(a => `<li class="tag">${escapeHtml(a)}</li>`).join('')}</ul></div>`;
-        }
-        if (log.diet) {
-            const dietTags = [];
-            Object.entries(log.diet).forEach(([cat, items]) => {
-                if (items) items.forEach(i => dietTags.push(`<li class="tag">${escapeHtml(cat)}: ${escapeHtml(i)}</li>`));
-            });
-            if (dietTags.length) out += `<div class="log-section"><h4>${escapeHtml(t('dietSection'))}</h4><ul>${dietTags.join('')}</ul></div>`;
-        }
-        out += `</div>`;
-        return out;
-    }
-
-    function displayLogEntries(logsToDisplay, container) {
-        if (!logsToDisplay || !logsToDisplay.length) {
-            container.innerHTML += `<div class="empty-placeholder">${escapeHtml(t('noLogsMatched'))}</div>`;
-            return;
-        }
-        const entriesWrap = document.createElement('div');
-        entriesWrap.className = 'log-entries';
-        entriesWrap.innerHTML = logsToDisplay.slice().reverse().map(createLogEntryHtml).join('');
-        container.appendChild(entriesWrap);
-    }
-
-    // --- Search Tab Accordion & Folder Filtering ---
-    function renderFolderChips() {
-        const bar = document.getElementById('foldersBar');
-        if (!bar) return;
-
-        const counts = { all: allUserLogs.length };
-        allUserLogs.forEach(log => {
-            const cats = Array.isArray(log.categories) && log.categories.length ? log.categories : ['personal'];
-            cats.forEach(c => {
-                counts[c] = (counts[c] || 0) + 1;
-            });
-        });
-
-        const availableFolders = ['all', ...Object.keys(counts).filter(k => k !== 'all' && counts[k] > 0)];
-
-        if (activeFolder !== 'all' && !availableFolders.includes(activeFolder)) {
-            activeFolder = 'all';
-        }
-
-        bar.innerHTML = availableFolders.map(folderKey => {
-            const meta = FOLDER_META[folderKey] || {
-                label: String(folderKey).charAt(0).toUpperCase() + String(folderKey).slice(1),
-                icon: '📁'
+            const syncHeight = {
+                id: 'syncHeight',
+                afterLayout(c) {
+                    const sliderElem = document.getElementById('slider');
+                    const y = c.scales.y;
+                    const top = y.getPixelForValue(c.options.scales.y.max);
+                    const bot = y.getPixelForValue(c.options.scales.y.min);
+                    sliderElem.style.marginTop = `${top + 10}px`;
+                    sliderElem.style.height = `${bot - top}px`;
+                }
             };
-            const isActive = folderKey === activeFolder;
-            return `
-                <button class="folder-chip ${isActive ? 'active' : ''}" data-folder="${escapeHtml(folderKey)}" type="button">
-                    <span>${meta.icon} ${escapeHtml(meta.label)}</span>
-                    <span class="folder-chip-count">${counts[folderKey] || 0}</span>
-                </button>
-            `;
-        }).join('');
 
-        bar.querySelectorAll('.folder-chip').forEach(btn => {
-            btn.addEventListener('click', () => {
-                activeFolder = btn.dataset.folder;
-                bar.querySelectorAll('.folder-chip').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                filterLogs(document.getElementById('logSearch')?.value || '');
+            moodChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: [{
+                        label: 'Mood', data: [], fill: true,
+                        backgroundColor: makeGradient(ctx),
+                        borderColor: '#333', borderWidth: 2.5, pointRadius: 4, pointHoverRadius: 6, tension: 0.32
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        x: { type: 'time', time: { unit: 'day', displayFormats: { day: 'dd' } }, grid: { display: false }, ticks: { color: 'rgba(51, 51, 51, 0.7)' } },
+                        y: { min: 1, max: 5, grid: { color: 'rgba(255,255,255,0.2)' }, ticks: { stepSize: 1, callback: (v) => ({1:"🥵", 2:"🥺", 3:"🙂", 4:"😃", 5:"🤗"}[v] || v) } }
+                    },
+                    plugins: { legend: { display: false } },
+                    thresholds: { min: 2, max: 4 }
+                },
+                plugins: [syncHeight, thresholdPlugin]
             });
-        });
-    }
 
-    function displayAllLogs() {
-        const container = document.getElementById('allLogsContainer');
-        if (!allUserLogs || !allUserLogs.length) {
-            container.innerHTML = `<div class="empty-placeholder">${escapeHtml(t('noLogsSoFar'))}</div>`;
-            renderFolderChips();
-            return;
+            slider = document.getElementById('slider');
+            noUiSlider.create(slider, { start: [1, 5], connect: true, orientation: 'vertical', direction: 'rtl', range: { min: 1, max: 5 }, step: 0.1 });
+
+            slider.noUiSlider.on('update', ([min, max]) => {
+                min = +min; max = +max;
+                moodChartInstance.options.thresholds.min = min;
+                moodChartInstance.options.thresholds.max = max;
+                
+                const weekData = getWeekMoodData(idx);
+                moodChartInstance.data.datasets[0].pointBackgroundColor = weekData.map(pt => (pt.y >= min && pt.y <= max) ? '#10b981' : '#333');
+                moodChartInstance.update('none');
+
+                if (sliderUpdateRAF) cancelAnimationFrame(sliderUpdateRAF);
+                sliderUpdateRAF = requestAnimationFrame(() => { updatePanels(idx); });
+            });
+            
+            chartInitialized = true;
+            updateView();
         }
 
-        const grouped = new Map();
-        allUserLogs.forEach(log => {
-            const dateKey = log.luxon_logged_at.toISODate();
-            if (!grouped.has(dateKey)) grouped.set(dateKey, []);
-            grouped.get(dateKey).push(log);
-        });
-
-        const sortedDates = Array.from(grouped.keys()).sort().reverse();
-
-        container.innerHTML = sortedDates.map(date => {
-            const logs = grouped.get(date);
-            return `
-                <div class="log-group" data-date="${date}">
-                    <div class="log-date-header">
-                        <div class="header-content">
-                            <svg class="expand-icon" viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z" fill="currentColor"/></svg>
-                            <span>${DateTime.fromISO(date).setLocale(currentLanguage === 'fa' ? 'fa' : 'en').toFormat('LLLL d, yyyy')}</span>
-                        </div>
-                        <span class="logs-count">${logs.length}</span>
-                    </div>
-                    <div class="log-entries" style="display:none;">
-                        ${logs.map(createLogEntryHtml).join('')}
-                    </div>
-                </div>
-            `;
-        }).join('');
-
-        container.querySelectorAll('.log-date-header').forEach(header => {
-            header.addEventListener('click', () => {
-                const entries = header.nextElementSibling;
-                const isOpen = entries.style.display !== 'none';
-                entries.style.display = isOpen ? 'none' : 'flex';
-                header.classList.toggle('expanded', !isOpen);
-            });
-        });
-
-        renderFolderChips();
-    }
-
-    function filterLogs(query) {
-        const term = (query || '').trim().toLowerCase();
-        const groups = document.querySelectorAll('.log-group');
-
-        groups.forEach(group => {
-            const dateStr = group.dataset.date;
-            const entriesContainer = group.querySelector('.log-entries');
-            const entries = entriesContainer.querySelectorAll('.log-entry');
-            let anyMatched = false;
-
-            const dateLogs = allUserLogs.filter(l => l.luxon_logged_at.toISODate() === dateStr);
-
-            entries.forEach((entryEl, i) => {
-                const log = dateLogs[i];
-                if (!log) return;
-
-                const categories = Array.isArray(log.categories) && log.categories.length
-                    ? log.categories
-                    : ['personal'];
-                const matchesFolder = activeFolder === 'all' || categories.includes(activeFolder);
-                const matchesQuery = !term || log._searchText.includes(term);
-                const isVisible = matchesFolder && matchesQuery;
-
-                entryEl.style.display = isVisible ? 'block' : 'none';
-                if (isVisible) anyMatched = true;
-            });
-
-            group.style.display = anyMatched ? 'block' : 'none';
-            const header = group.querySelector('.log-date-header');
-
-            if ((term || activeFolder !== 'all') && anyMatched) {
-                entriesContainer.style.display = 'flex';
-                header.classList.add('expanded');
-            } else if (!term && activeFolder === 'all') {
-                entriesContainer.style.display = 'none';
-                header.classList.remove('expanded');
+        function getWeekMoodData(weekIdx) {
+            if (!weekSegments[weekIdx] || !weekSegments[weekIdx].length) return [];
+            const weekLogs = weekSegments[weekIdx];
+            const weekActualStartLuxon = weekLogs[0].luxon_logged_at.startOf('week');
+            const daysData = [];
+            for (let i = 0; i < 7; i++) {
+                const currentDayLuxon = weekActualStartLuxon.plus({ days: i });
+                const dayLogs = weekLogs.filter(l => l.luxon_logged_at.toISODate() === currentDayLuxon.toISODate() && l.mood_score != null);
+                const avg = dayLogs.length ? dayLogs.reduce((s, l) => s + l.mood_score, 0) / dayLogs.length : null;
+                daysData.push({ x: currentDayLuxon.toISODate(), y: avg });
             }
-        });
-    }
-
-    // --- Home Dashboard with Leo Character Stage Only ---
-    function renderHomeDashboard() {
-        const container = document.getElementById('homeDashboard');
-        if (!container) return;
-
-        const characterImgSrc = getCharacterAvatarSrc();
-
-        container.innerHTML = `
-            <section class="home-hero" id="homeHeroStage">
-                <img id="homeCharacterImg" 
-                     class="home-hero-character-img" 
-                     src="${escapeHtml(characterImgSrc)}" 
-                     alt="Leo" 
-                     onerror="this.onerror=null; this.src='https://api.iconify.design/fluent-emoji:lion.svg';" />
-            </section>
-        `;
-    }
-
-    // --- Skills Computation ---
-function getSkillProgress(totalXP) {
-    if (totalXP <= 0) {
-        return { level: 0, xpInCurrentLevel: 0, xpNeededForNext: 25, progressPercent: 0 };
-    }
-
-    let level = 1;
-    let remainingXP = totalXP;
-
-    while (true) {
-        // Your new formula: 25 * (L - 1) + 25 = 25 * L
-        const costToNext = 25 * level;
-        if (remainingXP >= costToNext) {
-            remainingXP -= costToNext;
-            level++;
-        } else {
-            return {
-                level: level,
-                xpInCurrentLevel: remainingXP,
-                xpNeededForNext: costToNext,
-                progressPercent: Math.min(100, Math.round((remainingXP / costToNext) * 100))
-            };
+            return daysData;
         }
-    }
-}
 
-function calculateSkillLevels() {
-    userSkills = {};
+        function updateView() {
+            if(!moodChartInstance) return;
+            const weekData = getWeekMoodData(idx);
+            moodChartInstance.data.datasets[0].data = weekData;
+            moodChartInstance.data.datasets[0].backgroundColor = makeGradient(moodChartInstance.ctx);
 
-    // 1. Accumulate XP dynamically for ANY skill present in logs
-    allUserLogs.forEach(log => {
-        const skills = log.skills_xp_gained || {};
-        Object.entries(skills).forEach(([skillName, xp]) => {
-            const cleanName = skillName.toLowerCase().trim();
-            if (!userSkills[cleanName]) {
-                userSkills[cleanName] = { totalXP: 0 };
+            const currentWeekSegment = weekSegments[idx];
+            if (currentWeekSegment && currentWeekSegment.length > 0) {
+                const weekStartDate = currentWeekSegment[0].luxon_logged_at.startOf('week');
+                const weekEndDate = weekStartDate.plus({ days: 6 });
+                moodChartInstance.options.scales.x.min = weekStartDate.toISODate();
+                moodChartInstance.options.scales.x.max = weekEndDate.toISODate();
+                document.getElementById('segmentLabel').textContent = weekStartDate.toFormat('LLLL yyyy');
+            } else {
+                document.getElementById('segmentLabel').textContent = t('noData');
             }
-            userSkills[cleanName].totalXP += Number(xp) || 0;
-        });
-    });
 
-    // 2. Compute current level and progress bar percentage
-    Object.keys(userSkills).forEach(skillName => {
-        const progress = getSkillProgress(userSkills[skillName].totalXP);
-        userSkills[skillName] = {
-            ...userSkills[skillName],
-            ...progress,
-            icon: getSkillIcon(skillName),
-            displayName: skillName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
-        };
-    });
-
-    // Update the Focus Dropdown with unlocked skills
-    updateSkillFocusOptions();
-}
-
-function displaySkills() {
-    const container = document.getElementById('skillsContainer');
-    container.innerHTML = '';
-    const skillEntries = Object.entries(userSkills);
-
-    if (!skillEntries.length) {
-        container.innerHTML = `<div class="empty-placeholder" style="grid-column: 1 / -1;">${escapeHtml(t('logHabits'))}</div>`;
-        return;
-    }
-
-    // Sort by level descending
-    skillEntries.sort((a, b) => b[1].totalXP - a[1].totalXP);
-
-    skillEntries.forEach(([skillName, data]) => {
-        const card = document.createElement('div');
-        card.className = 'skill-item';
-        card.innerHTML = `
-            <div class="skill-header">
-                <div class="skill-title-group">
-                    <span class="skill-icon">${data.icon}</span>
-                    <span class="skill-name">${escapeHtml(data.displayName)}</span>
-                </div>
-                <span class="skill-level">${escapeHtml(t('level'))} ${data.level}</span>
-            </div>
-            <div class="progress-bar-container">
-                <div class="progress-bar" style="width: ${data.progressPercent}%;"></div>
-            </div>
-            <div class="skill-xp-info">${data.xpInCurrentLevel} / ${data.xpNeededForNext} XP</div>
-        `;
-        container.appendChild(card);
-    });
-}
-
-function updateSkillFocusOptions() {
-    const select = document.getElementById('skillFocusSelect');
-    if (!select) return;
-
-    const currentVal = select.value;
-    select.innerHTML = `<option value="none">${escapeHtml(t('none'))}</option>`;
-
-    Object.entries(userSkills).forEach(([key, data]) => {
-        const opt = document.createElement('option');
-        opt.value = key;
-        opt.textContent = `${data.icon} ${data.displayName}`;
-        if (key === currentVal) opt.selected = true;
-        select.appendChild(opt);
-    });
-}
-
-    // --- Lifecycle Initialization ---
-    document.addEventListener('DOMContentLoaded', () => {
-        initTheme();
-        initTabs();
-        initDrawer();
-
-        const languageSelect = document.getElementById('languageSelect');
-        languageSelect?.addEventListener('change', (e) => applyLanguage(e.target.value));
-        applyLanguage(currentLanguage);
-        document.getElementById('todayDate').textContent = DateTime.now().setLocale(currentLanguage === 'fa' ? 'fa' : 'en').toFormat('ccc, LLL d');
-        renderHomeDashboard();
-
-        document.getElementById('prevWeekBtn').addEventListener('click', () => {
-            if (idx > 0) { idx--; updateView(); }
-        });
-
-        document.getElementById('nextWeekBtn').addEventListener('click', () => {
-            if (idx < weekSegments.length - 1) { idx++; updateView(); }
-        });
-
-        document.getElementById('panelRangeSelect').addEventListener('change', (e) => {
-            panelRange = e.target.value;
+            document.getElementById('prevWeekBtn').disabled = (idx === 0);
+            document.getElementById('nextWeekBtn').disabled = (idx === weekSegments.length - 1);
             updatePanels(idx);
-        });
-
-        // Debounced Search Input
-        let searchTimer = null;
-        document.getElementById('logSearch').addEventListener('input', (e) => {
-            clearTimeout(searchTimer);
-            searchTimer = setTimeout(() => filterLogs(e.target.value), 120);
-        });
-
-        window.addEventListener('resize', () => {
-            const track = document.getElementById('pagesTrack');
-            if (track) {
-                track.style.transform = `translateX(-${currentTabIndex * 25}%)`;
-            }
-            if (moodChartInstance) {
-                moodChartInstance.resize();
-            }
-        });
-
-if (tg) {
-            tg.ready();
-            tg.expand();
+            moodChartInstance.update();
         }
 
-        // Strictly require Telegram user
-        if (tg?.initDataUnsafe?.user?.id) {
-            telegramUser = tg.initDataUnsafe.user;
-            fetchAllLogsAndSetupChart();
-        } else {
-            // Blocked if opened in regular browser
-            const loadingDiv = document.getElementById('loadingMessage');
-            if (loadingDiv) {
-                loadingDiv.innerText = "Please open this app inside Telegram.";
-                loadingDiv.style.display = 'block';
+        function updatePanels(weekIdx) {
+            if (!slider || !slider.noUiSlider) return;
+            const [minMood, maxMood] = slider.noUiSlider.get().map(Number);
+            let logsToUse = (panelRange === 'week') ? (weekSegments[weekIdx] || []) : allUserLogs;
+
+            const dailyGroups = new Map();
+            logsToUse.forEach(log => {
+                const dateKey = log.luxon_logged_at.toISODate();
+                if (!dailyGroups.has(dateKey)) dailyGroups.set(dateKey, { logs: [], totalScore: 0, count: 0 });
+                const group = dailyGroups.get(dateKey);
+                group.logs.push(log);
+                if (log.mood_score != null) { group.totalScore += log.mood_score; group.count++; }
+            });
+
+            const relevantLogs = [];
+            dailyGroups.forEach(group => {
+                if (group.count > 0) {
+                    const avg = group.totalScore / group.count;
+                    if (avg >= minMood && avg <= maxMood) relevantLogs.push(...group.logs);
+                }
+            });
+
+            function countAndSort(items) {
+                const map = new Map(); items.forEach(i => map.set(i, (map.get(i) || 0) + 1));
+                return Array.from(map.entries()).sort((a, b) => b[1] - a[1]);
             }
+
+            function renderPanelList(containerId, items, type) {
+                const el = document.getElementById(containerId);
+                if (!items.length) { el.innerHTML = `<div class="empty-placeholder">${escapeHtml(t('noneRecorded'))}</div>`; return; }
+                el.innerHTML = items.map(([item, count]) => `<div class="panel-item" data-item="${escapeHtml(item)}" data-type="${type}"><span>${escapeHtml(item)}</span><span class="count-pill">${count}×</span></div>`).join('');
+            }
+
+            const dietItems = []; relevantLogs.forEach(l => { if (l.diet) Object.entries(l.diet).forEach(([cat, arr]) => { if (arr) arr.forEach(item => dietItems.push(`${cat}: ${item}`)); }); });
+            renderPanelList('dietPanel', countAndSort(dietItems), 'diet');
+            const healthItems = []; relevantLogs.forEach(l => { if (l.health) l.health.forEach(item => healthItems.push(item)); });
+            renderPanelList('healthPanel', countAndSort(healthItems), 'health');
+            const activityItems = []; relevantLogs.forEach(l => { if (l.activity) l.activity.forEach(item => activityItems.push(item)); });
+            renderPanelList('activityPanel', countAndSort(activityItems), 'activity');
         }
-    });
+
+        document.getElementById('prevWeekBtn').addEventListener('click', () => { if (idx > 0) { idx--; updateView(); } });
+        document.getElementById('nextWeekBtn').addEventListener('click', () => { if (idx < weekSegments.length - 1) { idx++; updateView(); } });
+        document.getElementById('panelRangeSelect').addEventListener('change', (e) => { panelRange = e.target.value; updatePanels(idx); });
+
+        // ==========================================
+        // UI INTERACTIONS & NAV LOGIC
+        // ==========================================
+        
+        // Dog & Search (Search Tab Header)
+        const dogWrapper = document.getElementById('dogWrapper');
+        const searchWrapper = document.getElementById('searchWrapper');
+        const searchInput = document.getElementById('searchInput');
+
+        dogWrapper.addEventListener('click', (e) => { e.stopPropagation(); dogWrapper.classList.toggle('active'); searchWrapper.classList.remove('active'); });
+        searchWrapper.addEventListener('click', (e) => { e.stopPropagation(); if (!searchWrapper.classList.contains('active')) { searchWrapper.classList.add('active'); searchInput.focus(); } dogWrapper.classList.remove('active'); });
+        document.addEventListener('click', (e) => { if (!dogWrapper.contains(e.target)) dogWrapper.classList.remove('active'); if (!searchWrapper.contains(e.target)) { searchWrapper.classList.remove('active'); searchInput.blur(); } });
+
+        // Quests Segmented Controls
+        document.querySelectorAll('#quest-status-tabs .q-tab').forEach(btn => btn.addEventListener('click', (e) => { document.querySelectorAll('#quest-status-tabs .q-tab').forEach(b => b.classList.remove('active')); e.target.classList.add('active'); }));
+        document.querySelectorAll('#quest-type-tabs .q-tab').forEach(btn => btn.addEventListener('click', (e) => { document.querySelectorAll('#quest-type-tabs .q-tab').forEach(b => b.classList.remove('active')); e.target.classList.add('active'); }));
+
+        // 3D Cube Navigation
+        function initTabs() {
+            const tabs = [
+                { btn: document.getElementById('tab-home') },
+                { btn: document.getElementById('tab-analytics') }, // Index 1
+                { btn: document.getElementById('tab-logs') },      // Index 2 (Search)
+                { btn: document.getElementById('tab-quests') },
+                { btn: document.getElementById('tab-levelup') }
+            ];
+
+            const slides = document.querySelectorAll('.slide');
+            let isAnimating = false;
+
+            tabs.forEach((t, i) => t.btn.classList.toggle('active', i === window.currentTabIndex));
+            slides.forEach((slide, i) => {
+                if (i === window.currentTabIndex) { slide.style.display = 'flex'; slide.style.transform = 'translateZ(0) rotateY(0) translateZ(0)'; } 
+                else { slide.style.display = 'none'; }
+            });
+
+            function easeInOutCubic(x) { return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; }
+
+            function animateCube(oldIndex, newIndex) {
+                isAnimating = true;
+                const oldSlide = slides[oldIndex];
+                const newSlide = slides[newIndex];
+                const d = document.getElementById('stage').clientWidth / 2;
+                const direction = newIndex > oldIndex ? 1 : -1; 
+
+                newSlide.style.display = 'flex';
+                
+                // Render Chart if navigating to Analytics and data has loaded
+                if(newIndex === 1 && isDataLoaded) {
+                    setTimeout(() => { setupChartAndSlider(); }, 50);
+                }
+
+                let startTimestamp = null;
+                const duration = 650; 
+
+                function step(timestamp) {
+                    if (!startTimestamp) startTimestamp = timestamp;
+                    const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                    const e = easeInOutCubic(progress);
+
+                    oldSlide.style.transform = `translateZ(${-d}px) rotateY(${-90 * direction * e}deg) translateZ(${d}px)`;
+                    oldSlide.style.filter = `brightness(${1 - 0.5 * e})`;
+
+                    newSlide.style.transform = `translateZ(${-d}px) rotateY(${90 * direction * (1 - e)}deg) translateZ(${d}px)`;
+                    newSlide.style.filter = `brightness(${0.5 + 0.5 * e})`;
+
+                    if (progress < 1) {
+                        requestAnimationFrame(step);
+                    } else {
+                        oldSlide.style.display = 'none';
+                        oldSlide.style.transform = ''; oldSlide.style.filter = '';
+                        newSlide.style.transform = `translateZ(0) rotateY(0) translateZ(0)`; newSlide.style.filter = '';
+                        
+                        window.currentTabIndex = newIndex;
+                        isAnimating = false;
+                    }
+                }
+                requestAnimationFrame(step);
+            }
+
+            tabs.forEach((tab, index) => {
+                tab.btn.addEventListener('click', () => {
+                    if (index === window.currentTabIndex || isAnimating) return; 
+                    tabs.forEach((t, i) => t.btn.classList.toggle('active', i === index));
+                    animateCube(window.currentTabIndex, index);
+                });
+            });
+        }
+        initTabs();
     </script>
 </body>
 </html>
