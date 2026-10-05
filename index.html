@@ -204,30 +204,45 @@
            SEARCH TAB / FOLDERS / ACCORDION UI
            ========================================= */
         .folders-stage {
-            width: 100%; height: 60px; position: relative; display: flex; 
-            align-items: center; justify-content: center; perspective: 800px;
-            overflow: hidden; touch-action: pan-y; margin-bottom: 8px;
+            width: 100%; height: 95px; position: relative; display: flex; 
+            align-items: center; justify-content: center; perspective: 700px;
+            overflow: hidden; touch-action: pan-y; margin-bottom: 10px;
             cursor: grab;
         }
         .folders-stage:active { cursor: grabbing; }
         
         .folders-bar {
-            position: relative; width: 120px; height: 36px;
+            position: relative; width: 85px; height: 75px;
             transform-style: preserve-3d; will-change: transform;
         }
         
+        /* Compact Card Design from Reference */
         .folder-chip {
             position: absolute; inset: 0;
-            background: rgba(255, 255, 255, 0.25); border: 1px solid var(--glass-border);
-            border-radius: 20px; padding: 6px 12px; display: flex; align-items: center; justify-content: center; gap: 6px;
-            cursor: pointer; white-space: nowrap; transition: background 0.3s, border-color 0.3s;
-            color: var(--text-color); font-size: 0.85rem; font-family: inherit;
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0.12));
+            border: 1px solid var(--glass-border);
+            border-radius: 14px; padding: 6px 4px;
+            display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+            cursor: pointer; text-align: center;
+            color: var(--text-color);
             backface-visibility: hidden;
-            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+            transition: border-color 0.25s, box-shadow 0.25s, background 0.25s;
         }
         .folder-chip.active { 
-            background: var(--accent-soft); font-weight: 600; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-color: rgba(16, 185, 129, 0.6); 
+            background: rgba(255, 255, 255, 0.55);
+            border-color: #10b981;
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.35);
+        }
+        .folder-chip .folder-icon { font-size: 1.35rem; line-height: 1; margin-top: 2px; }
+        .folder-chip .folder-label { 
+            font-size: 0.68rem; font-weight: 600; white-space: nowrap; 
+            overflow: hidden; text-overflow: ellipsis; max-width: 100%; 
+        }
+        .folder-chip-count {
+            background: rgba(0, 0, 0, 0.08); padding: 1px 7px; border-radius: 10px; 
+            font-size: 0.62rem; font-weight: 700;
         }
 
         .log-group { width: 100%; display: flex; flex-direction: column; gap: 8px; }
@@ -976,21 +991,16 @@
             const bar = document.getElementById('foldersBar');
             if (!bar) return;
 
-            // Count occurrences per folder category
             const counts = { all: allUserLogs.length };
             allUserLogs.forEach(log => {
                 const cats = Array.isArray(log.categories) && log.categories.length ? log.categories : ['personal'];
-                cats.forEach(c => {
-                    counts[c] = (counts[c] || 0) + 1;
-                });
+                cats.forEach(c => { counts[c] = (counts[c] || 0) + 1; });
             });
 
             const availableFolders = ['all', ...Object.keys(counts).filter(k => k !== 'all' && counts[k] > 0)];
+            if (activeFolder !== 'all' && !availableFolders.includes(activeFolder)) activeFolder = 'all';
 
-            if (activeFolder !== 'all' && !availableFolders.includes(activeFolder)) {
-                activeFolder = 'all';
-            }
-
+            // Card template with stacked icon, title, and count
             bar.innerHTML = availableFolders.map(folderKey => {
                 const meta = FOLDER_META[folderKey] || {
                     label: String(folderKey).charAt(0).toUpperCase() + String(folderKey).slice(1),
@@ -998,39 +1008,41 @@
                 };
                 const isActive = folderKey === activeFolder;
                 return `
-                    <button class="folder-chip ${isActive ? 'active' : ''}" data-folder="${escapeHtml(folderKey)}" type="button">
-                        <span>${meta.icon} ${escapeHtml(meta.label)}</span>
+                    <div class="folder-chip ${isActive ? 'active' : ''}" data-folder="${escapeHtml(folderKey)}">
+                        <span class="folder-icon">${meta.icon}</span>
+                        <span class="folder-label">${escapeHtml(meta.label)}</span>
                         <span class="folder-chip-count">${counts[folderKey] || 0}</span>
-                    </button>
+                    </div>
                 `;
             }).join('');
 
-            // Folder selection triggers (with drag-click prevention)
-            bar.querySelectorAll('.folder-chip').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    // Prevent accidental clicks if the user was swiping the wheel
-                    if (Math.abs(wheelStartRot - wheelTargetRot) > 5) return; 
-                    
-                    activeFolder = btn.dataset.folder;
-                    bar.querySelectorAll('.folder-chip').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    filterLogs(document.getElementById('logSearch')?.value || '');
-                });
-            });
-
-            // --- Apply 3D Geometry to Chips ---
             const chips = Array.from(bar.children);
             const totalChips = chips.length;
-            // Calculate a safe radius so chips don't overlap based on how many exist
-            const radius = Math.max(140, (totalChips * 110) / (2 * Math.PI)); 
+            
+            // Fixed radius of 180px (from reference) so cards NEVER overlap
+            const radius = 180; 
             folderAngleStep = 360 / totalChips;
 
             chips.forEach((chip, index) => {
                 const angle = index * folderAngleStep;
                 chip.style.transform = `rotateY(${angle}deg) translateZ(${radius}px)`;
+
+                // Mouse/Touch Click Listener that works reliably
+                chip.addEventListener('click', (e) => {
+                    if (hasMovedWheel) return; // Ignore clicks if user was actively dragging
+                    
+                    activeFolder = chip.dataset.folder;
+                    bar.querySelectorAll('.folder-chip').forEach(b => b.classList.remove('active'));
+                    chip.classList.add('active');
+
+                    // Smoothly spin clicked card straight to the front
+                    const diff = (angle - (wheelTargetRot % 360) + 540) % 360 - 180;
+                    wheelTargetRot += diff;
+
+                    filterLogs(document.getElementById('logSearch')?.value || '');
+                });
             });
 
-            // Start the animation loop if it isn't running
             if (!wheelRAF) animateFoldersWheel();
         }
 
@@ -1193,32 +1205,38 @@ function displayAllLogs() {
             }, 120);
         });
 
-        // ==========================================
-        // 3D CAROUSEL WHEEL LOGIC
+// ==========================================
+        // 3D CAROUSEL WHEEL LOGIC (Faster & Clickable)
         // ==========================================
         const foldersStage = document.getElementById('foldersStage');
-        
+        let hasMovedWheel = false;
+
         foldersStage.addEventListener("pointerdown", (e) => {
             isWheelDragging = true;
+            hasMovedWheel = false;
             wheelStartX = e.clientX;
             wheelStartRot = wheelTargetRot;
-            foldersStage.setPointerCapture(e.pointerId);
         });
 
         foldersStage.addEventListener("pointermove", (e) => {
             if (!isWheelDragging) return;
             const deltaX = e.clientX - wheelStartX;
-            wheelTargetRot = wheelStartRot - deltaX * 0.4; // Sensitivity
+            if (Math.abs(deltaX) > 6) hasMovedWheel = true;
+            
+            // Increased sensitivity from 0.4 to 0.75 for much faster dragging
+            wheelTargetRot = wheelStartRot - deltaX * 0.75; 
         });
 
         const endWheelDrag = () => {
             if (!isWheelDragging) return;
             isWheelDragging = false;
-            // Snap to the nearest chip
+            // Snap to nearest card
             if (folderAngleStep > 0) {
                 const nearest = Math.round(wheelTargetRot / folderAngleStep);
                 wheelTargetRot = nearest * folderAngleStep;
             }
+            // Small timeout to prevent triggering clicks on release
+            setTimeout(() => { hasMovedWheel = false; }, 50);
         };
 
         foldersStage.addEventListener("pointerup", endWheelDrag);
@@ -1228,21 +1246,17 @@ function displayAllLogs() {
             const foldersBar = document.getElementById('foldersBar');
             if (!foldersBar) return;
 
-            // Smooth lerp for spinning
-            wheelCurrentRot += (wheelTargetRot - wheelCurrentRot) * 0.1;
+            // Faster lerp damping (0.13) for snappier and faster rotation
+            wheelCurrentRot += (wheelTargetRot - wheelCurrentRot) * 0.13;
             foldersBar.style.transform = `rotateY(${-wheelCurrentRot}deg)`;
 
-            // Depth calculation for opacity and pointer events
             Array.from(foldersBar.children).forEach((chip, index) => {
                 const angle = index * folderAngleStep;
                 let diff = (angle - (wheelCurrentRot % 360) + 540) % 360 - 180;
                 let absDiff = Math.abs(diff);
 
-                // Fade out chips facing backwards
-                chip.style.opacity = Math.max(0.15, 1 - Math.pow(absDiff / 100, 1.5));
-                
-                // Prevent clicking on chips that are hidden in the back
-                chip.style.pointerEvents = absDiff < 45 ? 'auto' : 'none';
+                // Extended angular visibility like reference code
+                chip.style.opacity = Math.max(0.2, 1 - Math.pow(absDiff / 105, 1.2));
             });
 
             wheelRAF = requestAnimationFrame(animateFoldersWheel);
