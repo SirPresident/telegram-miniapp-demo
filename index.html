@@ -203,20 +203,32 @@
         /* =========================================
            SEARCH TAB / FOLDERS / ACCORDION UI
            ========================================= */
+        .folders-stage {
+            width: 100%; height: 60px; position: relative; display: flex; 
+            align-items: center; justify-content: center; perspective: 800px;
+            overflow: hidden; touch-action: pan-y; margin-bottom: 8px;
+            cursor: grab;
+        }
+        .folders-stage:active { cursor: grabbing; }
+        
         .folders-bar {
-            display: flex; gap: 8px; overflow-x: auto; width: 100%; padding-bottom: 8px;
-            scrollbar-width: none; /* Firefox */
+            position: relative; width: 120px; height: 36px;
+            transform-style: preserve-3d; will-change: transform;
         }
-        .folders-bar::-webkit-scrollbar { display: none; /* Safari/Chrome */ }
-
+        
         .folder-chip {
-            background: rgba(255, 255, 255, 0.3); border: 1px solid var(--glass-border);
-            border-radius: 20px; padding: 6px 12px; display: flex; align-items: center; gap: 6px;
-            cursor: pointer; white-space: nowrap; transition: var(--transition-smooth);
+            position: absolute; inset: 0;
+            background: rgba(255, 255, 255, 0.25); border: 1px solid var(--glass-border);
+            border-radius: 20px; padding: 6px 12px; display: flex; align-items: center; justify-content: center; gap: 6px;
+            cursor: pointer; white-space: nowrap; transition: background 0.3s, border-color 0.3s;
             color: var(--text-color); font-size: 0.85rem; font-family: inherit;
+            backface-visibility: hidden;
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
         }
-        .folder-chip:hover { background: rgba(255, 255, 255, 0.45); }
-        .folder-chip.active { background: var(--accent-soft); font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .folder-chip.active { 
+            background: var(--accent-soft); font-weight: 600; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-color: rgba(16, 185, 129, 0.6); 
+        }
 
         .log-group { width: 100%; display: flex; flex-direction: column; gap: 8px; }
         .log-date-header {
@@ -385,8 +397,10 @@
                 </header>
                 <main class="page-content">
                     <section id="logsView" class="tab-view">
-                        <!-- Dynamic Folder Category Chips -->
-                        <div id="foldersBar" class="folders-bar"></div>
+                        <!-- Dynamic Folder Category Chips 3D Stage -->
+                        <div id="foldersStage" class="folders-stage">
+                            <div id="foldersBar" class="folders-bar"></div>
+                        </div>
                         
                         <!-- Grouped Accordion Logs Container -->
                         <div id="allLogsContainer" class="log-entries" style="gap: 16px;">
@@ -508,6 +522,9 @@
         let weekSegments = [];
         let activeFolder = 'all'; // State for active search folder
         let visibleDateCount = 5; // How many date groups to load initially
+        // 3D Wheel state variables
+        let wheelCurrentRot = 0, wheelTargetRot = 0, isWheelDragging = false;
+        let wheelStartX = 0, wheelStartRot = 0, wheelRAF = null, folderAngleStep = 0;
         let idx = 0;
         let isDataLoaded = false; 
 
@@ -988,15 +1005,33 @@
                 `;
             }).join('');
 
-            // Folder selection triggers search filtering
+            // Folder selection triggers (with drag-click prevention)
             bar.querySelectorAll('.folder-chip').forEach(btn => {
-                btn.addEventListener('click', () => {
+                btn.addEventListener('click', (e) => {
+                    // Prevent accidental clicks if the user was swiping the wheel
+                    if (Math.abs(wheelStartRot - wheelTargetRot) > 5) return; 
+                    
                     activeFolder = btn.dataset.folder;
                     bar.querySelectorAll('.folder-chip').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
                     filterLogs(document.getElementById('logSearch')?.value || '');
                 });
             });
+
+            // --- Apply 3D Geometry to Chips ---
+            const chips = Array.from(bar.children);
+            const totalChips = chips.length;
+            // Calculate a safe radius so chips don't overlap based on how many exist
+            const radius = Math.max(140, (totalChips * 110) / (2 * Math.PI)); 
+            folderAngleStep = 360 / totalChips;
+
+            chips.forEach((chip, index) => {
+                const angle = index * folderAngleStep;
+                chip.style.transform = `rotateY(${angle}deg) translateZ(${radius}px)`;
+            });
+
+            // Start the animation loop if it isn't running
+            if (!wheelRAF) animateFoldersWheel();
         }
 
 function displayAllLogs() {
@@ -1157,6 +1192,61 @@ function displayAllLogs() {
                 filterLogs(e.target.value);
             }, 120);
         });
+
+        // ==========================================
+        // 3D CAROUSEL WHEEL LOGIC
+        // ==========================================
+        const foldersStage = document.getElementById('foldersStage');
+        
+        foldersStage.addEventListener("pointerdown", (e) => {
+            isWheelDragging = true;
+            wheelStartX = e.clientX;
+            wheelStartRot = wheelTargetRot;
+            foldersStage.setPointerCapture(e.pointerId);
+        });
+
+        foldersStage.addEventListener("pointermove", (e) => {
+            if (!isWheelDragging) return;
+            const deltaX = e.clientX - wheelStartX;
+            wheelTargetRot = wheelStartRot - deltaX * 0.4; // Sensitivity
+        });
+
+        const endWheelDrag = () => {
+            if (!isWheelDragging) return;
+            isWheelDragging = false;
+            // Snap to the nearest chip
+            if (folderAngleStep > 0) {
+                const nearest = Math.round(wheelTargetRot / folderAngleStep);
+                wheelTargetRot = nearest * folderAngleStep;
+            }
+        };
+
+        foldersStage.addEventListener("pointerup", endWheelDrag);
+        foldersStage.addEventListener("pointercancel", endWheelDrag);
+
+        function animateFoldersWheel() {
+            const foldersBar = document.getElementById('foldersBar');
+            if (!foldersBar) return;
+
+            // Smooth lerp for spinning
+            wheelCurrentRot += (wheelTargetRot - wheelCurrentRot) * 0.1;
+            foldersBar.style.transform = `rotateY(${-wheelCurrentRot}deg)`;
+
+            // Depth calculation for opacity and pointer events
+            Array.from(foldersBar.children).forEach((chip, index) => {
+                const angle = index * folderAngleStep;
+                let diff = (angle - (wheelCurrentRot % 360) + 540) % 360 - 180;
+                let absDiff = Math.abs(diff);
+
+                // Fade out chips facing backwards
+                chip.style.opacity = Math.max(0.15, 1 - Math.pow(absDiff / 100, 1.5));
+                
+                // Prevent clicking on chips that are hidden in the back
+                chip.style.pointerEvents = absDiff < 45 ? 'auto' : 'none';
+            });
+
+            wheelRAF = requestAnimationFrame(animateFoldersWheel);
+        }
 
         // Quests Segmented Controls
         document.querySelectorAll('#quest-status-tabs .q-tab').forEach(btn => btn.addEventListener('click', (e) => { document.querySelectorAll('#quest-status-tabs .q-tab').forEach(b => b.classList.remove('active')); e.target.classList.add('active'); }));
