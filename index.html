@@ -1174,16 +1174,36 @@ function displayAllLogs() {
                 const header = group.querySelector('.log-date-header');
 
                 // Automatically expand headers ONLY if typing in the search bar
-                if (term && anyMatched) {
-                    entriesContainer.style.display = 'flex';
-                    header.classList.add('expanded');
-                } else {
-                    // Keep closed by default for folder clicks or empty searches
-                    entriesContainer.style.display = 'none';
-                    header.classList.remove('expanded');
-                }
-            });
+            if (term && anyMatched) {
+                entriesContainer.style.display = 'flex';
+                header.classList.add('expanded');
+            } else {
+                // Keep closed by default for folder clicks or empty searches
+                entriesContainer.style.display = 'none';
+                header.classList.remove('expanded');
+            }
+        }); // <-- This is the end of the groups.forEach loop
+
+        // ==========================================
+        // NEW: Hide "Show more" button if remaining matches are few
+        // ==========================================
+        const matchedDates = new Set();
+        allUserLogs.forEach(log => {
+            const categories = Array.isArray(log.categories) && log.categories.length ? log.categories : ['personal'];
+            const matchesFolder = activeFolder === 'all' || categories.includes(activeFolder);
+            const matchesQuery = !term || log._searchText.includes(term);
+            
+            if (matchesFolder && matchesQuery) {
+                matchedDates.add(log.luxon_logged_at.toISODate());
+            }
+        });
+
+        const showMoreBtn = document.getElementById('showMoreNotesBtn');
+        if (showMoreBtn) {
+            // Only show the button if the total matching dates are greater than what we currently allow to be visible
+            showMoreBtn.style.display = (matchedDates.size > visibleDateCount) ? 'block' : 'none';
         }
+    } // <-- This is the end of the filterLogs function
 
 
         // ==========================================
