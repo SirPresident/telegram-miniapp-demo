@@ -505,10 +505,6 @@
         let telegramUser = null;
         let allUserLogs = [];
         let weekSegments = [];
-        let telegramUser = null;
-        let allUserLogs = [];
-        let backendSkillsData = {}; // NEW: Holds the exact totals from Django Admin
-        let weekSegments = [];
         let activeFolder = 'all'; // State for active search folder
         let visibleDateCount = 5; // How many date groups to load initially
         let idx = 0;
@@ -587,7 +583,6 @@
                 if (response.ok) {
                     const data = await response.json();
                     loadingDiv.style.display = 'none';
-                    backendSkillsData = data.skills || {}; // Save backend skills
 
                     if (data.logs && data.logs.length > 0) {
                         allUserLogs = data.logs.map(log => {
@@ -1246,11 +1241,13 @@ function displayAllLogs() {
 
 function calculateSkillLevels() {
             userSkills = {};
-            
-            // INSTEAD of looping through logs, we just copy the exact totals the backend sent us!
-            Object.entries(backendSkillsData).forEach(([skillName, skillInfo]) => {
-                const cleanName = skillName.toLowerCase().trim();
-                userSkills[cleanName] = { totalXP: skillInfo.total_xp };
+            allUserLogs.forEach(log => {
+                const skills = log.skills_xp_gained || {};
+                Object.entries(skills).forEach(([skillName, xp]) => {
+                    const cleanName = skillName.toLowerCase().trim();
+                    if (!userSkills[cleanName]) userSkills[cleanName] = { totalXP: 0 };
+                    userSkills[cleanName].totalXP += Number(xp) || 0;
+                });
             });
 
             // Load previous state to detect changes for animations
@@ -1273,6 +1270,7 @@ function calculateSkillLevels() {
                         stateFlags.oldXpText = `${previous.xpInCurrentLevel} / ${previous.xpNeededForNext} XP`;
                         if (progress.level > previous.level) stateFlags.leveledUp = true;
                     } else if (!previous && userSkills[skillName].totalXP > 0) {
+                        // New skill acquired since last check
                         stateFlags.gainedXP = true;
                         stateFlags.oldLevel = 0; stateFlags.oldPercent = 0;
                         stateFlags.oldXpText = `0 / 10 XP`;
@@ -1280,6 +1278,7 @@ function calculateSkillLevels() {
                     }
                 }
 
+                // If not animating, save immediately. If animating, we defer saving until animation plays.
                 if (!stateFlags.gainedXP) {
                     stateToSave[skillName] = { totalXP: userSkills[skillName].totalXP, level: progress.level, progressPercent: progress.progressPercent, xpInCurrentLevel: progress.xpInCurrentLevel, xpNeededForNext: progress.xpNeededForNext };
                 }
