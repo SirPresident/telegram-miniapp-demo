@@ -450,6 +450,7 @@
         let allUserLogs = [];
         let weekSegments = [];
         let activeFolder = 'all'; // State for active search folder
+        let visibleDateCount = 5; // How many date groups to load initially
         let idx = 0;
         let isDataLoaded = false; 
 
@@ -624,7 +625,7 @@
                     const top = y.getPixelForValue(c.options.scales.y.max);
                     const bot = y.getPixelForValue(c.options.scales.y.min);
                     if (!isNaN(top) && !isNaN(bot) && bot > top) {
-                        sliderElem.style.marginTop = `${top + 10}px`;
+                        sliderElem.style.marginTop = `${top}px`;
                         sliderElem.style.height = `${bot - top}px`;
                     }
                 }
@@ -929,54 +930,74 @@
             });
         }
 
-        function displayAllLogs() {
-            const container = document.getElementById('allLogsContainer');
-            if (!allUserLogs || !allUserLogs.length) {
-                container.innerHTML = `<div class="empty-placeholder">No logs recorded so far.</div>`;
-                renderFolderChips();
-                return;
-            }
+function displayAllLogs() {
+    const container = document.getElementById('allLogsContainer');
+    if (!allUserLogs || !allUserLogs.length) {
+        container.innerHTML = `<div class="empty-placeholder">No logs recorded so far.</div>`;
+        renderFolderChips();
+        return;
+    }
 
-            // Group logs by YYYY-MM-DD
-            const grouped = new Map();
-            allUserLogs.forEach(log => {
-                const dateKey = log.luxon_logged_at.toISODate();
-                if (!grouped.has(dateKey)) grouped.set(dateKey, []);
-                grouped.get(dateKey).push(log);
-            });
+    // Group logs by YYYY-MM-DD
+    const grouped = new Map();
+    allUserLogs.forEach(log => {
+        const dateKey = log.luxon_logged_at.toISODate();
+        if (!grouped.has(dateKey)) grouped.set(dateKey, []);
+        grouped.get(dateKey).push(log);
+    });
 
-            // Sort dates in reverse chronological order
-            const sortedDates = Array.from(grouped.keys()).sort().reverse();
+    // Sort dates in reverse chronological order
+    const sortedDates = Array.from(grouped.keys()).sort().reverse();
+    
+    // Slice dates based on visibleDateCount
+    const datesToShow = sortedDates.slice(0, visibleDateCount);
 
-            container.innerHTML = sortedDates.map(date => {
-                const logs = grouped.get(date);
-                return `
-                    <div class="log-group" data-date="${date}">
-                        <div class="log-date-header">
-                            <div class="header-content">
-                                <span>${DateTime.fromISO(date).toFormat('LLLL d, yyyy')}</span>
-                            </div>
-                            <span class="logs-count">${logs.length}</span>
-                        </div>
-                        <div class="log-entries" style="display:none; margin-top: 4px;">
-                            ${logs.map(createLogEntryHtml).join('')}
-                        </div>
+    let html = datesToShow.map(date => {
+        const logs = grouped.get(date);
+        return `
+            <div class="log-group" data-date="${date}">
+                <div class="log-date-header">
+                    <div class="header-content">
+                        <span>${DateTime.fromISO(date).toFormat('LLLL d, yyyy')}</span>
+                        <span class="logs-count">${logs.length}</span>
                     </div>
-                `;
-            }).join('');
+                </div>
+                <div class="log-entries" style="display:none; margin-top: 4px;">
+                    ${logs.map(createLogEntryHtml).join('')}
+                </div>
+            </div>
+        `;
+    }).join('');
 
-            // Accordion toggle behavior
-            container.querySelectorAll('.log-date-header').forEach(header => {
-                header.addEventListener('click', () => {
-                    const entries = header.nextElementSibling;
-                    const isOpen = entries.style.display !== 'none';
-                    entries.style.display = isOpen ? 'none' : 'flex';
-                    header.classList.toggle('expanded', !isOpen);
-                });
-            });
+    // Add "Show more notes..." button if there are more dates to load
+    if (visibleDateCount < sortedDates.length) {
+        html += `<button id="showMoreNotesBtn" class="nav-btn" style="width: 100%; padding: 12px; margin-top: 10px;">Show more notes...</button>`;
+    }
 
-            renderFolderChips();
-        }
+    container.innerHTML = html;
+
+    // Attach listener to "Show more" button
+    const showMoreBtn = document.getElementById('showMoreNotesBtn');
+    if (showMoreBtn) {
+        showMoreBtn.addEventListener('click', () => {
+            visibleDateCount += 5; // Load 5 more dates
+            displayAllLogs();
+            filterLogs(document.getElementById('logSearch')?.value || ''); // Re-apply filters
+        });
+    }
+
+    // Accordion toggle behavior
+    container.querySelectorAll('.log-date-header').forEach(header => {
+        header.addEventListener('click', () => {
+            const entries = header.nextElementSibling;
+            const isOpen = entries.style.display !== 'none';
+            entries.style.display = isOpen ? 'none' : 'flex';
+            header.classList.toggle('expanded', !isOpen);
+        });
+    });
+
+    renderFolderChips();
+}
 
         function filterLogs(query) {
             const term = (query || '').trim().toLowerCase();
@@ -1010,11 +1031,12 @@
                 group.style.display = anyMatched ? 'block' : 'none';
                 const header = group.querySelector('.log-date-header');
 
-                // Automatically expand headers if searching or filtering by folder
-                if ((term || activeFolder !== 'all') && anyMatched) {
+                // Automatically expand headers ONLY if typing in the search bar
+                if (term && anyMatched) {
                     entriesContainer.style.display = 'flex';
                     header.classList.add('expanded');
-                } else if (!term && activeFolder === 'all') {
+                } else {
+                    // Keep closed by default for folder clicks or empty searches
                     entriesContainer.style.display = 'none';
                     header.classList.remove('expanded');
                 }
