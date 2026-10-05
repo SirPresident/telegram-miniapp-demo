@@ -383,15 +383,145 @@ body {
         .anim-vibrate { animation: skillVibrate 0.4s ease; }
         .anim-celebrate { animation: skillCelebrate 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); z-index: 10; position: relative; }
         .anim-level-pop { animation: levelPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); display: inline-block; }
+
+        /* =========================================
+           HOME TAB: CHARACTER & NOTE WIDGET
+           ========================================= */
+        .character-avatar { display: flex; align-items: center; justify-content: center; margin-top: 60px; }
+        .character-avatar img {
+            width: auto; height: 180px; max-width: 240px; object-fit: contain; 
+            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15)); 
+            transform-origin: bottom center; transition: transform 0.3s ease;
+        }
+        .character-avatar img.processing-mode { transform: scale(1.15); }
+
+        .note-container {
+            position: absolute; bottom: 95px; left: 50%; transform: translateX(-50%);
+            width: var(--match-width, 340px); height: var(--note-height, 140px); max-height: 75vh;
+            background: var(--glass-bg); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border); box-shadow: 0 8px 32px rgba(0,0,0,0.15); border-radius: 28px;
+            z-index: 50; overflow: hidden;
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1), height 0.3s ease, bottom 1s cubic-bezier(0.4, 0, 0.2, 1), 
+                        left 1s cubic-bezier(0.4, 0, 0.2, 1), transform 1s cubic-bezier(0.4, 0, 0.2, 1), 
+                        border-radius 1s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
+        }
+
+        .note-container.is-processing, .note-container.is-result, .note-container.is-dismissing {
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1), height 1s cubic-bezier(0.4, 0, 0.2, 1), 
+                        bottom 1s cubic-bezier(0.4, 0, 0.2, 1), left 1s cubic-bezier(0.4, 0, 0.2, 1), 
+                        transform 1s cubic-bezier(0.4, 0, 0.2, 1), border-radius 1s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease;
+        }
+
+        .note-container.is-processing {
+            bottom: var(--target-bottom, 80%); left: var(--target-left, 50%); transform: translate(-50%, 50%);
+            width: 50px; height: 50px; border-radius: 25px; z-index: 100;
+        }
+
+        .note-container.is-result {
+            bottom: calc(100% - 450px); left: 50%; transform: translateX(-50%);
+            width: var(--match-width, 340px); height: 340px; border-radius: 24px;
+        }
+
+        .note-container.is-dismissing {
+            bottom: 120%; left: 50%; transform: translateX(-50%); width: var(--match-width, 340px); height: 340px; border-radius: 24px; opacity: 0;
+        }
+
+        .note-container.is-respawning {
+            transition: none !important; bottom: -150px; left: 50%; transform: translateX(-50%);
+            width: var(--match-width, 340px); height: 140px; border-radius: 28px; opacity: 0;
+        }
+
+        .note-view { position: absolute; inset: 0; opacity: 0; pointer-events: none; transition: opacity 0.5s ease; display: flex; }
+
+        .note-container:not(.is-processing):not(.is-result):not(.is-dismissing) .view-input { opacity: 1; pointer-events: auto; }
+        .view-input { flex-direction: column; padding: 16px; gap: 12px; }
+        
+        #noteInput {
+            flex: 1; background: transparent; border: none; outline: none; color: var(--text-color); font-size: 1rem;
+            font-family: inherit; resize: none; line-height: 1.4; overflow-y: auto; -webkit-user-select: text; user-select: text;
+        }
+        #noteInput::-webkit-scrollbar { width: 0px; }
+        #noteInput::placeholder { color: var(--text-muted); }
+
+        .input-actions { display: flex; justify-content: flex-end; width: 100%; }
+        .action-btn { background: var(--accent-soft); color: var(--text-color); border: none; border-radius: 20px; padding: 8px 20px; font-weight: 600; cursor: pointer; transition: var(--transition-smooth); display: flex; align-items: center; justify-content: center; }
+        .action-btn:active { transform: scale(0.95); }
+
+        .note-container.is-processing .view-processing { opacity: 1; pointer-events: auto; }
+        .view-processing { align-items: center; justify-content: center; }
+        .spinner { width: 24px; height: 24px; border: 3px solid rgba(255, 255, 255, 0.4); border-top-color: var(--text-color); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        .note-container.is-result .view-result, .note-container.is-dismissing .view-result { opacity: 1; pointer-events: auto; }
+        .view-result { flex-direction: column; padding: 24px; gap: 16px; }
+        .result-content { flex: 1; display: flex; flex-direction: column; gap: 12px; color: var(--text-color); font-size: 0.95rem; line-height: 1.4; overflow-y: auto; }
+        .result-title { font-weight: 700; font-size: 1.1rem; margin-bottom: 4px; }
+        .result-section p { margin: 2px 0; }
+        .result-section.level-up { font-weight: 600; margin-top: 4px; }
+        .action-btn.dismiss { width: 100%; padding: 12px; background: rgba(255, 255, 255, 0.3); }
+
     </style>
 </head>
 <body>
 
     <div id="stage">
         
-        <!-- Tab 0: Home -->
+<!-- Tab 0: Home -->
         <div class="slide" id="page-home">
-            <div class="glass-panel"><header class="page-header"><h2>Home</h2></header><main class="page-content"><div class="blank-text">Nothing to see here yet.</div></main></div>
+            <div class="glass-panel">
+                <header class="page-header" style="align-items: flex-start;">
+                    <h2 style="margin-top: 10px;">Home</h2>
+                    <!-- Top Right Character (Pushed lower to make room for thinking bubble) -->
+                    <div class="character-avatar">
+                        <img id="leoImage" src="assets/Leo/Leo.png" alt="Leo" onerror="this.src='https://cdn-icons-png.flaticon.com/512/616/616408.png'">
+                    </div>
+                </header>
+                
+                <main class="page-content">
+                    <div class="blank-text">Welcome back. How are you feeling?</div>
+                </main>
+
+                <!-- Note Input Widget -->
+                <div class="note-container" id="noteWidget">
+                    <!-- 1. Input View -->
+                    <div class="note-view view-input">
+                        <textarea id="noteInput" placeholder="Write a note... Press Enter for a new line" autocomplete="off"></textarea>
+                        <div class="input-actions">
+                            <button id="sendBtn" class="action-btn">Send</button>
+                        </div>
+                    </div>
+
+                    <!-- 2. Processing View -->
+                    <div class="note-view view-processing">
+                        <div class="spinner"></div>
+                    </div>
+
+                    <!-- 3. Result View -->
+                    <div class="note-view view-result">
+                        <div class="result-content">
+                            <div class="result-title">📝 Note processed!</div>
+                            
+                            <div class="result-section">
+                                <p>❤️ Health: energized</p>
+                                <p>⚡️ Activities: running</p>
+                            </div>
+
+                            <div class="result-section">
+                                <p>✨ XP Gained:</p>
+                                <p>💪 Strength: +1 XP</p>
+                                <p>🏃 Endurance: +2 XP</p>
+                                <p>🧘 Well-being: +1 XP</p>
+                            </div>
+
+                            <div class="result-section level-up">
+                                <p>🚀 Level Up:</p>
+                                <p>🏃 Endurance reached Lvl 2!</p>
+                            </div>
+                        </div>
+                        <button id="dismissBtn" class="action-btn dismiss">Dismiss</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Tab 1: Analytics -->
@@ -1366,6 +1496,12 @@ function animateFoldersWheel() {
 
         // 3D Cube Navigation
         function initTabs() {
+            const syncNoteWidth = () => {
+                const nav = document.querySelector('.capsule-tabs');
+                if(nav) document.body.style.setProperty('--match-width', `${nav.offsetWidth}px`);
+            };
+            window.addEventListener('resize', syncNoteWidth);
+            syncNoteWidth();
             const tabs = [
                 { btn: document.getElementById('tab-home') },      // Index 0
                 { btn: document.getElementById('tab-analytics') }, // Index 1
@@ -1425,6 +1561,12 @@ function animateFoldersWheel() {
                         if (newIndex === 4 && isDataLoaded) {
                             requestAnimationFrame(() => { triggerLevelUpAnimations(); });
                         }
+                        if (newIndex === 4 && isDataLoaded) {
+                            requestAnimationFrame(() => { triggerLevelUpAnimations(); });
+                        }
+                        
+                        // Sync Note widget width after the tab fully changes
+                        setTimeout(syncNoteWidth, 300);
                     }
                 }
                 requestAnimationFrame(step);
@@ -1622,6 +1764,80 @@ function triggerLevelUpAnimations() {
             });
 
             localStorage.setItem('liquidGlass_skillsState', JSON.stringify(stateToSave));
+        }
+
+// ==========================================
+        // HOME TAB NOTE WIDGET LOGIC
+        // ==========================================
+        const noteWidget = document.getElementById('noteWidget');
+        const noteInput = document.getElementById('noteInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const dismissBtn = document.getElementById('dismissBtn');
+
+        if (noteInput && sendBtn) {
+            noteInput.addEventListener('input', function() {
+                const oldHeight = this.style.height;
+                this.style.height = '1px'; 
+                const requiredHeight = this.scrollHeight;
+                this.style.height = oldHeight; 
+
+                const uiOffset = 80; 
+                let newContainerHeight = requiredHeight + uiOffset;
+                const minHeight = 140;
+                const maxHeight = window.innerHeight * 0.75; 
+                
+                newContainerHeight = Math.max(minHeight, Math.min(newContainerHeight, maxHeight));
+                document.body.style.setProperty('--note-height', `${newContainerHeight}px`);
+            });
+
+            sendBtn.addEventListener('click', () => {
+                if (!noteInput.value.trim()) return; 
+                
+                const leoImg = document.getElementById('leoImage');
+                const rect = leoImg.getBoundingClientRect();
+                const scale = 2;
+                const scaledHeight = rect.height * scale;
+                
+                const targetLeft = rect.left + (rect.width / 2.07);
+                const distFromBottom = window.innerHeight - rect.bottom;
+                const targetBottom = distFromBottom + (scaledHeight * 0.5);
+                
+                document.body.style.setProperty('--target-left', `${targetLeft}px`);
+                document.body.style.setProperty('--target-bottom', `${targetBottom}px`);
+
+                noteWidget.classList.add('is-processing');
+                
+                leoImg.src = 'assets/Leo/Processing-Leo.png';
+                leoImg.classList.add('processing-mode');
+
+                // Simulate backend processing time
+                setTimeout(() => {
+                    noteWidget.classList.remove('is-processing');
+                    noteWidget.classList.add('is-result');
+                    noteInput.value = ''; 
+                    document.body.style.setProperty('--note-height', `140px`); 
+                    
+                    leoImg.src = 'assets/Leo/Leo.png';
+                    leoImg.classList.remove('processing-mode');
+                    
+                }, 1800); 
+            });
+
+            dismissBtn.addEventListener('click', () => {
+                noteWidget.classList.remove('is-result');
+                noteWidget.classList.add('is-dismissing');
+
+                setTimeout(() => {
+                    noteWidget.classList.remove('is-dismissing');
+                    noteWidget.classList.add('is-respawning');
+
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(() => {
+                            noteWidget.classList.remove('is-respawning');
+                        });
+                    });
+                }, 800); 
+            });
         }
 
         initTabs();
