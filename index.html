@@ -542,6 +542,7 @@
         // 3D Wheel state variables
         let wheelCurrentRot = 0, wheelTargetRot = 0, isWheelDragging = false;
         let wheelStartX = 0, wheelStartRot = 0, wheelRAF = null, folderAngleStep = 0;
+        let isFullLoop = true; // Tracks whether to spin 360 or use a forward arc
         let idx = 0;
         let isDataLoaded = false; 
 
@@ -1018,29 +1019,34 @@
                 `;
             }).join('');
 
-            const chips = Array.from(bar.children);
+const chips = Array.from(bar.children);
             const totalChips = chips.length;
             
-// Dynamically calculate radius to keep cards tightly packed (68px card + 12px gap)
-            const targetSpacing = 80; 
-            const radius = Math.max(95, Math.round((totalChips * targetSpacing) / (2 * Math.PI)));
-            folderAngleStep = 360 / totalChips;
+            // If 5 or fewer folders, use a tight 36° forward-facing arc; otherwise 360° circle
+            isFullLoop = totalChips >= 6;
+            folderAngleStep = isFullLoop ? (360 / totalChips) : 36;
+            const radius = isFullLoop 
+                ? Math.max(95, Math.round((totalChips * 80) / (2 * Math.PI))) 
+                : 135; 
 
             chips.forEach((chip, index) => {
                 const angle = index * folderAngleStep;
                 chip.style.transform = `rotateY(${angle}deg) translateZ(${radius}px)`;
 
-                // Mouse/Touch Click Listener that works reliably
                 chip.addEventListener('click', (e) => {
-                    if (hasMovedWheel) return; // Ignore clicks if user was actively dragging
+                    if (hasMovedWheel) return;
                     
                     activeFolder = chip.dataset.folder;
                     bar.querySelectorAll('.folder-chip').forEach(b => b.classList.remove('active'));
                     chip.classList.add('active');
 
-                    // Smoothly spin clicked card straight to the front
-                    const diff = (angle - (wheelTargetRot % 360) + 540) % 360 - 180;
-                    wheelTargetRot += diff;
+                    // Center clicked card (looping vs arc)
+                    if (isFullLoop) {
+                        const diff = (angle - (wheelTargetRot % 360) + 540) % 360 - 180;
+                        wheelTargetRot += diff;
+                    } else {
+                        wheelTargetRot = angle;
+                    }
 
                     filterLogs(document.getElementById('logSearch')?.value || '');
                 });
@@ -1224,9 +1230,7 @@ function displayAllLogs() {
             wheelStartRot = wheelTargetRot;
         });
 
-        // Listen on window so you never lose drag control if cursor leaves the box
-        window.addEventListener("pointermove", (e) => {
-            // Strict check: if mouse button is NOT pressed, cancel drag immediately
+window.addEventListener("pointermove", (e) => {
             if (!isWheelDragging || (e.pointerType === "mouse" && e.buttons !== 1)) {
                 isWheelDragging = false;
                 return;
@@ -1235,7 +1239,15 @@ function displayAllLogs() {
             const deltaX = e.clientX - wheelStartX;
             if (Math.abs(deltaX) > 5) hasMovedWheel = true;
             
-            wheelTargetRot = wheelStartRot - deltaX * 0.75; 
+            let target = wheelStartRot - deltaX * 0.75; 
+            
+            // If few folders, prevent swiping past the first or last card into empty space
+            if (!isFullLoop) {
+                const totalChips = document.getElementById('foldersBar')?.children.length || 1;
+                const maxAngle = (totalChips - 1) * folderAngleStep;
+                target = Math.max(-15, Math.min(maxAngle + 15, target));
+            }
+            wheelTargetRot = target;
         });
 
         const endWheelDrag = () => {
@@ -1244,7 +1256,15 @@ function displayAllLogs() {
             
             if (folderAngleStep > 0) {
                 const nearest = Math.round(wheelTargetRot / folderAngleStep);
-                wheelTargetRot = nearest * folderAngleStep;
+                let snapped = nearest * folderAngleStep;
+                
+                // Snap safely inside bounds for arc mode
+                if (!isFullLoop) {
+                    const totalChips = document.getElementById('foldersBar')?.children.length || 1;
+                    const maxAngle = (totalChips - 1) * folderAngleStep;
+                    snapped = Math.max(0, Math.min(maxAngle, snapped));
+                }
+                wheelTargetRot = snapped;
             }
             setTimeout(() => { hasMovedWheel = false; }, 50);
         };
@@ -1264,12 +1284,15 @@ function displayAllLogs() {
             wheelCurrentRot += (wheelTargetRot - wheelCurrentRot) * 0.13;
             foldersBar.style.transform = `rotateY(${-wheelCurrentRot}deg)`;
 
-            Array.from(foldersBar.children).forEach((chip, index) => {
+Array.from(foldersBar.children).forEach((chip, index) => {
                 const angle = index * folderAngleStep;
-                let diff = (angle - (wheelCurrentRot % 360) + 540) % 360 - 180;
+                
+                // Correct angle difference for full loop vs arc
+                let diff = isFullLoop 
+                    ? ((angle - (wheelCurrentRot % 360) + 540) % 360 - 180) 
+                    : (angle - wheelCurrentRot);
                 let absDiff = Math.abs(diff);
 
-// Keeps all 5 front cards sharp and visible without fading away
                 chip.style.opacity = Math.max(0.5, 1 - Math.pow(absDiff / 165, 1.1));
             });
 
