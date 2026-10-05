@@ -203,37 +203,12 @@
         /* =========================================
            SEARCH TAB / FOLDERS / ACCORDION UI
            ========================================= */
-.folders-stage {
-            width: 100%; height: 160px; position: relative; display: flex; 
+        .folders-stage {
+            width: 100%; height: 60px; position: relative; display: flex; 
             align-items: center; justify-content: center; perspective: 800px;
-            overflow: hidden; touch-action: pan-y; margin-bottom: 16px;
+            overflow: hidden; touch-action: pan-y; margin-bottom: 8px;
             cursor: grab;
         }
-        .folders-stage:active { cursor: grabbing; }
-        
-        .folders-bar {
-            position: relative; width: 100px; height: 120px;
-            transform-style: preserve-3d; will-change: transform;
-        }
-        
-        .folder-chip {
-            position: absolute; inset: 0;
-            background: linear-gradient(150deg, rgba(28, 31, 48, 0.85), rgba(14, 16, 26, 0.85));
-            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; 
-            padding: 12px 10px; display: flex; flex-direction: column; 
-            align-items: flex-start; justify-content: space-between;
-            cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s;
-            color: #f8fafc; font-family: inherit; backface-visibility: hidden;
-            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
-        }
-        .folder-chip.active { 
-            border-color: rgba(99, 102, 241, 0.75); 
-            box-shadow: 0 12px 35px rgba(99, 102, 241, 0.35);
-        }
-        .chip-icon { font-size: 1.6rem; background: rgba(255, 255, 255, 0.1); padding: 4px; border-radius: 8px; line-height: 1; }
-        .chip-title { font-size: 0.75rem; font-weight: 600; line-height: 1.2; white-space: normal; }
-        .chip-count { font-size: 0.6rem; color: #818cf8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
         .folders-stage:active { cursor: grabbing; }
         
         .folders-bar {
@@ -550,7 +525,6 @@
         // 3D Wheel state variables
         let wheelCurrentRot = 0, wheelTargetRot = 0, isWheelDragging = false;
         let wheelStartX = 0, wheelStartRot = 0, wheelRAF = null, folderAngleStep = 0;
-        let wheelDragDistance = 0;
         let idx = 0;
         let isDataLoaded = false; 
 
@@ -1024,21 +998,18 @@
                 };
                 const isActive = folderKey === activeFolder;
                 return `
-                    <div class="folder-chip ${isActive ? 'active' : ''}" data-folder="${escapeHtml(folderKey)}">
-                        <div class="chip-icon">${meta.icon}</div>
-                        <div>
-                            <div class="chip-count">${counts[folderKey] || 0} Logs</div>
-                            <div class="chip-title">${escapeHtml(meta.label)}</div>
-                        </div>
-                    </div>
+                    <button class="folder-chip ${isActive ? 'active' : ''}" data-folder="${escapeHtml(folderKey)}" type="button">
+                        <span>${meta.icon} ${escapeHtml(meta.label)}</span>
+                        <span class="folder-chip-count">${counts[folderKey] || 0}</span>
+                    </button>
                 `;
             }).join('');
 
-            // Folder selection triggers (with proper drag-click prevention)
+            // Folder selection triggers (with drag-click prevention)
             bar.querySelectorAll('.folder-chip').forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    // Prevent click if the user was actively dragging
-                    if (wheelDragDistance > 5) return;
+                    // Prevent accidental clicks if the user was swiping the wheel
+                    if (Math.abs(wheelStartRot - wheelTargetRot) > 5) return; 
                     
                     activeFolder = btn.dataset.folder;
                     bar.querySelectorAll('.folder-chip').forEach(b => b.classList.remove('active'));
@@ -1051,7 +1022,7 @@
             const chips = Array.from(bar.children);
             const totalChips = chips.length;
             // Calculate a safe radius so chips don't overlap based on how many exist
-            const radius = Math.max(160, (totalChips * 110) / (2 * Math.PI)); 
+            const radius = Math.max(140, (totalChips * 110) / (2 * Math.PI)); 
             folderAngleStep = 360 / totalChips;
 
             chips.forEach((chip, index) => {
@@ -1231,15 +1202,13 @@ function displayAllLogs() {
             isWheelDragging = true;
             wheelStartX = e.clientX;
             wheelStartRot = wheelTargetRot;
-            wheelDragDistance = 0; // Reset drag distance on touch
             foldersStage.setPointerCapture(e.pointerId);
         });
 
         foldersStage.addEventListener("pointermove", (e) => {
             if (!isWheelDragging) return;
             const deltaX = e.clientX - wheelStartX;
-            wheelDragDistance = Math.abs(deltaX); // Track how far they moved
-            wheelTargetRot = wheelStartRot - deltaX * 0.6; // Increased sensitivity (was 0.4)
+            wheelTargetRot = wheelStartRot - deltaX * 0.4; // Sensitivity
         });
 
         const endWheelDrag = () => {
@@ -1259,8 +1228,8 @@ function displayAllLogs() {
             const foldersBar = document.getElementById('foldersBar');
             if (!foldersBar) return;
 
-            // Increased speed: 0.15 lerp (was 0.1)
-            wheelCurrentRot += (wheelTargetRot - wheelCurrentRot) * 0.15;
+            // Smooth lerp for spinning
+            wheelCurrentRot += (wheelTargetRot - wheelCurrentRot) * 0.1;
             foldersBar.style.transform = `rotateY(${-wheelCurrentRot}deg)`;
 
             // Depth calculation for opacity and pointer events
@@ -1269,11 +1238,11 @@ function displayAllLogs() {
                 let diff = (angle - (wheelCurrentRot % 360) + 540) % 360 - 180;
                 let absDiff = Math.abs(diff);
 
-                // Extended visibility curve
-                chip.style.opacity = Math.max(0.2, 1 - Math.pow(absDiff / 110, 1.2));
+                // Fade out chips facing backwards
+                chip.style.opacity = Math.max(0.15, 1 - Math.pow(absDiff / 100, 1.5));
                 
-                // WIDENED clickable range to 90 degrees so adjacent visible cards can be clicked
-                chip.style.pointerEvents = absDiff < 90 ? 'auto' : 'none';
+                // Prevent clicking on chips that are hidden in the back
+                chip.style.pointerEvents = absDiff < 45 ? 'auto' : 'none';
             });
 
             wheelRAF = requestAnimationFrame(animateFoldersWheel);
