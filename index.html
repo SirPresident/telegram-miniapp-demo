@@ -312,7 +312,7 @@ body {
         }
         .capsule-tab-btn.active .capsule-text { opacity: 1; transform: translateY(0); }
 
-        /* Settings Button in Profile Header */
+/* Settings Button in Profile Header */
         .settings-btn {
             background: rgba(255, 255, 255, 0.25);
             border: 1px solid var(--glass-border);
@@ -323,6 +323,7 @@ body {
             transition: var(--transition-smooth);
             backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
             box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            z-index: 100;
         }
         .settings-btn:hover, .settings-btn:active {
             background: rgba(255, 255, 255, 0.5);
@@ -487,23 +488,21 @@ body {
             </div>
         </div>
 
-<!-- Tab 4: Profile (Now includes Level Up skills) -->
+<!-- Tab 4: Profile (Merged with Level Up & Settings) -->
         <div class="slide" id="page-profile">
             <div class="glass-panel">
                 <header class="page-header">
                     <h2>Profile</h2>
                     <button class="settings-btn" id="settingsBtn" aria-label="Settings">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="3"></circle>
                             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                         </svg>
                     </button>
                 </header>
                 <main class="page-content">
-                    <!-- Future Profile Avatar/Settings can go here -->
-                    
                     <!-- Merged Level Up / Skills Grid -->
-                    <section id="levelupView" class="tab-view" style="margin-top: 10px;">
+                    <section id="levelupView" class="tab-view" style="margin-top: 5px;">
                         <h3 style="font-size: 1.1rem; color: var(--text-color); font-weight: 600; margin-bottom: 4px;">Skills & Progress</h3>
                         <div id="skillsContainer" class="skills-grid"></div>
                     </section>
@@ -511,7 +510,7 @@ body {
             </div>
         </div>
 
-    </div>
+    </div> <!-- This closes the <div id="stage"> DO NOT DELETE THIS -->
 
 <!-- Bottom Capsule UI -->
     <nav class="capsule-tabs" aria-label="Main Navigation">
