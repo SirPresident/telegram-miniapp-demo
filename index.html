@@ -496,27 +496,10 @@ body {
                         <div class="spinner"></div>
                     </div>
 
-                    <!-- 3. Result View -->
+                    <!-- 3. Result View (Dynamic) -->
                     <div class="note-view view-result">
-                        <div class="result-content">
-                            <div class="result-title">📝 Note processed!</div>
-                            
-                            <div class="result-section">
-                                <p>❤️ Health: energized</p>
-                                <p>⚡️ Activities: running</p>
-                            </div>
-
-                            <div class="result-section">
-                                <p>✨ XP Gained:</p>
-                                <p>💪 Strength: +1 XP</p>
-                                <p>🏃 Endurance: +2 XP</p>
-                                <p>🧘 Well-being: +1 XP</p>
-                            </div>
-
-                            <div class="result-section level-up">
-                                <p>🚀 Level Up:</p>
-                                <p>🏃 Endurance reached Lvl 2!</p>
-                            </div>
+                        <div class="result-content" id="resultContent">
+                            <!-- Populated dynamically via Django response -->
                         </div>
                         <button id="dismissBtn" class="action-btn dismiss">Dismiss</button>
                     </div>
@@ -1790,8 +1773,14 @@ function triggerLevelUpAnimations() {
                 document.body.style.setProperty('--note-height', `${newContainerHeight}px`);
             });
 
-            sendBtn.addEventListener('click', () => {
-                if (!noteInput.value.trim()) return; 
+            sendBtn.addEventListener('click', async () => {
+                const noteText = noteInput.value.trim();
+                if (!noteText) return; 
+
+                if (!telegramUser || !telegramUser.id) {
+                    alert("Telegram User ID missing. Please open inside Telegram.");
+                    return;
+                }
                 
                 const leoImg = document.getElementById('leoImage');
                 const rect = leoImg.getBoundingClientRect();
@@ -1805,22 +1794,101 @@ function triggerLevelUpAnimations() {
                 document.body.style.setProperty('--target-left', `${targetLeft}px`);
                 document.body.style.setProperty('--target-bottom', `${targetBottom}px`);
 
+                // 1. Start thinking animation
                 noteWidget.classList.add('is-processing');
-                
                 leoImg.src = 'assets/Leo/Processing-Leo.png';
                 leoImg.classList.add('processing-mode');
 
-                // Simulate backend processing time
-                setTimeout(() => {
+                const payload = {
+                    telegram_user_id: telegramUser.id,
+                    telegram_username: telegramUser.username || '',
+                    note_text: noteText
+                };
+
+                const resultContent = document.getElementById('resultContent');
+
+                try {
+                    // 2. Send to Django & wait at least 1.2s so the animation feels natural
+                    const [res] = await Promise.all([
+                        fetch(`${BACKEND_URL_BASE}/api/process_text_note/`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        }),
+                        new Promise(resolve => setTimeout(resolve, 1200))
+                    ]);
+
+                    const data = await res.json();
+
+                    // 3. Build UI matching bot's construct_reply_and_send logic
+                    if (data.error) {
+                        resultContent.innerHTML = `
+                            <div class="result-title" style="color: #ef4444;">⚠️ Note Error</div>
+                            <div class="result-section"><p>${escapeHtml(data.error)}</p></div>
+                        `;
+                    } else {
+                        let html = `<div class="result-title">📝 Note processed!</div>`;
+
+                        // Mood
+                        if (data.mood) {
+                            html += `<div class="result-section"><p>😊 <b>Mood:</b> ${escapeHtml(data.mood)}</p></div>`;
+                        }
+
+                        // Health, Diet, Activity
+                        const metaItems = [];
+                        if (data.health_items?.length) metaItems.push(`<p>❤️ <b>Health:</b> ${data.health_items.map(escapeHtml).join(', ')}</p>`);
+                        if (data.diet_items?.length) metaItems.push(`<p>🍜 <b>Diet:</b> ${data.diet_items.map(escapeHtml).join(', ')}</p>`);
+                        if (data.activity_items?.length) metaItems.push(`<p>⚡ <b>Activities:</b> ${data.activity_items.map(escapeHtml).join(', ')}</p>`);
+                        if (metaItems.length) {
+                            html += `<div class="result-section">${metaItems.join('')}</div>`;
+                        }
+
+                        // Specific XP Gained
+                        if (data.specific_xp_gained?.length) {
+                            const xpLines = data.specific_xp_gained.map(i => 
+                                `<p>${escapeHtml(i.icon || '⚡')} <b>${escapeHtml(i.name)}:</b> +${i.amount} XP</p>`
+                            ).join('');
+                            html += `<div class="result-section"><p style="font-weight:700; margin-bottom:2px;">✨ XP Gained:</p>${xpLines}</div>`;
+                        }
+
+                        // Newly Unlocked Skills
+                        if (data.newly_unlocked_skills?.length) {
+                            const unlockLines = data.newly_unlocked_skills.map(i => 
+                                `<p>${escapeHtml(i.icon || '🎉')} Unlocked: <b>${escapeHtml(i.name)}</b>!</p>`
+                            ).join('');
+                            html += `<div class="result-section" style="color:#10b981;"><p style="font-weight:700; margin-bottom:2px;">🎉 New Skill Unlocked:</p>${unlockLines}</div>`;
+                        }
+
+                        // Leveled Up Skills
+                        if (data.leveled_up_skills?.length) {
+                            const lvlLines = data.leveled_up_skills.map(i => 
+                                `<p>${escapeHtml(i.icon || '🚀')} <b>${escapeHtml(i.name)}</b> reached <b>Lvl ${i.new_level}</b>!</p>`
+                            ).join('');
+                            html += `<div class="result-section level-up" style="color:#10b981;"><p style="font-weight:700; margin-bottom:2px;">🚀 Level Up:</p>${lvlLines}</div>`;
+                        }
+
+                        resultContent.innerHTML = html;
+
+                        // 4. Silently refresh all app data (History, Analytics, & Profile XP)
+                        fetchAllLogsAndSetupChart();
+                    }
+
+                } catch (err) {
+                    console.error('Note process error:', err);
+                    resultContent.innerHTML = `
+                        <div class="result-title" style="color: #ef4444;">⚠️ Network Error</div>
+                        <div class="result-section"><p>Could not connect to processing server.</p></div>
+                    `;
+                } finally {
+                    // 5. Reveal result card and revert Leo avatar
                     noteWidget.classList.remove('is-processing');
                     noteWidget.classList.add('is-result');
-                    noteInput.value = ''; 
-                    document.body.style.setProperty('--note-height', `140px`); 
+                    noteInput.value = '';
+                    document.body.style.setProperty('--note-height', `140px`);
                     
                     leoImg.src = 'assets/Leo/Leo.png';
                     leoImg.classList.remove('processing-mode');
-                    
-                }, 1800); 
+                }
             });
 
             dismissBtn.addEventListener('click', () => {
