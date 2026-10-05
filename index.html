@@ -1223,10 +1223,10 @@ function displayAllLogs() {
         }
 
         function getSkillProgress(totalXP) {
-            if (totalXP <= 0) return { level: 0, xpInCurrentLevel: 0, xpNeededForNext: 25, progressPercent: 0 };
+            if (totalXP <= 0) return { level: 0, xpInCurrentLevel: 0, xpNeededForNext: 10, progressPercent: 0 };
             let level = 1; let remainingXP = totalXP;
             while (true) {
-                const costToNext = 25 * level;
+                const costToNext = 10 * level;
                 if (remainingXP >= costToNext) {
                     remainingXP -= costToNext; level++;
                 } else {
@@ -1273,7 +1273,7 @@ function calculateSkillLevels() {
                         // New skill acquired since last check
                         stateFlags.gainedXP = true;
                         stateFlags.oldLevel = 0; stateFlags.oldPercent = 0;
-                        stateFlags.oldXpText = `0 / 25 XP`;
+                        stateFlags.oldXpText = `0 / 10 XP`;
                         if (progress.level > 0) stateFlags.leveledUp = true;
                     }
                 }
