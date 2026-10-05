@@ -272,19 +272,36 @@
         @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 0.8; } 100% { opacity: 0.5; } }
 
         /* =========================================
-           BOTTOM CAPSULE NAVIGATION
+           BOTTOM CAPSULE NAVIGATION (Fluid/Responsive)
            ========================================= */
-        .capsule-tabs { position: fixed; bottom: calc(env(safe-area-inset-bottom) + 20px); left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; align-items: center; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 99px; padding: 6px; box-shadow: var(--glass-shadow); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
-        .capsule-tab-group { display: flex; align-items: center; gap: 4px; }
-        .capsule-tab-btn { position: relative; background: transparent; border: none; cursor: pointer; height: 44px; width: 50px; border-radius: 99px; display: flex; align-items: center; justify-content: center; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden; outline: none; color: var(--text-color); }
+        .capsule-tabs { 
+            position: fixed; bottom: calc(env(safe-area-inset-bottom) + 20px); left: 50%; transform: translateX(-50%); 
+            z-index: 1000; display: flex; align-items: center; background: var(--glass-bg); 
+            border: 1px solid var(--glass-border); border-radius: 99px; 
+            padding: clamp(4px, 1.5vw, 6px); width: max-content; max-width: 96vw;
+            box-shadow: var(--glass-shadow); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); 
+        }
+        .capsule-tab-group { display: flex; align-items: center; gap: clamp(2px, 1vw, 4px); }
+        .capsule-tab-btn { 
+            position: relative; background: transparent; border: none; cursor: pointer; 
+            height: 44px; width: clamp(38px, 11vw, 50px); border-radius: 99px; 
+            display: flex; align-items: center; justify-content: center; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden; outline: none; color: var(--text-color); 
+        }
         .capsule-tab-btn:hover:not(.active) { background: rgba(255, 255, 255, 0.2); }
-        .capsule-tab-btn.active { width: 116px; background: var(--accent-soft); color: var(--accent-strong); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .capsule-tab-btn.active { 
+            width: clamp(95px, 28vw, 116px); 
+            background: var(--accent-soft); color: var(--accent-strong); box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
+        }
         .capsule-icon-wrap { position: absolute; display: flex; align-items: center; justify-content: center; transition: transform 0.25s ease, opacity 0.2s ease; }
-        .icon-img { width: 22px; height: 22px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
+        .icon-img { width: clamp(18px, 5.5vw, 22px); height: clamp(18px, 5.5vw, 22px); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
         .capsule-tab-btn.active .capsule-icon-wrap { opacity: 0; transform: scale(0.6); }
-        .capsule-text { position: absolute; font-size: 14px; font-weight: 500; opacity: 0; transform: translateY(6px); transition: opacity 0.25s ease, transform 0.25s ease; white-space: nowrap; }
+        .capsule-text { 
+            position: absolute; font-size: clamp(0.75rem, 3.5vw, 14px); font-weight: 500; 
+            opacity: 0; transform: translateY(6px); transition: opacity 0.25s ease, transform 0.25s ease; white-space: nowrap; 
+        }
         .capsule-tab-btn.active .capsule-text { opacity: 1; transform: translateY(0); }
-
+        
         /* =========================================
            LEVEL UP TAB UI
            ========================================= */
