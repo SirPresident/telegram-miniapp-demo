@@ -255,6 +255,32 @@
         .capsule-tab-btn.active .capsule-icon-wrap { opacity: 0; transform: scale(0.6); }
         .capsule-text { position: absolute; font-size: 14px; font-weight: 500; opacity: 0; transform: translateY(6px); transition: opacity 0.25s ease, transform 0.25s ease; white-space: nowrap; }
         .capsule-tab-btn.active .capsule-text { opacity: 1; transform: translateY(0); }
+
+        /* =========================================
+           LEVEL UP TAB UI
+           ========================================= */
+        .skills-grid { width: 100%; display: flex; flex-direction: column; gap: 12px; }
+        .skill-item {
+            background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border); border-radius: 16px; padding: 16px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); transition: var(--transition-smooth);
+        }
+        .skill-header { display: flex; align-items: center; margin-bottom: 12px; gap: 10px; }
+        .skill-icon { font-size: 1.6rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
+        .skill-name { flex: 1; font-weight: 600; font-size: 1rem; color: var(--text-color); }
+        .skill-level {
+            background: var(--accent-soft); color: var(--accent-strong); font-weight: 700;
+            padding: 4px 10px; border-radius: 12px; font-size: 0.8rem;
+        }
+        .progress-bar-container {
+            width: 100%; height: 8px; background: rgba(0, 0, 0, 0.1); border-radius: 8px; 
+            overflow: hidden; margin-bottom: 6px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .progress-bar {
+            height: 100%; background: #10b981; border-radius: 8px; 
+            transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .skill-xp-info { font-size: 0.75rem; color: var(--text-muted); text-align: right; font-weight: 500; }
     </style>
 </head>
 <body>
@@ -365,9 +391,17 @@
             </div>
         </div>
 
-        <!-- Tab 4: Level Up -->
+<!-- Tab 4: Level Up -->
         <div class="slide" id="page-levelup">
-            <div class="glass-panel"><header class="page-header"><h2>Level Up</h2></header><main class="page-content"><div class="blank-text">Nothing to see here yet.</div></main></div>
+            <div class="glass-panel">
+                <header class="page-header"><h2>Level Up</h2></header>
+                <main class="page-content">
+                    <section id="levelupView" class="tab-view">
+                        <!-- Dynamic Skills and Progression Grid -->
+                        <div id="skillsContainer" class="skills-grid"></div>
+                    </section>
+                </main>
+            </div>
         </div>
 
         <!-- Tab 5: Profile -->
@@ -454,6 +488,13 @@
         let idx = 0;
         let isDataLoaded = false; 
 
+        let userSkills = {};
+        const KNOWN_SKILL_ICONS = {
+            strength: '💪', endurance: '🏃', intelligence: '🧠', charisma: '🗣️',
+            perception: '👁️', wellbeing: '🧘', art: '🎨', luck: '🍀',
+            cooking: '🍳', coding: '💻', music: '🎵', gaming: '🎮', reading: '📚'
+        };
+
         // Prepares searchable text for every log record
         function prepareLogSearchIndex(log, luxonDate) {
             const skillsGained = log.skills_xp_gained || {};
@@ -533,6 +574,10 @@
                         idx = weekSegments.length - 1;
                         
                         isDataLoaded = true;
+                        
+                        // Calculate and populate Skills for Level Up tab
+                        calculateSkillLevels();
+                        displaySkills();
                         
                         // Populate logs into Search Tab layout
                         displayAllLogs();
@@ -1143,6 +1188,82 @@ function displayAllLogs() {
                 });
             });
         }
+
+        // ==========================================
+        // LEVEL UP LOGIC
+        // ==========================================
+        function getSkillIcon(skillName) {
+            return KNOWN_SKILL_ICONS[skillName.toLowerCase()] || '✨';
+        }
+
+        function getSkillProgress(totalXP) {
+            if (totalXP <= 0) return { level: 0, xpInCurrentLevel: 0, xpNeededForNext: 25, progressPercent: 0 };
+            let level = 1; let remainingXP = totalXP;
+            while (true) {
+                const costToNext = 25 * level;
+                if (remainingXP >= costToNext) {
+                    remainingXP -= costToNext; level++;
+                } else {
+                    return {
+                        level: level, xpInCurrentLevel: remainingXP,
+                        xpNeededForNext: costToNext,
+                        progressPercent: Math.min(100, Math.round((remainingXP / costToNext) * 100))
+                    };
+                }
+            }
+        }
+
+        function calculateSkillLevels() {
+            userSkills = {};
+            allUserLogs.forEach(log => {
+                const skills = log.skills_xp_gained || {};
+                Object.entries(skills).forEach(([skillName, xp]) => {
+                    const cleanName = skillName.toLowerCase().trim();
+                    if (!userSkills[cleanName]) userSkills[cleanName] = { totalXP: 0 };
+                    userSkills[cleanName].totalXP += Number(xp) || 0;
+                });
+            });
+
+            Object.keys(userSkills).forEach(skillName => {
+                const progress = getSkillProgress(userSkills[skillName].totalXP);
+                userSkills[skillName] = {
+                    ...userSkills[skillName], ...progress,
+                    icon: getSkillIcon(skillName),
+                    displayName: skillName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+                };
+            });
+        }
+
+        function displaySkills() {
+            const container = document.getElementById('skillsContainer');
+            container.innerHTML = '';
+            const skillEntries = Object.entries(userSkills);
+
+            if (!skillEntries.length) {
+                container.innerHTML = `<div class="empty-placeholder">Log habits to start gaining XP!</div>`;
+                return;
+            }
+
+            skillEntries.sort((a, b) => b[1].totalXP - a[1].totalXP);
+
+            skillEntries.forEach(([skillName, data]) => {
+                const card = document.createElement('div');
+                card.className = 'skill-item';
+                card.innerHTML = `
+                    <div class="skill-header">
+                        <span class="skill-icon">${data.icon}</span>
+                        <span class="skill-name">${escapeHtml(data.displayName)}</span>
+                        <span class="skill-level">Lvl ${data.level}</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" style="width: ${data.progressPercent}%;"></div>
+                    </div>
+                    <div class="skill-xp-info">${data.xpInCurrentLevel} / ${data.xpNeededForNext} XP</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
         initTabs();
     </script>
 </body>
