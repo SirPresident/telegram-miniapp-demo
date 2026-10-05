@@ -460,6 +460,75 @@ body {
         .result-section.level-up { font-weight: 600; margin-top: 4px; }
         .action-btn.dismiss { width: 100%; padding: 12px; background: rgba(255, 255, 255, 0.3); }
 
+/* =========================================
+           PROFILE: SUB-PAGE & NAVIGATION CARDS
+           ========================================= */
+        .profile-nav-card {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            margin-top: 10px;
+        }
+        .profile-nav-card:active {
+            transform: scale(0.97);
+            background: rgba(255, 255, 255, 0.4);
+        }
+        .profile-nav-card .card-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .card-badge-icon {
+            font-size: 1.6rem;
+            background: rgba(255, 255, 255, 0.35);
+            width: 48px; height: 48px;
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            border: 1px solid var(--glass-border);
+        }
+        .profile-nav-card .card-info h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 2px;
+        }
+        .profile-nav-card .card-info p {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+        .card-arrow {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        /* Full Sub-page Slide (iOS Push Navigation) */
+        .sub-page {
+            position: absolute;
+            inset: 0;
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            display: flex;
+            flex-direction: column;
+            transform: translateX(100%); /* Hidden off-screen right */
+            transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+            z-index: 200;
+        }
+        .sub-page.is-open {
+            transform: translateX(0); /* Slide into view */
+        }
+
     </style>
 </head>
 <body>
@@ -608,23 +677,51 @@ body {
             </div>
         </div>
 
-<!-- Tab 4: Profile (Merged with Level Up & Settings) -->
+<!-- Tab 4: Profile -->
         <div class="slide" id="page-profile">
-            <div class="glass-panel">
+            <div class="glass-panel" style="position: relative; overflow: hidden;">
+                
+                <!-- 1. Main Profile Screen -->
                 <header class="page-header">
                     <h2>Profile</h2>
                     <button class="settings-btn" id="settingsBtn" aria-label="Settings">
-                        <img src="assets/icons/Moon.svg" alt="Settings" class="settings-icon-img" onerror="this.style.display='none'">
+                        <img src="assets/icons/settings.svg" alt="Settings" class="settings-icon-img" onerror="this.style.display='none'">
                     </button>
-                
                 </header>
+                
                 <main class="page-content">
-                    <!-- Merged Level Up / Skills Grid -->
-                    <section id="levelupView" class="tab-view" style="margin-top: 5px;">
-                        <h3 style="font-size: 1.1rem; color: var(--text-color); font-weight: 600; margin-bottom: 4px;">Skills & Progress</h3>
-                        <div id="skillsContainer" class="skills-grid"></div>
-                    </section>
+                    <!-- Dedicated Level Up Card -->
+                    <div class="profile-nav-card" id="openLevelUpBtn">
+                        <div class="card-left">
+                            <span class="card-badge-icon">🚀</span>
+                            <div class="card-info">
+                                <h3>Level Up & Skills</h3>
+                                <p>View your RPG attributes & level</p>
+                            </div>
+                        </div>
+                        <span class="card-arrow">→</span>
+                    </div>
+
+                    <!-- Future Profile content (Achievements, Badges, etc.) can go here -->
                 </main>
+
+                <!-- 2. Dedicated Level Up Sub-page (Slides in) -->
+                <div id="levelUpSubPage" class="sub-page">
+                    <header class="page-header">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <button class="nav-btn" id="closeLevelUpBtn" style="padding: 6px 12px;">← Back</button>
+                            <h2>Level Up</h2>
+                        </div>
+                    </header>
+                    
+                    <main class="page-content">
+                        <section id="levelupView" class="tab-view" style="width: 100%;">
+                            <!-- Skills Cards rendered here -->
+                            <div id="skillsContainer" class="skills-grid"></div>
+                        </section>
+                    </main>
+                </div>
+
             </div>
         </div>
 
@@ -1903,6 +2000,28 @@ function triggerLevelUpAnimations() {
                         });
                     });
                 }, 800); 
+            });
+        }
+
+// ==========================================
+        // PROFILE SUB-PAGE INTERACTION
+        // ==========================================
+        const openLevelUpBtn = document.getElementById('openLevelUpBtn');
+        const closeLevelUpBtn = document.getElementById('closeLevelUpBtn');
+        const levelUpSubPage = document.getElementById('levelUpSubPage');
+
+        if (openLevelUpBtn && levelUpSubPage) {
+            // Open Sub-page and trigger the exciting animations right in front of user
+            openLevelUpBtn.addEventListener('click', () => {
+                levelUpSubPage.classList.add('is-open');
+                setTimeout(() => {
+                    triggerLevelUpAnimations();
+                }, 200);
+            });
+
+            // Close Sub-page
+            closeLevelUpBtn.addEventListener('click', () => {
+                levelUpSubPage.classList.remove('is-open');
             });
         }
 
