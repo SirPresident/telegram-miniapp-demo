@@ -205,14 +205,14 @@
            ========================================= */
         .folders-stage {
             width: 100%; height: 95px; position: relative; display: flex; 
-            align-items: center; justify-content: center; perspective: 700px;
+            align-items: center; justify-content: center; perspective: 950px;
             overflow: hidden; touch-action: pan-y; margin-bottom: 10px;
             cursor: grab;
         }
         .folders-stage:active { cursor: grabbing; }
         
         .folders-bar {
-            position: relative; width: 85px; height: 75px;
+            position: relative; width: 74px; height: 72px;
             transform-style: preserve-3d; will-change: transform;
         }
         
@@ -1020,7 +1020,7 @@
             const totalChips = chips.length;
             
             // Fixed radius of 180px (from reference) so cards NEVER overlap
-            const radius = 180; 
+            const radius = 220; 
             folderAngleStep = 360 / totalChips;
 
             chips.forEach((chip, index) => {
@@ -1206,38 +1206,49 @@ function displayAllLogs() {
         });
 
 // ==========================================
-        // 3D CAROUSEL WHEEL LOGIC (Faster & Clickable)
+        // 3D CAROUSEL WHEEL LOGIC (Strict Click & Drag)
         // ==========================================
         const foldersStage = document.getElementById('foldersStage');
         let hasMovedWheel = false;
 
         foldersStage.addEventListener("pointerdown", (e) => {
+            // Only respond to primary left-click / touch
+            if (e.button !== 0 && e.pointerType === "mouse") return;
+            
             isWheelDragging = true;
             hasMovedWheel = false;
             wheelStartX = e.clientX;
             wheelStartRot = wheelTargetRot;
         });
 
-        foldersStage.addEventListener("pointermove", (e) => {
-            if (!isWheelDragging) return;
+        // Listen on window so you never lose drag control if cursor leaves the box
+        window.addEventListener("pointermove", (e) => {
+            // Strict check: if mouse button is NOT pressed, cancel drag immediately
+            if (!isWheelDragging || (e.pointerType === "mouse" && e.buttons !== 1)) {
+                isWheelDragging = false;
+                return;
+            }
+
             const deltaX = e.clientX - wheelStartX;
-            if (Math.abs(deltaX) > 6) hasMovedWheel = true;
+            if (Math.abs(deltaX) > 5) hasMovedWheel = true;
             
-            // Increased sensitivity from 0.4 to 0.75 for much faster dragging
             wheelTargetRot = wheelStartRot - deltaX * 0.75; 
         });
 
         const endWheelDrag = () => {
             if (!isWheelDragging) return;
             isWheelDragging = false;
-            // Snap to nearest card
+            
             if (folderAngleStep > 0) {
                 const nearest = Math.round(wheelTargetRot / folderAngleStep);
                 wheelTargetRot = nearest * folderAngleStep;
             }
-            // Small timeout to prevent triggering clicks on release
             setTimeout(() => { hasMovedWheel = false; }, 50);
         };
+
+        // Window listener ensures letting go of the mouse anywhere releases the drag
+        window.addEventListener("pointerup", endWheelDrag);
+        window.addEventListener("pointercancel", endWheelDrag);
 
         foldersStage.addEventListener("pointerup", endWheelDrag);
         foldersStage.addEventListener("pointercancel", endWheelDrag);
@@ -1256,7 +1267,7 @@ function displayAllLogs() {
                 let absDiff = Math.abs(diff);
 
                 // Extended angular visibility like reference code
-                chip.style.opacity = Math.max(0.2, 1 - Math.pow(absDiff / 105, 1.2));
+                chip.style.opacity = Math.max(0.35, 1 - Math.pow(absDiff / 150, 1.2));
             });
 
             wheelRAF = requestAnimationFrame(animateFoldersWheel);
