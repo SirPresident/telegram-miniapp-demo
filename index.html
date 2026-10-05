@@ -382,7 +382,11 @@ body {
         }
 
         /* Vibration speeds */
-        .anim-vibrate-long { animation: skillVibrate 0.35s ease 4; } /* Vibrates 4 times (~1.4s) */
+        /* How fast it shakes and how many times it repeats for regular XP: */
+        /* 0.35s = speed of 1 shake. 4 = repeats 4 times (Total duration: ~1.4s) */
+        .anim-vibrate-long { animation: skillVibrate 0.35s ease 8; } /* Vibrates 4 times (~1.4s) */
+        /* How fast it buzzes when waiting for user to tap (Level Up): */
+        /* Lowering 0.32s makes it shake faster; increasing makes it gentler */
         .anim-vibrate-infinite { animation: skillVibrate 0.32s ease infinite; } /* Persistent until tapped */
         .anim-celebrate { animation: skillCelebrate 0.7s cubic-bezier(0.34, 1.56, 0.64, 1); z-index: 10; position: relative; }
         .anim-level-pop { animation: levelPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); display: inline-block; }
@@ -1867,17 +1871,19 @@ function triggerLevelUpAnimations() {
 
                     // Start progress bar animation halfway through the vibration
                     setTimeout(() => {
-                        // Slower, smooth transition (1.6s)
-                        bar.style.transition = 'width 1.6s cubic-bezier(0.25, 1, 0.5, 1)';
+                        // Slower, smooth transition 
+                        // How long the green bar takes to slide into its new XP:
+                        bar.style.transition = 'width 2.0s cubic-bezier(0.25, 1, 0.5, 1)';
                         bar.style.width = targetPercent + '%';
                         xpText.textContent = targetXpText;
                     }, 500);
 
                     // Cool down the fire effect when progress completes
+                    // How long the fire effect stays before cooling back down to normal glass:
                     setTimeout(() => {
                         card.classList.remove('card-on-fire');
                         card.classList.remove('anim-vibrate-long');
-                    }, 2200);
+                    }, 2200); // <-- Change 2200ms (2.2s)
 
                     delete card.dataset.anim;
                     
