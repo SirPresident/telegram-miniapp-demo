@@ -203,16 +203,18 @@
         /* =========================================
            SEARCH TAB / FOLDERS / ACCORDION UI
            ========================================= */
-        .folders-stage {
+.folders-stage {
             width: 100%; height: 95px; position: relative; display: flex; 
-            align-items: center; justify-content: center; perspective: 550px;
+            align-items: center; justify-content: center; 
+            perspective: 550px; /* Reduced from 950px to bring side cards into view */
             overflow: hidden; touch-action: pan-y; margin-bottom: 10px;
             cursor: grab;
         }
-        .folders-stage:active { cursor: grabbing; }
         
         .folders-bar {
-            position: relative; width: 74px; height: 72px;
+            position: relative; 
+            width: 68px; /* Slightly narrower width so 5 cards fit easily */
+            height: 72px;
             transform-style: preserve-3d; will-change: transform;
         }
         
@@ -1019,8 +1021,9 @@
             const chips = Array.from(bar.children);
             const totalChips = chips.length;
             
-            // Fixed radius of 180px (from reference) so cards NEVER overlap
-            const radius = 220; 
+// Dynamically calculate radius to keep cards tightly packed (68px card + 12px gap)
+            const targetSpacing = 80; 
+            const radius = Math.max(95, Math.round((totalChips * targetSpacing) / (2 * Math.PI)));
             folderAngleStep = 360 / totalChips;
 
             chips.forEach((chip, index) => {
@@ -1266,8 +1269,8 @@ function displayAllLogs() {
                 let diff = (angle - (wheelCurrentRot % 360) + 540) % 360 - 180;
                 let absDiff = Math.abs(diff);
 
-                // Extended angular visibility like reference code
-                chip.style.opacity = Math.max(0.2, 1 - Math.pow(absDiff / 105, 1.2));
+// Keeps all 5 front cards sharp and visible without fading away
+                chip.style.opacity = Math.max(0.5, 1 - Math.pow(absDiff / 165, 1.1));
             });
 
             wheelRAF = requestAnimationFrame(animateFoldersWheel);
