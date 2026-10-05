@@ -1739,6 +1739,17 @@ function calculateSkillLevels() {
                 const cleanName = skillName.toLowerCase().trim();
                 userSkills[cleanName] = { totalXP: skillInfo.total_xp };
             });
+// Attach the timestamp of when each skill last gained XP
+            allUserLogs.forEach(log => {
+                const skills = log.skills_xp_gained || {};
+                Object.keys(skills).forEach(skillName => {
+                    const cleanName = skillName.toLowerCase().trim();
+                    if (userSkills[cleanName]) {
+                        const logTime = log.luxon_logged_at ? log.luxon_logged_at.toMillis() : 0;
+                        userSkills[cleanName].lastGainedAt = Math.max(userSkills[cleanName].lastGainedAt || 0, logTime);
+                    }
+                });
+            });
 
             // Load previous state to detect changes for animations
             const storedStateStr = localStorage.getItem('liquidGlass_skillsState');
@@ -1790,7 +1801,13 @@ function calculateSkillLevels() {
                 return;
             }
 
-            skillEntries.sort((a, b) => b[1].totalXP - a[1].totalXP);
+            // Sort by most recently gained XP first (fallback to highest total XP)
+            skillEntries.sort((a, b) => {
+                const timeA = a[1].lastGainedAt || 0;
+                const timeB = b[1].lastGainedAt || 0;
+                if (timeB !== timeA) return timeB - timeA;
+                return b[1].totalXP - a[1].totalXP;
+            });
 
             skillEntries.forEach(([skillName, data]) => {
                 const card = document.createElement('div');
