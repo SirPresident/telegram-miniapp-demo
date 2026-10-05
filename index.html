@@ -281,6 +281,28 @@
             transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         .skill-xp-info { font-size: 0.75rem; color: var(--text-muted); text-align: right; font-weight: 500; }
+
+        /* Level Up Animations */
+        @keyframes skillVibrate {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-4px) rotate(-1deg); }
+            40% { transform: translateX(4px) rotate(1deg); }
+            60% { transform: translateX(-4px) rotate(-1deg); }
+            80% { transform: translateX(4px) rotate(1deg); }
+        }
+        @keyframes skillCelebrate {
+            0% { transform: scale(1); box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+            50% { transform: scale(1.05); box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4); border-color: rgba(16, 185, 129, 0.6); }
+            100% { transform: scale(1); box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        }
+        @keyframes levelPop {
+            0% { transform: scale(1); color: var(--accent-strong); }
+            50% { transform: scale(1.4); color: #10b981; }
+            100% { transform: scale(1); color: var(--accent-strong); }
+        }
+        .anim-vibrate { animation: skillVibrate 0.4s ease; }
+        .anim-celebrate { animation: skillCelebrate 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); z-index: 10; position: relative; }
+        .anim-level-pop { animation: levelPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); display: inline-block; }
     </style>
 </head>
 <body>
@@ -578,7 +600,7 @@
                         // Calculate and populate Skills for Level Up tab
                         calculateSkillLevels();
                         displaySkills();
-                        
+
                         // Populate logs into Search Tab layout
                         displayAllLogs();
 
@@ -1175,6 +1197,10 @@ function displayAllLogs() {
                         if (newIndex === 1 && isDataLoaded) {
                             requestAnimationFrame(() => { setupChartAndSlider(); });
                         }
+                        // Trigger Level Up Animations if sliding to index 4
+                        if (newIndex === 4 && isDataLoaded) {
+                            requestAnimationFrame(() => { triggerLevelUpAnimations(); });
+                        }
                     }
                 }
                 requestAnimationFrame(step);
@@ -1213,7 +1239,7 @@ function displayAllLogs() {
             }
         }
 
-        function calculateSkillLevels() {
+function calculateSkillLevels() {
             userSkills = {};
             allUserLogs.forEach(log => {
                 const skills = log.skills_xp_gained || {};
@@ -1224,14 +1250,46 @@ function displayAllLogs() {
                 });
             });
 
+            // Load previous state to detect changes for animations
+            const storedStateStr = localStorage.getItem('liquidGlass_skillsState');
+            const isFirstLoad = !storedStateStr;
+            const storedState = JSON.parse(storedStateStr || '{}');
+            const stateToSave = { ...storedState };
+
             Object.keys(userSkills).forEach(skillName => {
                 const progress = getSkillProgress(userSkills[skillName].totalXP);
+                const previous = storedState[skillName];
+                
+                let stateFlags = { gainedXP: false, leveledUp: false, oldLevel: progress.level, oldPercent: progress.progressPercent, oldXpText: `${progress.xpInCurrentLevel} / ${progress.xpNeededForNext} XP` };
+
+                if (!isFirstLoad) {
+                    if (previous && previous.totalXP < userSkills[skillName].totalXP) {
+                        stateFlags.gainedXP = true;
+                        stateFlags.oldLevel = previous.level;
+                        stateFlags.oldPercent = previous.progressPercent;
+                        stateFlags.oldXpText = `${previous.xpInCurrentLevel} / ${previous.xpNeededForNext} XP`;
+                        if (progress.level > previous.level) stateFlags.leveledUp = true;
+                    } else if (!previous && userSkills[skillName].totalXP > 0) {
+                        // New skill acquired since last check
+                        stateFlags.gainedXP = true;
+                        stateFlags.oldLevel = 0; stateFlags.oldPercent = 0;
+                        stateFlags.oldXpText = `0 / 25 XP`;
+                        if (progress.level > 0) stateFlags.leveledUp = true;
+                    }
+                }
+
+                // If not animating, save immediately. If animating, we defer saving until animation plays.
+                if (!stateFlags.gainedXP) {
+                    stateToSave[skillName] = { totalXP: userSkills[skillName].totalXP, level: progress.level, progressPercent: progress.progressPercent, xpInCurrentLevel: progress.xpInCurrentLevel, xpNeededForNext: progress.xpNeededForNext };
+                }
+
                 userSkills[skillName] = {
-                    ...userSkills[skillName], ...progress,
+                    ...userSkills[skillName], ...progress, ...stateFlags,
                     icon: getSkillIcon(skillName),
                     displayName: skillName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
                 };
             });
+            localStorage.setItem('liquidGlass_skillsState', JSON.stringify(stateToSave));
         }
 
         function displaySkills() {
@@ -1249,19 +1307,101 @@ function displayAllLogs() {
             skillEntries.forEach(([skillName, data]) => {
                 const card = document.createElement('div');
                 card.className = 'skill-item';
+                card.id = `skill-${skillName}`;
+
+                // Set flags and stash target data for the animation reader
+                if (data.leveledUp) card.dataset.anim = 'celebrate';
+                else if (data.gainedXP) card.dataset.anim = 'vibrate';
+
+                card.dataset.targetPercent = data.progressPercent;
+                card.dataset.targetLevel = data.level;
+                card.dataset.targetXpText = `${data.xpInCurrentLevel} / ${data.xpNeededForNext} XP`;
+                card.dataset.skillKey = skillName;
+
+                // Render the OLD state initially if an animation is pending
+                const renderLevel = (data.gainedXP || data.leveledUp) ? data.oldLevel : data.level;
+                const renderPercent = (data.gainedXP || data.leveledUp) ? data.oldPercent : data.progressPercent;
+                const renderXpText = (data.gainedXP || data.leveledUp) ? data.oldXpText : `${data.xpInCurrentLevel} / ${data.xpNeededForNext} XP`;
+
                 card.innerHTML = `
                     <div class="skill-header">
                         <span class="skill-icon">${data.icon}</span>
                         <span class="skill-name">${escapeHtml(data.displayName)}</span>
-                        <span class="skill-level">Lvl ${data.level}</span>
+                        <span class="skill-level">Lvl <span class="lvl-num">${renderLevel}</span></span>
                     </div>
                     <div class="progress-bar-container">
-                        <div class="progress-bar" style="width: ${data.progressPercent}%;"></div>
+                        <div class="progress-bar" style="width: ${renderPercent}%;"></div>
                     </div>
-                    <div class="skill-xp-info">${data.xpInCurrentLevel} / ${data.xpNeededForNext} XP</div>
+                    <div class="skill-xp-info">${renderXpText}</div>
                 `;
                 container.appendChild(card);
             });
+        }
+
+function triggerLevelUpAnimations() {
+            const cards = document.querySelectorAll('.skill-item[data-anim]');
+            if (!cards.length) return;
+
+            let stateToSave = JSON.parse(localStorage.getItem('liquidGlass_skillsState') || '{}');
+
+            cards.forEach(card => {
+                const animType = card.dataset.anim;
+                const skillKey = card.dataset.skillKey;
+                const bar = card.querySelector('.progress-bar');
+                const levelNum = card.querySelector('.lvl-num');
+                const xpText = card.querySelector('.skill-xp-info');
+
+                const targetPercent = card.dataset.targetPercent;
+                const targetLevel = card.dataset.targetLevel;
+                const targetXpText = card.dataset.targetXpText;
+
+                if (animType === 'vibrate') {
+                    // Standard XP Gain
+                    card.classList.add('anim-vibrate');
+                    setTimeout(() => {
+                        bar.style.width = targetPercent + '%';
+                        xpText.textContent = targetXpText;
+                    }, 400); // Wait for vibration to finish
+                } 
+                else if (animType === 'celebrate') {
+                    // Level Up Celebration
+                    card.classList.add('anim-celebrate');
+                    
+                    // Rush the bar to 100%
+                    setTimeout(() => {
+                        bar.style.transition = 'width 0.4s ease-in';
+                        bar.style.width = '100%';
+                        xpText.textContent = 'Level Up!';
+                    }, 100);
+
+                    // Reset and transition to new XP level
+                    setTimeout(() => {
+                        levelNum.textContent = targetLevel;
+                        levelNum.classList.add('anim-level-pop');
+                        
+                        // Secretly reset bar to 0%
+                        bar.style.transition = 'none';
+                        bar.style.width = '0%';
+                        void bar.offsetWidth; // Force CSS reflow
+                        
+                        // Slide to new XP target
+                        bar.style.transition = 'width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                        bar.style.width = targetPercent + '%';
+                        xpText.textContent = targetXpText;
+                    }, 650);
+                }
+
+                delete card.dataset.anim; // Remove flag
+                
+                // Save new state baseline to storage
+                stateToSave[skillKey] = {
+                    totalXP: userSkills[skillKey].totalXP, level: userSkills[skillKey].level,
+                    progressPercent: userSkills[skillKey].progressPercent,
+                    xpInCurrentLevel: userSkills[skillKey].xpInCurrentLevel, xpNeededForNext: userSkills[skillKey].xpNeededForNext
+                };
+            });
+
+            localStorage.setItem('liquidGlass_skillsState', JSON.stringify(stateToSave));
         }
 
         initTabs();
