@@ -471,37 +471,31 @@ body {
             </div>
         </div>
 
-<!-- Tab 4: Level Up -->
-        <div class="slide" id="page-levelup">
+<!-- Tab 4: Profile (Now includes Level Up skills) -->
+        <div class="slide" id="page-profile">
             <div class="glass-panel">
-                <header class="page-header"><h2>Level Up</h2></header>
+                <header class="page-header"><h2>Profile</h2></header>
                 <main class="page-content">
-                    <section id="levelupView" class="tab-view">
-                        <!-- Dynamic Skills and Progression Grid -->
+                    <!-- Future Profile Avatar/Settings can go here -->
+                    
+                    <!-- Merged Level Up / Skills Grid -->
+                    <section id="levelupView" class="tab-view" style="margin-top: 10px;">
+                        <h3 style="font-size: 1.1rem; color: var(--text-color); font-weight: 600; margin-bottom: 4px;">Skills & Progress</h3>
                         <div id="skillsContainer" class="skills-grid"></div>
                     </section>
                 </main>
             </div>
         </div>
 
-        <!-- Tab 5: Profile -->
-        <div class="slide" id="page-profile">
-            <div class="glass-panel">
-                <header class="page-header"><h2>Profile</h2></header>
-                <main class="page-content"><div class="blank-text">Nothing to see here yet.</div></main>
-            </div>
-        </div>
-
     </div>
 
-    <!-- Bottom Capsule UI -->
+<!-- Bottom Capsule UI -->
     <nav class="capsule-tabs" aria-label="Main Navigation">
         <div class="capsule-tab-group">
             <button class="capsule-tab-btn" id="tab-home" type="button"><span class="capsule-icon-wrap"><img src="assets/icons/Home.svg" class="icon-img"></span><span class="capsule-text">Home</span></button>
             <button class="capsule-tab-btn" id="tab-analytics" type="button"><span class="capsule-icon-wrap"><img src="assets/icons/Eye.svg" class="icon-img"></span><span class="capsule-text">Analytics</span></button>
-            <button class="capsule-tab-btn" id="tab-logs" type="button"><span class="capsule-icon-wrap"><img src="assets/icons/Search.svg" class="icon-img"></span><span class="capsule-text">Search</span></button>
+            <button class="capsule-tab-btn" id="tab-logs" type="button"><span class="capsule-icon-wrap"><img src="assets/icons/Search.svg" class="icon-img"></span><span class="capsule-text">History</span></button>
             <button class="capsule-tab-btn" id="tab-quests" type="button"><span class="capsule-icon-wrap"><img src="assets/icons/Book-open.svg" class="icon-img"></span><span class="capsule-text">Quests</span></button>
-            <button class="capsule-tab-btn" id="tab-levelup" type="button"><span class="capsule-icon-wrap"><img src="assets/icons/Arrow up.svg" class="icon-img"></span><span class="capsule-text">Level up</span></button>
             <button class="capsule-tab-btn" id="tab-profile" type="button">
                 <span class="capsule-icon-wrap"><img src="assets/icons/User.svg" class="icon-img"></span>
                 <span class="capsule-text">Profile</span>
@@ -1343,12 +1337,11 @@ function animateFoldersWheel() {
         // 3D Cube Navigation
         function initTabs() {
             const tabs = [
-                { btn: document.getElementById('tab-home') },
-                { btn: document.getElementById('tab-analytics') }, 
-                { btn: document.getElementById('tab-logs') },      // Index 2 (Search)
-                { btn: document.getElementById('tab-quests') },
-                { btn: document.getElementById('tab-levelup') },
-                { btn: document.getElementById('tab-profile') }    
+                { btn: document.getElementById('tab-home') },      // Index 0
+                { btn: document.getElementById('tab-analytics') }, // Index 1
+                { btn: document.getElementById('tab-logs') },      // Index 2 (History)
+                { btn: document.getElementById('tab-quests') },    // Index 3
+                { btn: document.getElementById('tab-profile') }    // Index 4 (Profile + Skills)  
             ];
 
             const slides = document.querySelectorAll('.slide');
