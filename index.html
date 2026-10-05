@@ -512,21 +512,41 @@ body {
             font-weight: 600;
         }
 
-        /* Full Sub-page Slide (iOS Push Navigation) */
-        .sub-page {
+/* Synchronized Push Navigation */
+        .profile-view-screen {
             position: absolute;
             inset: 0;
-            background: var(--glass-bg);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
             display: flex;
             flex-direction: column;
-            transform: translateX(100%); /* Hidden off-screen right */
-            transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
-            z-index: 200;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.3s ease;
+            will-change: transform, opacity;
         }
-        .sub-page.is-open {
-            transform: translateX(0); /* Slide into view */
+
+        /* 1. Main Profile Screen */
+        #profileMainView {
+            transform: translateX(0);
+            opacity: 1;
+            z-index: 10;
+        }
+        #profileMainView.is-pushed-left {
+            transform: translateX(-100%); /* Pushes off to the left */
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* 2. Level Up Screen */
+        #levelUpSubPage {
+            transform: translateX(100%); /* Waits off to the right */
+            opacity: 0;
+            pointer-events: none;
+            z-index: 20;
+        }
+        #levelUpSubPage.is-open {
+            transform: translateX(0); /* Pushes into center */
+            opacity: 1;
+            pointer-events: auto;
         }
 
     </style>
@@ -681,32 +701,32 @@ body {
         <div class="slide" id="page-profile">
             <div class="glass-panel" style="position: relative; overflow: hidden;">
                 
-                <!-- 1. Main Profile Screen -->
-                <header class="page-header">
-                    <h2>Profile</h2>
-                    <button class="settings-btn" id="settingsBtn" aria-label="Settings">
-                        <img src="assets/icons/settings.svg" alt="Settings" class="settings-icon-img" onerror="this.style.display='none'">
-                    </button>
-                </header>
-                
-                <main class="page-content">
-                    <!-- Dedicated Level Up Card -->
-                    <div class="profile-nav-card" id="openLevelUpBtn">
-                        <div class="card-left">
-                            <span class="card-badge-icon">🚀</span>
-                            <div class="card-info">
-                                <h3>Level Up & Skills</h3>
-                                <p>View your RPG attributes & level</p>
+                <!-- 1. Main Profile Screen (Pushes Left) -->
+                <div id="profileMainView" class="profile-view-screen">
+                    <header class="page-header">
+                        <h2>Profile</h2>
+                        <button class="settings-btn" id="settingsBtn" aria-label="Settings">
+                            <img src="assets/icons/settings.svg" alt="Settings" class="settings-icon-img" onerror="this.style.display='none'">
+                        </button>
+                    </header>
+                    
+                    <main class="page-content">
+                        <!-- Dedicated Level Up Card -->
+                        <div class="profile-nav-card" id="openLevelUpBtn">
+                            <div class="card-left">
+                                <span class="card-badge-icon">🚀</span>
+                                <div class="card-info">
+                                    <h3>Level Up & Skills</h3>
+                                    <p>View your RPG attributes & level</p>
+                                </div>
                             </div>
+                            <span class="card-arrow">→</span>
                         </div>
-                        <span class="card-arrow">→</span>
-                    </div>
+                    </main>
+                </div>
 
-                    <!-- Future Profile content (Achievements, Badges, etc.) can go here -->
-                </main>
-
-                <!-- 2. Dedicated Level Up Sub-page (Slides in) -->
-                <div id="levelUpSubPage" class="sub-page">
+                <!-- 2. Dedicated Level Up Screen (Pushes In From Right) -->
+                <div id="levelUpSubPage" class="profile-view-screen">
                     <header class="page-header">
                         <div style="display: flex; align-items: center; gap: 12px;">
                             <button class="nav-btn" id="closeLevelUpBtn" style="padding: 6px 12px;">← Back</button>
@@ -716,7 +736,6 @@ body {
                     
                     <main class="page-content">
                         <section id="levelupView" class="tab-view" style="width: 100%;">
-                            <!-- Skills Cards rendered here -->
                             <div id="skillsContainer" class="skills-grid"></div>
                         </section>
                     </main>
@@ -2004,23 +2023,27 @@ function triggerLevelUpAnimations() {
         }
 
 // ==========================================
-        // PROFILE SUB-PAGE INTERACTION
+        // PROFILE SYNCHRONIZED PUSH INTERACTION
         // ==========================================
         const openLevelUpBtn = document.getElementById('openLevelUpBtn');
         const closeLevelUpBtn = document.getElementById('closeLevelUpBtn');
         const levelUpSubPage = document.getElementById('levelUpSubPage');
+        const profileMainView = document.getElementById('profileMainView');
 
-        if (openLevelUpBtn && levelUpSubPage) {
-            // Open Sub-page and trigger the exciting animations right in front of user
+        if (openLevelUpBtn && levelUpSubPage && profileMainView) {
+            // Push Profile LEFT and Level Up IN from RIGHT
             openLevelUpBtn.addEventListener('click', () => {
+                profileMainView.classList.add('is-pushed-left');
                 levelUpSubPage.classList.add('is-open');
+                
                 setTimeout(() => {
                     triggerLevelUpAnimations();
-                }, 200);
+                }, 250);
             });
 
-            // Close Sub-page
+            // Push Level Up back to RIGHT and Profile back IN from LEFT
             closeLevelUpBtn.addEventListener('click', () => {
+                profileMainView.classList.remove('is-pushed-left');
                 levelUpSubPage.classList.remove('is-open');
             });
         }
