@@ -1123,10 +1123,31 @@ function displayAllLogs() {
         const searchInput = document.getElementById('logSearch');
         let searchTimer = null;
 
-        // Dog / Top Header Animation triggers
-        dogWrapper.addEventListener('click', (e) => { e.stopPropagation(); dogWrapper.classList.toggle('active'); searchWrapper.classList.remove('active'); });
-        searchWrapper.addEventListener('click', (e) => { e.stopPropagation(); if (!searchWrapper.classList.contains('active')) { searchWrapper.classList.add('active'); searchInput.focus(); } dogWrapper.classList.remove('active'); });
-        document.addEventListener('click', (e) => { if (!dogWrapper.contains(e.target)) dogWrapper.classList.remove('active'); if (!searchWrapper.contains(e.target)) { searchWrapper.classList.remove('active'); searchInput.blur(); } });
+// Dog / Top Header Animation triggers
+        dogWrapper.addEventListener('click', (e) => { 
+            e.stopPropagation(); 
+            dogWrapper.classList.toggle('active'); 
+            // This is what closes the search bar when the dog is tapped
+            searchWrapper.classList.remove('active'); 
+        });
+        
+        searchWrapper.addEventListener('click', (e) => { 
+            e.stopPropagation(); 
+            if (!searchWrapper.classList.contains('active')) { 
+                searchWrapper.classList.add('active'); 
+                searchInput.focus(); 
+            } 
+            dogWrapper.classList.remove('active'); 
+        });
+        
+        document.addEventListener('click', (e) => { 
+            // Only hide the dog's speech bubble when clicking outside
+            if (!dogWrapper.contains(e.target)) {
+                dogWrapper.classList.remove('active'); 
+            }
+            // We removed the logic that minimizes the search wrapper here, 
+            // so it will remain fully expanded while the user scrolls!
+        });
 
         // Real-Time Search Debounce Trigger
         searchInput.addEventListener('input', (e) => {
