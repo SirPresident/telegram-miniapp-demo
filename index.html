@@ -312,6 +312,22 @@ body {
         }
         .capsule-tab-btn.active .capsule-text { opacity: 1; transform: translateY(0); }
 
+        /* Settings Button in Profile Header */
+        .settings-btn {
+            background: rgba(255, 255, 255, 0.25);
+            border: 1px solid var(--glass-border);
+            border-radius: 50%;
+            width: 40px; height: 40px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text-color); cursor: pointer;
+            transition: var(--transition-smooth);
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        .settings-btn:hover, .settings-btn:active {
+            background: rgba(255, 255, 255, 0.5);
+            transform: rotate(45deg);
+        }
         /* =========================================
            LEVEL UP TAB UI
            ========================================= */
@@ -474,7 +490,15 @@ body {
 <!-- Tab 4: Profile (Now includes Level Up skills) -->
         <div class="slide" id="page-profile">
             <div class="glass-panel">
-                <header class="page-header"><h2>Profile</h2></header>
+                <header class="page-header">
+                    <h2>Profile</h2>
+                    <button class="settings-btn" id="settingsBtn" aria-label="Settings">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                        </svg>
+                    </button>
+                </header>
                 <main class="page-content">
                     <!-- Future Profile Avatar/Settings can go here -->
                     
