@@ -1847,12 +1847,12 @@ function calculateSkillLevels() {
         // ⚙️ ANIMATION CONTROL PANEL (Adjust all timings here!)
         // ========================================================
         const SKILL_ANIM_SETTINGS = {
-            shakeSpeed: 350,        // Speed of 1 single shake (in milliseconds)
-            shakeCount: 4,          // How many times it shakes for normal XP
-            progressDuration: 1600, // Time for the progress bar to fill (in milliseconds)
-            levelRushDuration: 900, // Time for bar to rush to 100% on Level Up (in milliseconds)
-            levelRefillDuration: 1600, // Time for bar to fill in the new level (in milliseconds)
-            pauseBuffer: 100        // Small natural pause between animations (in milliseconds)
+            shakeSpeed: 500,        // Speed of 1 single shake (in milliseconds)
+            shakeCount: 6,          // How many times it shakes for normal XP
+            progressDuration: 2000, // Time for the progress bar to fill (in milliseconds)
+            levelRushDuration: 1500, // Time for bar to rush to 100% on Level Up (in milliseconds)
+            levelRefillDuration: 2000, // Time for bar to fill in the new level (in milliseconds)
+            pauseBuffer: 150        // Small natural pause between animations (in milliseconds)
         };
 
         function triggerLevelUpAnimations() {
