@@ -381,13 +381,9 @@ body {
             100% { transform: scale(1); color: var(--accent-strong); }
         }
 
-        /* Vibration speeds */
-        /* How fast it shakes and how many times it repeats for regular XP: */
-        /* 0.35s = speed of 1 shake. 4 = repeats 4 times (Total duration: ~1.4s) */
-        .anim-vibrate-long { animation: skillVibrate 0.35s ease 8; } /* Vibrates 4 times (~1.4s) */
-        /* How fast it buzzes when waiting for user to tap (Level Up): */
-        /* Lowering 0.32s makes it shake faster; increasing makes it gentler */
-        .anim-vibrate-infinite { animation: skillVibrate 0.32s ease infinite; } /* Persistent until tapped */
+        /* Dynamic vibration speeds driven by JS settings */
+        .anim-vibrate-long { animation: skillVibrate var(--shake-speed, 0.35s) ease var(--shake-count, 4); }
+        .anim-vibrate-infinite { animation: skillVibrate var(--shake-speed, 0.32s) ease infinite; }
         .anim-celebrate { animation: skillCelebrate 0.7s cubic-bezier(0.34, 1.56, 0.64, 1); z-index: 10; position: relative; }
         .anim-level-pop { animation: levelPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); display: inline-block; }
 
@@ -1847,9 +1843,29 @@ function calculateSkillLevels() {
             });
         }
 
-function triggerLevelUpAnimations() {
+// ========================================================
+        // ⚙️ ANIMATION CONTROL PANEL (Adjust all timings here!)
+        // ========================================================
+        const SKILL_ANIM_SETTINGS = {
+            shakeSpeed: 350,        // Speed of 1 single shake (in milliseconds)
+            shakeCount: 4,          // How many times it shakes for normal XP
+            progressDuration: 1600, // Time for the progress bar to fill (in milliseconds)
+            levelRushDuration: 900, // Time for bar to rush to 100% on Level Up (in milliseconds)
+            levelRefillDuration: 1600, // Time for bar to fill in the new level (in milliseconds)
+            pauseBuffer: 100        // Small natural pause between animations (in milliseconds)
+        };
+
+        function triggerLevelUpAnimations() {
             const cards = document.querySelectorAll('.skill-item[data-anim]');
             if (!cards.length) return;
+
+            // Sync JS timings to CSS variables automatically
+            document.documentElement.style.setProperty('--shake-speed', `${SKILL_ANIM_SETTINGS.shakeSpeed}ms`);
+            document.documentElement.style.setProperty('--shake-count', SKILL_ANIM_SETTINGS.shakeCount);
+
+            // Automatically calculate total phase durations
+            const totalVibrationTime = SKILL_ANIM_SETTINGS.shakeSpeed * SKILL_ANIM_SETTINGS.shakeCount;
+            const totalRegularCooldown = totalVibrationTime + SKILL_ANIM_SETTINGS.progressDuration + SKILL_ANIM_SETTINGS.pauseBuffer;
 
             let stateToSave = JSON.parse(localStorage.getItem('liquidGlass_skillsState') || '{}');
 
@@ -1864,26 +1880,24 @@ function triggerLevelUpAnimations() {
                 const targetLevel = card.dataset.targetLevel;
                 const targetXpText = card.dataset.targetXpText;
 
-                // Case 1: Normal XP Gain (Longer vibration + fire glow + slower progress bar)
+                // Case 1: Normal XP Gain
                 if (animType === 'vibrate') {
                     card.classList.add('card-on-fire');
                     card.classList.add('anim-vibrate-long');
 
-                    // Start progress bar animation halfway through the vibration
+                    // 1. Wait for vibration to fully finish before moving the bar
                     setTimeout(() => {
-                        // Slower, smooth transition 
-                        // How long the green bar takes to slide into its new XP:
-                        bar.style.transition = 'width 2.0s cubic-bezier(0.25, 1, 0.5, 1)';
+                        card.classList.remove('anim-vibrate-long');
+
+                        bar.style.transition = `width ${SKILL_ANIM_SETTINGS.progressDuration}ms cubic-bezier(0.25, 1, 0.5, 1)`;
                         bar.style.width = targetPercent + '%';
                         xpText.textContent = targetXpText;
-                    }, 500);
+                    }, totalVibrationTime);
 
-                    // Cool down the fire effect when progress completes
-                    // How long the fire effect stays before cooling back down to normal glass:
+                    // 2. Cool down fire effect after bar finishes
                     setTimeout(() => {
                         card.classList.remove('card-on-fire');
-                        card.classList.remove('anim-vibrate-long');
-                    }, 2200); // <-- Change 2200ms (2.2s)
+                    }, totalRegularCooldown);
 
                     delete card.dataset.anim;
                     
@@ -1895,49 +1909,44 @@ function triggerLevelUpAnimations() {
                     localStorage.setItem('liquidGlass_skillsState', JSON.stringify(stateToSave));
                 } 
 
-                // Case 2: Level Up (Vibrates continuously on fire until user TAPS it)
+                // Case 2: Level Up
                 else if (animType === 'celebrate') {
                     card.classList.add('card-on-fire');
                     card.classList.add('anim-vibrate-infinite');
                     
-                    // Show interactive prompt
                     xpText.innerHTML = `<span class="tap-claim-badge">🔥 Tap to Level Up!</span>`;
                     card.style.cursor = 'pointer';
 
-                    // One-time tap event to trigger celebration
                     const claimLevelUp = () => {
                         card.removeEventListener('click', claimLevelUp);
                         card.classList.remove('anim-vibrate-infinite');
                         card.classList.add('anim-celebrate');
                         card.style.cursor = 'default';
 
-                        // 1. Smoothly rush the bar to 100%
-                        bar.style.transition = 'width 0.9s cubic-bezier(0.4, 0, 0.2, 1)';
+                        // 1. Rush bar to 100%
+                        bar.style.transition = `width ${SKILL_ANIM_SETTINGS.levelRushDuration}ms cubic-bezier(0.4, 0, 0.2, 1)`;
                         bar.style.width = '100%';
                         xpText.textContent = 'Level Up!';
 
-                        // 2. Pop level number, reset bar, and smoothly fill to new level's XP
+                        // 2. Pop level number, reset, and fill to new XP
                         setTimeout(() => {
                             levelNum.textContent = targetLevel;
                             levelNum.classList.add('anim-level-pop');
 
-                            // Reset to 0% invisibly
                             bar.style.transition = 'none';
                             bar.style.width = '0%';
                             void bar.offsetWidth; // Force reflow
 
-                            // Slow, satisfying fill to new XP
-                            bar.style.transition = 'width 1.6s cubic-bezier(0.25, 1, 0.5, 1)';
+                            bar.style.transition = `width ${SKILL_ANIM_SETTINGS.levelRefillDuration}ms cubic-bezier(0.25, 1, 0.5, 1)`;
                             bar.style.width = targetPercent + '%';
                             xpText.textContent = targetXpText;
 
-                            // Cool down fire effect after celebration finishes
+                            // Cool down
                             setTimeout(() => {
                                 card.classList.remove('card-on-fire');
                                 card.classList.remove('anim-celebrate');
-                            }, 1800);
+                            }, SKILL_ANIM_SETTINGS.levelRefillDuration + SKILL_ANIM_SETTINGS.pauseBuffer);
 
-                            // Save new baseline
                             stateToSave[skillKey] = {
                                 totalXP: userSkills[skillKey].totalXP, level: userSkills[skillKey].level,
                                 progressPercent: userSkills[skillKey].progressPercent,
@@ -1945,7 +1954,7 @@ function triggerLevelUpAnimations() {
                             };
                             localStorage.setItem('liquidGlass_skillsState', JSON.stringify(stateToSave));
                             delete card.dataset.anim;
-                        }, 950);
+                        }, SKILL_ANIM_SETTINGS.levelRushDuration + SKILL_ANIM_SETTINGS.pauseBuffer);
                     };
 
                     card.addEventListener('click', claimLevelUp);
